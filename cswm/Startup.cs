@@ -21,7 +21,7 @@ internal class Startup
 
     public void Run()
     {
-        _trayService.Start();
+        _trayService.AddToSystemTray();
         _winHookService.Start();
 
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
@@ -30,8 +30,7 @@ internal class Startup
 
     private void Exit()
     {
-        _trayService.Stop();
-        _winHookService.Stop();
+        _trayService.RemoveFromSystemTray();
 
         Application.Exit();
     }

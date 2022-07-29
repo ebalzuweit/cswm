@@ -17,17 +17,16 @@ public class SystemTrayService
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }
 
-    public void Start()
+    public void AddToSystemTray()
     {
         var thread = new Thread(() => SystemTrayApp())
         {
             Name = "cswmtray"
         };
-        thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
     }
 
-    public void Stop()
+    public void RemoveFromSystemTray()
     {
         if (_notifyIcon is not null)
             _notifyIcon!.Visible = false;

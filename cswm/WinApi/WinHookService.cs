@@ -23,8 +23,6 @@ public class WinHookService
         thread.Start();
     }
 
-    public void Stop() { }
-
     private void SetWinEventHooks()
     {
         User32.SetWinEventHook(EventConstant.EVENT_SYSTEM_FOREGROUND, EventConstant.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, WindowEventHookProc, 0, 0, 0);
