@@ -1,15 +1,16 @@
-
+using System;
 using System.Windows.Forms;
+using System.Reactive.Linq;
 using cswm.Events;
 
 namespace cswm;
 
 internal class Startup
 {
-    private readonly IEventBus _bus;
+    private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
 
-    public Startup(IEventBus bus, SystemTrayService trayService)
+    public Startup(MessageBus bus, SystemTrayService trayService)
     {
         _bus = bus ?? throw new System.ArgumentNullException(nameof(bus));
         _trayService = trayService ?? throw new System.ArgumentNullException(nameof(trayService));
@@ -19,10 +20,11 @@ internal class Startup
     {
         _trayService.Start();
 
-        _bus.Subscribe<ExitApplicationEvent>((@event) => Exit());
+        _bus.Events.Where(@event => @event is ExitApplicationEvent)
+            .Subscribe(_ => Exit());
     }
 
-    public void Exit()
+    private void Exit()
     {
         _trayService.Stop();
 

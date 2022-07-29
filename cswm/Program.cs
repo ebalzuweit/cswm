@@ -26,7 +26,7 @@ internal static class Program
         return Host.CreateDefaultBuilder()
             .ConfigureServices((_, services) =>
             {
-                services.AddSingleton<IEventBus, EventBus>();
+                services.AddSingleton<MessageBus>();
                 services.AddSingleton<SystemTrayService>();
                 services.AddSingleton<Startup>();
             })

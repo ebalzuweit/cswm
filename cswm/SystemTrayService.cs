@@ -9,10 +9,10 @@ namespace cswm;
 
 public class SystemTrayService
 {
-    private readonly IEventBus _bus;
+    private readonly MessageBus _bus;
     private NotifyIcon? _notifyIcon;
 
-    public SystemTrayService(IEventBus bus)
+    public SystemTrayService(MessageBus bus)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }
