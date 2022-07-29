@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using System.Reactive.Linq;
 using cswm.Events;
+using cswm.WinApi;
 
 namespace cswm;
 
@@ -9,16 +10,19 @@ internal class Startup
 {
     private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
+    private readonly WinHookService _winHookService;
 
-    public Startup(MessageBus bus, SystemTrayService trayService)
+    public Startup(MessageBus bus, SystemTrayService trayService, WinHookService winHookService)
     {
-        _bus = bus ?? throw new System.ArgumentNullException(nameof(bus));
-        _trayService = trayService ?? throw new System.ArgumentNullException(nameof(trayService));
+        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+        _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
+        _winHookService = winHookService ?? throw new ArgumentNullException(nameof(winHookService));
     }
 
     public void Run()
     {
         _trayService.Start();
+        _winHookService.Start();
 
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
             .Subscribe(_ => Exit());
@@ -27,6 +31,7 @@ internal class Startup
     private void Exit()
     {
         _trayService.Stop();
+        _winHookService.Stop();
 
         Application.Exit();
     }

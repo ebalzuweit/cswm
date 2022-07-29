@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using cswm.Events;
+using cswm.WinApi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -28,6 +29,7 @@ internal static class Program
             {
                 services.AddSingleton<MessageBus>();
                 services.AddSingleton<SystemTrayService>();
+                services.AddSingleton<WinHookService>();
                 services.AddSingleton<Startup>();
             })
             .Build();
