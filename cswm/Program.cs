@@ -28,6 +28,7 @@ internal static class Program
         return Host.CreateDefaultBuilder()
             .ConfigureServices((_, services) =>
             {
+                services.AddSingleton<SystemTrayService>();
                 services.AddSingleton<Startup>();
             })
             .Build();
