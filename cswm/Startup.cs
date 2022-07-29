@@ -1,5 +1,5 @@
 
-namespace cswm2;
+namespace cswm;
 
 internal class Startup
 {

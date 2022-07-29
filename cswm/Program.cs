@@ -3,7 +3,7 @@ using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace cswm2;
+namespace cswm;
 
 internal static class Program
 {
@@ -16,6 +16,9 @@ internal static class Program
         using var scope = host.Services.CreateScope();
         var startup = scope.ServiceProvider.GetRequiredService<Startup>();
 
+#if DEBUG
+        Console.WriteLine("Starting application.");
+#endif
         startup.Run();
         Application.Run();
     }
