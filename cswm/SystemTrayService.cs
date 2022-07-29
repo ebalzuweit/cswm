@@ -3,16 +3,18 @@ using System.Drawing;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
+using cswm.Events;
 
 namespace cswm;
 
 public class SystemTrayService
 {
+    private readonly IEventBus _bus;
     private NotifyIcon? _notifyIcon;
 
-    public SystemTrayService()
+    public SystemTrayService(IEventBus bus)
     {
-
+        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }
 
     public void Start()
@@ -23,9 +25,6 @@ public class SystemTrayService
         };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
-#if DEBUG
-        Console.WriteLine($"Started thread '{thread.Name}'.");
-#endif
     }
 
     public void Stop()
@@ -43,11 +42,11 @@ public class SystemTrayService
         var assembly = Assembly.GetEntryAssembly();
         const string iconResourceName = "cswm.icon.ico";
 
-        using (var stream = assembly.GetManifestResourceStream(iconResourceName))
+        using (var stream = assembly!.GetManifestResourceStream(iconResourceName))
         {
             _notifyIcon = new NotifyIcon
             {
-                Icon = new Icon(stream),
+                Icon = new Icon(stream!),
                 ContextMenuStrip = menu,
                 Text = "cswm",
                 Visible = true,
@@ -60,6 +59,6 @@ public class SystemTrayService
 
     private void Close_OnClick(object? sender, EventArgs e)
     {
-
+        _bus.Publish(new ExitApplicationEvent());
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using cswm.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -16,9 +17,6 @@ internal static class Program
         using var scope = host.Services.CreateScope();
         var startup = scope.ServiceProvider.GetRequiredService<Startup>();
 
-#if DEBUG
-        Console.WriteLine("Starting application.");
-#endif
         startup.Run();
         Application.Run();
     }
@@ -28,6 +26,7 @@ internal static class Program
         return Host.CreateDefaultBuilder()
             .ConfigureServices((_, services) =>
             {
+                services.AddSingleton<IEventBus, EventBus>();
                 services.AddSingleton<SystemTrayService>();
                 services.AddSingleton<Startup>();
             })
