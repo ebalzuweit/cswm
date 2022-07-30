@@ -48,7 +48,7 @@ public class WinHookService
             return;
 
         var windowEvent = new WindowEvent(hWnd, eventType);
-        _logger?.LogDebug("Publishing event: {event}.", windowEvent);
+        _logger?.LogTrace("Publishing event: {event}.", windowEvent);
         _bus.Publish(windowEvent);
     }
 }
