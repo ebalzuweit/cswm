@@ -29,6 +29,13 @@ internal class Startup
 
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
             .Subscribe(_ => On_ExitApplicationEvent());
+        _bus.Events.Where(@event => @event is WindowEvent)
+            .Subscribe(@event => On_WindowEvent((@event as WindowEvent)!));
+    }
+
+    private void On_WindowEvent(WindowEvent @event)
+    {
+        _logger?.LogDebug("Received WindowEvent: {eventType} hWnd: {hWnd}", @event.GetType().Name, @event.hWnd);
     }
 
     private void On_ExitApplicationEvent()
