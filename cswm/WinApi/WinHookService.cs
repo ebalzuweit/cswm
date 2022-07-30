@@ -43,8 +43,8 @@ public class WinHookService
 
     private void WindowEventHookProc(IntPtr hWinEventHook, EventConstant eventType, IntPtr hWnd, ObjectIdentifier idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
     {
-        var isWindowEvent = idChild == 0 && idObject == ObjectIdentifier.OBJID_WINDOW && hWnd != IntPtr.Zero;
-        if (isWindowEvent == false)
+        var isNonWindowEvent = idChild != 0 || idObject != ObjectIdentifier.OBJID_WINDOW || hWnd == IntPtr.Zero;
+        if (isNonWindowEvent)
             return;
 
         Event? windowEvent = eventType switch
