@@ -4,7 +4,7 @@ namespace cswm.Events;
 
 public class Event { }
 
-public class WindowEvent : Event
+public abstract class WindowEvent : Event
 {
     public IntPtr hWnd { get; init; }
 
@@ -16,7 +16,27 @@ public class WindowEvent : Event
 
 public class ExitApplicationEvent : Event { }
 
-public class ForegroundWindowChangeEvent : WindowEvent
+public class ForegroundChangeWindowEvent : WindowEvent
 {
-    public ForegroundWindowChangeEvent(IntPtr hWnd) : base(hWnd) { }
+    public ForegroundChangeWindowEvent(IntPtr hWnd) : base(hWnd) { }
+}
+
+public class MinimizeStartWindowEvent : WindowEvent
+{
+    public MinimizeStartWindowEvent(IntPtr hWnd) : base(hWnd) { }
+}
+
+public class MinimizeEndWindowEvent : WindowEvent
+{
+    public MinimizeEndWindowEvent(IntPtr hWnd) : base(hWnd) { }
+}
+
+public class ShowWindowEvent : WindowEvent
+{
+    public ShowWindowEvent(IntPtr hWnd) : base(hWnd) { }
+}
+
+public class HideWindowEvent : WindowEvent
+{
+    public HideWindowEvent(IntPtr hWnd) : base(hWnd) { }
 }

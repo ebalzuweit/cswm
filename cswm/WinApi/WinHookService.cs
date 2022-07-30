@@ -28,15 +28,39 @@ public class WinHookService
 
     private void SetWinEventHooks()
     {
-        User32.SetWinEventHook(EventConstant.EVENT_SYSTEM_FOREGROUND, EventConstant.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, WindowEventHookProc, 0, 0, 0);
+        SetWinEventHook(EventConstant.EVENT_SYSTEM_FOREGROUND);
+        SetWinEventHook(EventConstant.EVENT_SYSTEM_MINIMIZESTART, EventConstant.EVENT_SYSTEM_MINIMIZEEND);
+        SetWinEventHook(EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_OBJECT_HIDE);
 
         // message loop
         Application.Run();
     }
 
+    private IntPtr SetWinEventHook(EventConstant @event) => SetWinEventHook(@event, @event);
+
+    private IntPtr SetWinEventHook(EventConstant eventMin, EventConstant eventMax) =>
+        User32.SetWinEventHook(eventMin, eventMax, IntPtr.Zero, WindowEventHookProc, 0, 0, 0);
+
     private void WindowEventHookProc(IntPtr hWinEventHook, EventConstant eventType, IntPtr hWnd, ObjectIdentifier idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
     {
-        _logger?.LogDebug("Publishing event: {eventType} hWnd: {hWnd}", eventType, hWnd);
-        _bus.Publish(new ForegroundWindowChangeEvent(hWnd));
+        var isWindowEvent = idChild == 0 && idObject == ObjectIdentifier.OBJID_WINDOW && hWnd != IntPtr.Zero;
+        if (isWindowEvent == false)
+            return;
+
+        Event? windowEvent = eventType switch
+        {
+            EventConstant.EVENT_SYSTEM_FOREGROUND => new ForegroundChangeWindowEvent(hWnd),
+            EventConstant.EVENT_SYSTEM_MINIMIZESTART => new MinimizeStartWindowEvent(hWnd),
+            EventConstant.EVENT_SYSTEM_MINIMIZEEND => new MinimizeEndWindowEvent(hWnd),
+            EventConstant.EVENT_OBJECT_SHOW => new ShowWindowEvent(hWnd),
+            EventConstant.EVENT_OBJECT_HIDE => new HideWindowEvent(hWnd),
+            _ => null,
+        };
+
+        if (windowEvent is not null)
+        {
+            _logger?.LogDebug("Publishing event: {eventType} hWnd: {hWnd}", windowEvent.GetType().Name, hWnd);
+            _bus.Publish(windowEvent);
+        }
     }
 }
