@@ -47,20 +47,8 @@ public class WinHookService
         if (isNonWindowEvent)
             return;
 
-        Event? windowEvent = eventType switch
-        {
-            EventConstant.EVENT_SYSTEM_FOREGROUND => new ForegroundChangeWindowEvent(hWnd),
-            EventConstant.EVENT_SYSTEM_MINIMIZESTART => new MinimizeStartWindowEvent(hWnd),
-            EventConstant.EVENT_SYSTEM_MINIMIZEEND => new MinimizeEndWindowEvent(hWnd),
-            EventConstant.EVENT_OBJECT_SHOW => new ShowWindowEvent(hWnd),
-            EventConstant.EVENT_OBJECT_HIDE => new HideWindowEvent(hWnd),
-            _ => null,
-        };
-
-        if (windowEvent is not null)
-        {
-            _logger?.LogDebug("Publishing event: {eventType} hWnd: {hWnd}", windowEvent.GetType().Name, hWnd);
-            _bus.Publish(windowEvent);
-        }
+        var windowEvent = new WindowEvent(hWnd, eventType);
+        _logger?.LogDebug("Publishing event: {event}.", windowEvent);
+        _bus.Publish(windowEvent);
     }
 }

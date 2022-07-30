@@ -35,7 +35,7 @@ internal class Startup
 
     private void On_WindowEvent(WindowEvent @event)
     {
-        _logger?.LogDebug("Received WindowEvent: {eventType} hWnd: {hWnd}", @event.GetType().Name, @event.hWnd);
+        _logger?.LogDebug("Received WindowEvent: {event}.", @event);
     }
 
     private void On_ExitApplicationEvent()
