@@ -19,8 +19,8 @@ internal static class Program
         using var scope = host.Services.CreateScope();
         var startup = scope.ServiceProvider.GetRequiredService<Startup>();
 
+        host.Start();
         startup.Start();
-        Application.Run();
     }
 
     private static IHost BuildHost(string[] args)
