@@ -36,7 +36,9 @@ internal static class Program
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
+#if DEBUG
                 logging.AddConsole();
+#endif
             })
             .Build();
     }
