@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace cswm.WinApi;
@@ -20,4 +21,17 @@ public static class User32
     /// <returns></returns>
     [DllImport("user32.dll")]
     public static extern IntPtr SetWinEventHook(EventConstant eventMin, EventConstant eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+    public delegate bool EnumWindowsProc(IntPtr hWnd, int lParam);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    public static IntPtr[] EnumWindows()
+    {
+        var hWnds = new List<IntPtr>();
+        EnumWindows((hWnd, lParam) => { hWnds.Add(hWnd); return true; }, IntPtr.Zero);
+        return hWnds.ToArray();
+    }
 }
