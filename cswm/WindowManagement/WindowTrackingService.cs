@@ -16,6 +16,11 @@ public class WindowTrackingService
 
     public Window[] Windows => _windows.ToArray();
 
+    public delegate void OnTrackedWindowChange(Window window);
+
+    public OnTrackedWindowChange OnWindowTrackingStart = null!;
+    public OnTrackedWindowChange OnWindowtrackingStop = null!;
+
     public WindowTrackingService(ILogger<WindowTrackingService> logger, MessageBus bus)
     {
         _logger = logger;
@@ -51,9 +56,11 @@ public class WindowTrackingService
         {
             case EventConstant.EVENT_OBJECT_SHOW:
                 _windows.Add(window);
+                OnWindowTrackingStart?.Invoke(window);
                 break;
             case EventConstant.EVENT_OBJECT_HIDE:
                 _windows.Remove(window);
+                OnWindowtrackingStop?.Invoke(window);
                 break;
         }
     }

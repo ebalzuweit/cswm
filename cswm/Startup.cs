@@ -38,18 +38,12 @@ internal class Startup
 
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
             .Subscribe(_ => On_ExitApplicationEvent());
-        _bus.Events.Where(@event => @event is WindowEvent)
-            .Subscribe(@event => On_WindowEvent((@event as WindowEvent)!));
-    }
-
-    private void On_WindowEvent(WindowEvent @event)
-    {
-        _logger?.LogDebug("Received WindowEvent: {event}.", @event);
     }
 
     private void On_ExitApplicationEvent()
     {
         _logger?.LogInformation("ExitApplicationEvent received, exiting.");
+        _wmService.Stop();
         _trayService.RemoveFromSystemTray();
 
         Application.Exit();

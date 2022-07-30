@@ -25,5 +25,27 @@ public class WindowManagementService
             sb.AppendLine(window.ToString());
         }
         _logger?.LogInformation(sb.ToString());
+
+        _windowTrackingService.OnWindowTrackingStart += OnWindowTrackingStart;
+        _windowTrackingService.OnWindowtrackingStop += OnWindowTrackingStop;
+    }
+
+    public void Stop()
+    {
+#pragma warning disable CS8601
+        _windowTrackingService.OnWindowTrackingStart -= OnWindowTrackingStart;
+        _windowTrackingService.OnWindowtrackingStop -= OnWindowTrackingStop;
+#pragma warning restore CS8601
+
+    }
+
+    private void OnWindowTrackingStart(Window window)
+    {
+        _logger?.LogDebug("Started tracking window: {window}", window);
+    }
+
+    private void OnWindowTrackingStop(Window window)
+    {
+        _logger?.LogDebug("Stopped tracking window: {window}", window);
     }
 }
