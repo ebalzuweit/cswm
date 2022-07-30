@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using cswm.Events;
 using cswm.WinApi;
 using Microsoft.Extensions.Logging;
+using cswm.WindowManagement;
 
 namespace cswm;
 
@@ -13,19 +14,27 @@ internal class Startup
     private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
     private readonly WinHookService _winHookService;
+    private readonly WindowManagementService _wmService;
 
-    public Startup(ILogger<Startup> logger, MessageBus bus, SystemTrayService trayService, WinHookService winHookService)
+    public Startup(
+        ILogger<Startup> logger,
+        MessageBus bus,
+        SystemTrayService trayService,
+        WinHookService winHookService,
+        WindowManagementService windowManagementService)
     {
         _logger = logger;
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
         _winHookService = winHookService ?? throw new ArgumentNullException(nameof(winHookService));
+        _wmService = windowManagementService ?? throw new ArgumentNullException(nameof(windowManagementService));
     }
 
     public void Start()
     {
         _trayService.AddToSystemTray();
         _winHookService.Start();
+        _wmService.Start();
 
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
             .Subscribe(_ => On_ExitApplicationEvent());

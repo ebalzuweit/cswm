@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Windows.Forms;
 using cswm.Events;
 using cswm.WinApi;
+using cswm.WindowManagement;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -31,7 +31,10 @@ internal static class Program
                 services.AddSingleton<MessageBus>();
                 services.AddSingleton<SystemTrayService>();
                 services.AddSingleton<WinHookService>();
+                services.AddSingleton<WindowManagementService>();
                 services.AddSingleton<Startup>();
+
+                services.AddTransient<WindowTrackingService>();
             })
             .ConfigureLogging(logging =>
             {
