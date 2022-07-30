@@ -2,15 +2,18 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 using cswm.Events;
+using Microsoft.Extensions.Logging;
 
 namespace cswm.WinApi;
 
 public class WinHookService
 {
+    private readonly ILogger? _logger;
     private readonly MessageBus _bus;
 
-    public WinHookService(MessageBus bus)
+    public WinHookService(ILogger<WinHookService> logger, MessageBus bus)
     {
+        _logger = logger;
         _bus = bus ?? throw new System.ArgumentNullException(nameof(bus));
     }
 
@@ -33,6 +36,7 @@ public class WinHookService
 
     private void WindowEventHookProc(IntPtr hWinEventHook, EventConstant eventType, IntPtr hWnd, ObjectIdentifier idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
     {
-        Console.WriteLine($"Foreground window: {hWnd}");
+        _logger?.LogDebug("Publishing event: {eventType} hWnd: {hWnd}", eventType, hWnd);
+        _bus.Publish(new ForegroundWindowChangeEvent(hWnd));
     }
 }
