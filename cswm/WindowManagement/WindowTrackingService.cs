@@ -42,6 +42,11 @@ public class WindowTrackingService
 
     public bool ShouldTrackWindow(Window window)
     {
+        var requiredStyles = new WindowStyle[] { WindowStyle.WS_THICKFRAME, WindowStyle.WS_MAXIMIZEBOX, WindowStyle.WS_MINIMIZEBOX };
+        var windowStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
+        if (requiredStyles.Any(style => (windowStyles & (long)style) == 0))
+            return false;
+
         return true;
     }
 

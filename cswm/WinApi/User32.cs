@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace cswm.WinApi;
 
@@ -34,4 +35,16 @@ public static class User32
         EnumWindows((hWnd, lParam) => { hWnds.Add(hWnd); return true; }, IntPtr.Zero);
         return hWnds.ToArray();
     }
+
+    /// <summary>
+    /// <see href="https://www.pinvoke.net/default.aspx/user32.getwindowlong"/>
+    /// </summary>
+    /// <param name="hWnd">Window handle</param>
+    /// <param name="nIndex"><see cref="WindowLongFlags"/></param>
+    /// <returns></returns>
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")] // 64-bit only
+    public static extern IntPtr GetWindowLongPtr(IntPtr hWnd, WindowLongFlags nIndex);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    public static extern int GetWindowText(IntPtr hWNd, StringBuilder lpString, int nMaxCount);
 }
