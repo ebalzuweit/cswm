@@ -68,4 +68,39 @@ public static class User32
     [DllImport("User32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsWindowVisible(IntPtr hWnd);
+
+    /// <summary>
+    /// <see href="https://www.pinvoke.net/default.aspx/user32.getancestor"/>
+    /// </summary>
+    /// <param name="hWnd"></param>
+    /// <param name="flags"></param>
+    /// <returns></returns>
+    [DllImport("user32.dll", ExactSpelling = true)]
+    public static extern IntPtr GetAncestor(IntPtr hWnd, GetAncestorFlags flags);
+
+    /// <summary>
+    /// <see href="https://www.pinvoke.net/default.aspx/user32.getlastactivepopup"/>
+    /// </summary>
+    /// <param name="hWnd"></param>
+    /// <returns></returns>
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetLastActivePopup(IntPtr hWnd);
+
+    /// <summary>
+    /// <see href="https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863"/>
+    /// </summary>
+    /// <param name="hWnd">Handle of the window.</param>
+    /// <returns></returns>
+    public static bool IsAltTabWindow(IntPtr hWnd)
+    {
+        var hWndWalk = User32.GetAncestor(hWnd, GetAncestorFlags.GA_ROOTOWNER);
+        IntPtr hWndTry;
+        while ((hWndTry = GetLastActivePopup(hWndWalk)) != hWndTry)
+        {
+            if (IsWindowVisible(hWndTry))
+                break;
+            hWndWalk = hWndTry;
+        }
+        return hWndWalk == hWnd;
+    }
 }
