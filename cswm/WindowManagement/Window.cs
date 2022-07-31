@@ -6,7 +6,7 @@ namespace cswm.WindowManagement;
 public class Window
 {
     private const int WINDOW_CLASS_NAME_LENGTH = 20;
-    private const int WINDOW_CAPTION_TEXT_LENGTH = 40;
+    private const int WINDOW_CAPTION_TEXT_LENGTH = 60;
 
     public IntPtr hWnd { get; init; }
     public string? Caption { get; init; }
