@@ -47,4 +47,21 @@ public static class User32
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern int GetWindowText(IntPtr hWNd, StringBuilder lpString, int nMaxCount);
+
+    public static string GetWindowText(IntPtr hWnd, int maxLength)
+    {
+        var stringBuilder = new StringBuilder(maxLength);
+        _ = GetWindowText(hWnd, stringBuilder, maxLength);
+        return stringBuilder.ToString();
+    }
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+    public static string GetClassName(IntPtr hWnd, int maxLength)
+    {
+        var stringBuilder = new StringBuilder(maxLength);
+        _ = GetClassName(hWnd, stringBuilder, maxLength);
+        return stringBuilder.ToString();
+    }
 }
