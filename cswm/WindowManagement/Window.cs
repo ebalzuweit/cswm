@@ -5,8 +5,8 @@ namespace cswm.WindowManagement;
 
 public class Window
 {
-    private const int WINDOW_CLASS_NAME_LENGTH = 20;
-    private const int WINDOW_CAPTION_TEXT_LENGTH = 60;
+    private const int WINDOW_CLASS_NAME_LENGTH = 256;
+    private const int WINDOW_CAPTION_TEXT_LENGTH = 255;
 
     public IntPtr hWnd { get; init; }
     public string? Caption { get; init; }
@@ -22,5 +22,20 @@ public class Window
     public override string ToString()
     {
         return $"[{hWnd}] {ClassName} : {Caption}";
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+            return false;
+        var window = obj as Window;
+        if (window is null)
+            return false;
+        return this.hWnd == window.hWnd;
+    }
+
+    public override int GetHashCode()
+    {
+        return hWnd.GetHashCode();
     }
 }
