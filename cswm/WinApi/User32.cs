@@ -103,4 +103,14 @@ public static class User32
         }
         return hWndWalk == hWnd;
     }
+
+    /// <summary>
+    /// Retrieves a handle to a window that has the specified relationship (Z-Order or owner) to the specified window.
+    /// <see href="https://www.pinvoke.net/default.aspx/user32/GetWindow.html"/>
+    /// </summary>
+    /// <param name="hWnd"></param>
+    /// <param name="uCmd"></param>
+    /// <returns></returns>
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr GetWindow(IntPtr hWnd, GetWindowType uCmd);
 }
