@@ -19,10 +19,10 @@ public class WindowManagementService
     {
         _windowTrackingService.ResetTrackedWindows();
         var windows = _windowTrackingService.Windows;
-        var sb = new StringBuilder("Tracking windows:");
+        var sb = new StringBuilder("Tracking windows:\n");
         foreach (var window in windows)
         {
-            sb.AppendLine(window.ToString());
+            sb.AppendLine("\t" + window.ToString());
         }
         _logger?.LogInformation(sb.ToString());
 
