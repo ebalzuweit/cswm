@@ -64,4 +64,8 @@ public static class User32
         _ = GetClassName(hWnd, stringBuilder, maxLength);
         return stringBuilder.ToString();
     }
+
+    [DllImport("User32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
 }

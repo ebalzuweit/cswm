@@ -49,6 +49,10 @@ public class WindowTrackingService
         if (_requiredStyles.Any(style => (windowStyles & (long)style) == 0))
             return false;
 
+        var isVisible = User32.IsWindowVisible(window.hWnd);
+        if (isVisible == false)
+            return false;
+
         _ = DwmApi.DwmGetWindowAttribute(window.hWnd, DwmWindowAttribute.DWMWA_CLOAKED, out var isCloaked, Marshal.SizeOf<bool>());
         if (isCloaked)
             return false;
