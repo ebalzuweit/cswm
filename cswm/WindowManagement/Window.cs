@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using cswm.WinApi;
 
 namespace cswm.WindowManagement;
@@ -18,12 +17,6 @@ public class Window
         this.hWnd = hWnd;
         Caption = User32.GetWindowText(hWnd, WINDOW_CAPTION_TEXT_LENGTH);
         ClassName = User32.GetClassName(hWnd, WINDOW_CLASS_NAME_LENGTH);
-    }
-
-    public bool HasStyle(WindowStyle style)
-    {
-        var windowStyles = (long)User32.GetWindowLongPtr(hWnd, WindowLongFlags.GWL_STYLE);
-        return (windowStyles & (long)style) != 0;
     }
 
     public override string ToString()
