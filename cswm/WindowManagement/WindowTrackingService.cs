@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using cswm.Events;
 using cswm.WinApi;
 using Microsoft.Extensions.Logging;
@@ -40,11 +41,16 @@ public class WindowTrackingService
             _windows.Add(w);
     }
 
+    private readonly WindowStyle[] _requiredStyles = new[] { WindowStyle.WS_THICKFRAME, WindowStyle.WS_MAXIMIZEBOX, WindowStyle.WS_MINIMIZEBOX };
     public bool ShouldTrackWindow(Window window)
     {
-        var requiredStyles = new WindowStyle[] { WindowStyle.WS_THICKFRAME, WindowStyle.WS_MAXIMIZEBOX, WindowStyle.WS_MINIMIZEBOX };
+        // check required styles
         var windowStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
-        if (requiredStyles.Any(style => (windowStyles & (long)style) == 0))
+        if (_requiredStyles.Any(style => (windowStyles & (long)style) == 0))
+            return false;
+
+        _ = DwmApi.DwmGetWindowAttribute(window.hWnd, DwmWindowAttribute.DWMWA_CLOAKED, out var isCloaked, Marshal.SizeOf<bool>());
+        if (isCloaked)
             return false;
 
         return true;
