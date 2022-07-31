@@ -47,11 +47,11 @@ public class WindowManagementService
 
     private void OnWindowTrackingStart(Window window)
     {
-        _logger?.LogDebug("Started tracking window: {window}", window);
+        _logger?.LogInformation("Started tracking window: {window}", window);
     }
 
     private void OnWindowTrackingStop(Window window)
     {
-        _logger?.LogDebug("Stopped tracking window: {window}", window);
+        _logger?.LogInformation("Stopped tracking window: {window}", window);
     }
 }
