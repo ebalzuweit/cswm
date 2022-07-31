@@ -32,12 +32,14 @@ internal class Startup
 
     public void Start()
     {
+        _bus.Events.Where(@event => @event is ExitApplicationEvent)
+            .Subscribe(_ => On_ExitApplicationEvent());
+
         _trayService.AddToSystemTray();
         _winHookService.Start();
         _wmService.Start();
 
-        _bus.Events.Where(@event => @event is ExitApplicationEvent)
-            .Subscribe(_ => On_ExitApplicationEvent());
+        _bus.Publish(new ResetTrackedWindowsEvent());
     }
 
     private void On_ExitApplicationEvent()
