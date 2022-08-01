@@ -23,6 +23,7 @@ public class WindowTrackingService
     public OnTrackedWindowsResetDelegate OnTrackedWindowsReset = null!;
     public OnTrackedWindowChangeDelegate OnWindowTrackingStart = null!;
     public OnTrackedWindowChangeDelegate OnWindowtrackingStop = null!;
+    public OnTrackedWindowChangeDelegate OnWindowMoved = null!;
 
     public WindowTrackingService(ILogger<WindowTrackingService> logger, MessageBus bus)
     {
@@ -99,5 +100,7 @@ public class WindowTrackingService
         if (windowVisible == false && _stopTrackingEvents.Contains(@event.EventType))
             if (_windows.Remove(window))
                 OnWindowtrackingStop?.Invoke(window);
+        if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
+            OnWindowMoved?.Invoke(window);
     }
 }

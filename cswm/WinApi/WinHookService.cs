@@ -28,7 +28,7 @@ public class WinHookService
 
     private void SetWinEventHooks()
     {
-        SetWinEventHook(EventConstant.EVENT_SYSTEM_FOREGROUND);
+        SetWinEventHook(EventConstant.EVENT_SYSTEM_MOVESIZEEND);
         SetWinEventHook(EventConstant.EVENT_SYSTEM_MINIMIZESTART, EventConstant.EVENT_SYSTEM_MINIMIZEEND);
         SetWinEventHook(EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_OBJECT_HIDE);
 

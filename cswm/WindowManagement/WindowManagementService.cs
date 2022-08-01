@@ -21,6 +21,7 @@ public class WindowManagementService
         _windowTrackingService.OnTrackedWindowsReset += OnWindowTrackingReset;
         _windowTrackingService.OnWindowTrackingStart += OnWindowTrackingStart;
         _windowTrackingService.OnWindowtrackingStop += OnWindowTrackingStop;
+        _windowTrackingService.OnWindowMoved += OnWindowMoved;
     }
 
     public void Stop()
@@ -29,8 +30,8 @@ public class WindowManagementService
         _windowTrackingService.OnTrackedWindowsReset -= OnWindowTrackingReset;
         _windowTrackingService.OnWindowTrackingStart -= OnWindowTrackingStart;
         _windowTrackingService.OnWindowtrackingStop -= OnWindowTrackingStop;
+        _windowTrackingService.OnWindowMoved -= OnWindowMoved;
 #pragma warning restore CS8601
-
     }
 
     private void OnWindowTrackingReset()
@@ -52,5 +53,10 @@ public class WindowManagementService
     private void OnWindowTrackingStop(Window window)
     {
         _logger?.LogInformation("Stopped tracking window: {window}", window);
+    }
+
+    private void OnWindowMoved(Window window)
+    {
+        _logger?.LogInformation("Window moved: {window}", window);
     }
 }
