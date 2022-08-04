@@ -9,19 +9,22 @@ public class Window
     private const int WINDOW_CAPTION_TEXT_LENGTH = 255;
 
     public IntPtr hWnd { get; init; }
-    public string? Caption { get; init; }
-    public string? ClassName { get; init; }
+    public string Caption { get; init; }
+    public string ClassName { get; init; }
+    public Rect Position { get; init; }
 
     public Window(IntPtr hWnd)
     {
         this.hWnd = hWnd;
         Caption = User32.GetWindowText(hWnd, WINDOW_CAPTION_TEXT_LENGTH);
         ClassName = User32.GetClassName(hWnd, WINDOW_CLASS_NAME_LENGTH);
+        if (User32.GetWindowRect(hWnd, out var lpRect))
+            Position = lpRect;
     }
 
     public override string ToString()
     {
-        return $"[{hWnd}] {ClassName} : {Caption}";
+        return $"[{hWnd}] {ClassName} : {Caption.Substring(0, 24)} @ {Position}";
     }
 
     public override bool Equals(object? obj)

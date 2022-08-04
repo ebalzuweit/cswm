@@ -17,4 +17,9 @@ public struct Rect
         Right = right;
         Bottom = bottom;
     }
+
+    public override string ToString()
+    {
+        return $"[Rect:({Left},{Top},{Right},{Bottom})]";
+    }
 }

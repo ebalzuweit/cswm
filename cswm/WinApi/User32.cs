@@ -116,4 +116,13 @@ public static class User32
 
     [DllImport("user32.dll")]
     public static extern bool IsZoomed(IntPtr hWnd);
+
+    /// <summary>
+    /// <see href="https://www.pinvoke.net/default.aspx/user32/getwindowrect.html"/>
+    /// </summary>
+    /// <param name="hWnd"></param>
+    /// <param name="lpRect"></param>
+    /// <returns></returns>
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
 }
