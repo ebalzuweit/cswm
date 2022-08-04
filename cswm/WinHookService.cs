@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using cswm.Events;
 using Microsoft.Extensions.Logging;
 
-namespace cswm.WinApi;
+namespace cswm;
 
 public class WinHookService
 {
