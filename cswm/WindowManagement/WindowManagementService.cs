@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using cswm.Events;
 using cswm.WindowManagement.Arrangement;
@@ -44,6 +45,9 @@ public class WindowManagementService
     private void UpdateWindowPositions()
     {
         _logger?.LogDebug("Updating window positions");
+        var monitors = WinApi.User32.EnumDisplayMonitors()
+            .Select(hMonitor => new Monitor(hMonitor));
+        _logger?.LogInformation(string.Join(',', monitors));
         var windows = _windowTrackingService.Windows;
         var arrangement = _arrangementStrategy.Arrange(windows);
         // TODO move windows to positions
