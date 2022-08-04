@@ -2,9 +2,10 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 using cswm.Events;
+using cswm.WinApi;
 using Microsoft.Extensions.Logging;
 
-namespace cswm.WinApi;
+namespace cswm;
 
 public class WinHookService
 {
