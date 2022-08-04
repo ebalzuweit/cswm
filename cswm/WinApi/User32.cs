@@ -37,6 +37,65 @@ public static class User32
     }
 
     /// <summary>
+    /// A MonitorEnumProc function is an application-defined callback function that is called by the EnumDisplayMonitors function.
+    /// </summary>
+    /// <remarks>
+    /// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc"/>
+    /// </remarks>
+    /// <param name="hMonitor">A handle to the display monitor. This value will always be non-NULL.</param>
+    /// <param name="hdcMonitor">
+    /// A handle to a device context.
+    /// The device context has color attributes that are appropriate for the display monitor identified by hMonitor.The clipping area of the device context is set to the intersection of the visible region of the device context identified by the hdc parameter of EnumDisplayMonitors, the rectangle pointed to by the lprcClip parameter of EnumDisplayMonitors, and the display monitor rectangle.
+    /// This value is NULL if the hdc parameter of EnumDisplayMonitors was NULL.
+    /// </param>
+    /// <param name="lprcMonitor">
+    /// A pointer to a RECT structure.
+    /// If hdcMonitor is non-NULL, this rectangle is the intersection of the clipping area of the device context identified by hdcMonitor and the display monitor rectangle.The rectangle coordinates are device-context coordinates.
+    /// If hdcMonitor is NULL, this rectangle is the display monitor rectangle. The rectangle coordinates are virtual-screen coordinates.
+    /// </param>
+    /// <param name="dwData">Application-defined data that EnumDisplayMonitors passes directly to the enumeration function.</param>
+    /// <returns>
+    /// To continue the enumeration, return TRUE.
+    /// To stop the enumeration, return FALSE.
+    /// </returns>
+    public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
+
+    /// <summary>
+    /// The EnumDisplayMonitors function enumerates display monitors (including invisible pseudo-monitors associated with the mirroring drivers) that intersect a region formed by the intersection of a specified clipping rectangle and the visible region of a device context. EnumDisplayMonitors calls an application-defined MonitorEnumProc callback function once for each monitor that is enumerated. Note that GetSystemMetrics (SM_CMONITORS) counts only the display monitors.
+    /// </summary>
+    /// <remarks>
+    /// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaymonitors"/>
+    /// </remarks>
+    /// <param name="hdc">
+    /// A handle to a display device context that defines the visible region of interest.
+    /// If this parameter is NULL, the hdcMonitor parameter passed to the callback function will be NULL, and the visible region of interest is the virtual screen that encompasses all the displays on the desktop.
+    /// </param>
+    /// <param name="lprcClip">
+    /// A pointer to a RECT structure that specifies a clipping rectangle. The region of interest is the intersection of the clipping rectangle with the visible region specified by hdc.
+    /// If hdc is non-NULL, the coordinates of the clipping rectangle are relative to the origin of the hdc.If hdc is NULL, the coordinates are virtual-screen coordinates.
+    /// This parameter can be NULL if you don't want to clip the region specified by hdc.
+    /// </param>
+    /// <param name="lpfnEnum">A pointer to a MonitorEnumProc application-defined callback function.</param>
+    /// <param name="dwData">Application-defined data that EnumDisplayMonitors passes directly to the MonitorEnumProc function.</param>
+    /// <returns>
+    /// If the function succeeds, the return value is nonzero.
+    /// If the function fails, the return value is zero.
+    /// </returns>
+    [DllImport("user32.dll")]
+    public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumProc lpfnEnum, IntPtr dwData);
+
+    public static IntPtr[] EnumDisplayMonitors()
+    {
+        var hMonitors = new List<IntPtr>();
+        EnumDisplayMonitors(
+            hdc: IntPtr.Zero,
+            lprcClip: IntPtr.Zero,
+            lpfnEnum: (IntPtr hMonitor, IntPtr _, ref Rect lprcMonitor, IntPtr _) => { hMonitors.Add(hMonitor); return true; },
+            dwData: IntPtr.Zero);
+        return hMonitors.ToArray();
+    }
+
+    /// <summary>
     /// <see href="https://www.pinvoke.net/default.aspx/user32.getwindowlong"/>
     /// </summary>
     /// <param name="hWnd">Window handle</param>
@@ -125,4 +184,6 @@ public static class User32
     /// <returns></returns>
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
+
+
 }
