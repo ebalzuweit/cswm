@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using cswm.Events;
+using cswm.WindowManagement;
 
 namespace cswm;
 
@@ -51,13 +52,15 @@ public class SystemTrayService
                 Visible = true,
             };
         }
+        _notifyIcon.Click += NotifyIcon_OnClick;
 
         // message loop
         Application.Run();
     }
 
+    private void NotifyIcon_OnClick(object? sender, EventArgs e)
+        => _bus.Publish(new ResetTrackedWindowsEvent());
+
     private void Close_OnClick(object? sender, EventArgs e)
-    {
-        _bus.Publish(new ExitApplicationEvent());
-    }
+        => _bus.Publish(new ExitApplicationEvent());
 }
