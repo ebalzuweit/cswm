@@ -113,4 +113,7 @@ public static class User32
     /// <returns></returns>
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr GetWindow(IntPtr hWnd, GetWindowType uCmd);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsZoomed(IntPtr hWnd);
 }

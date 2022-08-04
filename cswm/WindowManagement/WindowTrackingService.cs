@@ -84,7 +84,7 @@ public class WindowTrackingService
         return true;
     }
 
-    private readonly EventConstant[] _startTrackingEvents = new[] { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND };
+    private readonly EventConstant[] _startTrackingEvents = new[] { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND, EventConstant.EVENT_OBJECT_LOCATIONCHANGE };
     private readonly EventConstant[] _stopTrackingEvents = new[] { EventConstant.EVENT_OBJECT_HIDE, EventConstant.EVENT_SYSTEM_MINIMIZESTART };
     private void On_WindowEvent(WindowEvent @event)
     {
@@ -93,11 +93,20 @@ public class WindowTrackingService
         if (shouldNotTrackWindow)
             return;
 
-        bool windowVisible = IsWindowVisible(window);
-        if (windowVisible && _startTrackingEvents.Contains(@event.EventType))
+        // ignore maximized windows
+        var isZoomed = User32.IsZoomed(window.hWnd);
+        if (isZoomed)
+        {
+            if (_windows.Remove(window))
+                OnWindowtrackingStop?.Invoke(window);
+            return;
+        }
+
+        var isWindowVisible = IsWindowVisible(window);
+        if (isWindowVisible && _startTrackingEvents.Contains(@event.EventType))
             if (_windows.Add(window))
                 OnWindowTrackingStart?.Invoke(window);
-        if (windowVisible == false && _stopTrackingEvents.Contains(@event.EventType))
+        if (isWindowVisible == false && _stopTrackingEvents.Contains(@event.EventType))
             if (_windows.Remove(window))
                 OnWindowtrackingStop?.Invoke(window);
         if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
