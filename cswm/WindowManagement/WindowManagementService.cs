@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using cswm.Events;
+using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.Logging;
 
 namespace cswm.WindowManagement;
@@ -9,11 +10,17 @@ public class WindowManagementService
 {
     private readonly ILogger? _logger;
     private readonly WindowTrackingService _windowTrackingService;
+    private readonly IArrangementStrategy _arrangementStrategy;
 
-    public WindowManagementService(ILogger<WindowManagementService> logger, MessageBus bus, WindowTrackingService windowTrackingService)
+    public WindowManagementService(
+        ILogger<WindowManagementService> logger,
+        MessageBus bus,
+        WindowTrackingService windowTrackingService,
+        IArrangementStrategy arrangementStrategy)
     {
         _logger = logger;
         _windowTrackingService = windowTrackingService ?? throw new ArgumentNullException(nameof(windowTrackingService));
+        _arrangementStrategy = arrangementStrategy ?? throw new ArgumentNullException(nameof(arrangementStrategy));
     }
 
     public void Start()
@@ -34,6 +41,14 @@ public class WindowManagementService
 #pragma warning restore CS8601
     }
 
+    private void UpdateWindowPositions()
+    {
+        _logger?.LogDebug("Updating window positions");
+        var windows = _windowTrackingService.Windows;
+        var arrangement = _arrangementStrategy.Arrange(windows);
+        // TODO move windows to positions
+    }
+
     private void OnWindowTrackingReset()
     {
         var windows = _windowTrackingService.Windows;
@@ -48,15 +63,18 @@ public class WindowManagementService
     private void OnWindowTrackingStart(Window window)
     {
         _logger?.LogInformation("Started tracking window: {window}", window);
+        UpdateWindowPositions();
     }
 
     private void OnWindowTrackingStop(Window window)
     {
         _logger?.LogInformation("Stopped tracking window: {window}", window);
+        UpdateWindowPositions();
     }
 
     private void OnWindowMoved(Window window)
     {
         _logger?.LogInformation("Window moved: {window}", window);
+        UpdateWindowPositions();
     }
 }

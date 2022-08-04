@@ -2,6 +2,7 @@
 using cswm.Events;
 using cswm.WinApi;
 using cswm.WindowManagement;
+using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,6 +36,7 @@ internal static class Program
                 services.AddSingleton<Startup>();
 
                 services.AddTransient<WindowTrackingService>();
+                services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
             })
             .ConfigureLogging(logging =>
             {
