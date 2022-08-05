@@ -46,8 +46,8 @@ public class WindowManagementService
     {
         _logger?.LogDebug("Updating window positions");
         var monitors = WinApi.User32.EnumDisplayMonitors()
-            .Select(hMonitor => new Monitor(hMonitor));
-        _logger?.LogInformation(string.Join(',', monitors));
+            .Select(hMonitor => new Monitor(hMonitor))
+            .ToArray();
         var windows = _windowTrackingService.Windows;
         var arrangement = _arrangementStrategy.Arrange(windows, monitors);
         // TODO move windows to positions

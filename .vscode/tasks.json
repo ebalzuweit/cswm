@@ -7,7 +7,19 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/cswm/cswm.csproj",
+                "${workspaceFolder}/src/cswm/cswm.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/test/cswmTests/cswmTests.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +31,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/cswm/cswm.csproj",
+                "${workspaceFolder}/src/cswm/cswm.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +45,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/cswm/cswm.csproj"
+                "${workspaceFolder}/src/cswm/cswm.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
