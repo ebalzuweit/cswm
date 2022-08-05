@@ -6,8 +6,8 @@ namespace cswm.WindowManagement.Arrangement;
 
 public record WindowArrangement
 {
-    private readonly IEnumerable<Window> _windows;
-    private readonly IEnumerable<Rect> _positions;
+    internal readonly IEnumerable<Window> _windows;
+    internal readonly IEnumerable<Rect> _positions;
 
     public WindowArrangement(ICollection<Window> windows, ICollection<Rect> positions)
     {
