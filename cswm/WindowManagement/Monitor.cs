@@ -10,6 +10,8 @@ public class Monitor
     public Rect WorkArea { get; init; }
     public string DeviceName { get; init; }
 
+    public bool IsPrimary => Position.Left == 0 && Position.Top == 0;
+
     public Monitor(IntPtr hMonitor)
     {
         this.hMonitor = hMonitor;
@@ -24,6 +26,6 @@ public class Monitor
 
     public override string ToString()
     {
-        return $"[[{hMonitor}]] {DeviceName} @ {Position}";
+        return $"[[{hMonitor}]] {DeviceName}{(IsPrimary ? "*" : string.Empty)} @ {Position}";
     }
 }
