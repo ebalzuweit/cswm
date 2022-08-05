@@ -49,7 +49,7 @@ public class WindowManagementService
             .Select(hMonitor => new Monitor(hMonitor));
         _logger?.LogInformation(string.Join(',', monitors));
         var windows = _windowTrackingService.Windows;
-        var arrangement = _arrangementStrategy.Arrange(windows);
+        var arrangement = _arrangementStrategy.Arrange(windows, monitors);
         // TODO move windows to positions
     }
 

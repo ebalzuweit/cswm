@@ -6,7 +6,7 @@ namespace cswm.WindowManagement.Arrangement;
 
 public class SplitArrangementStrategy : IArrangementStrategy
 {
-    public WindowArrangement Arrange(ICollection<Window> windows)
+    public WindowArrangement Arrange(ICollection<Window> windows, ICollection<Monitor> monitors)
     {
         return new WindowArrangement(windows, windows.Select(w => new Rect()).ToArray());
     }
