@@ -57,7 +57,6 @@ public class WindowManagementService
             )
         );
         var windowLayouts = _arrangementStrategy.Arrange(monitorLayouts);
-        _logger?.LogInformation("Arranging windows: {windowLayouts}", windowLayouts);
         // TODO move windows to positions
     }
 
