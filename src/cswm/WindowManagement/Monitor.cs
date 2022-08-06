@@ -8,7 +8,7 @@ public class Monitor
     public IntPtr hMonitor { get; init; }
     public Rect Position { get; init; }
     public virtual Rect WorkArea { get; init; }
-    public string DeviceName { get; init; }
+    public string? DeviceName { get; init; }
 
     public bool IsPrimary => Position.Left == 0 && Position.Top == 0;
 
