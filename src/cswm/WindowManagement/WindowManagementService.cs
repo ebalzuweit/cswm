@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using cswm.Events;
+using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.Logging;
 
@@ -49,7 +50,14 @@ public class WindowManagementService
             .Select(hMonitor => new Monitor(hMonitor))
             .ToArray();
         var windows = _windowTrackingService.Windows;
-        // var arrangement = _arrangementStrategy.Arrange(layouts);
+        var monitorLayouts = monitors.Select(monitor =>
+            new MonitorLayout(
+                monitor,
+                windows.Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == monitor.hMonitor)
+            )
+        );
+        var windowLayouts = _arrangementStrategy.Arrange(monitorLayouts);
+        _logger?.LogInformation("Arranging windows: {windowLayouts}", windowLayouts);
         // TODO move windows to positions
     }
 
@@ -62,6 +70,8 @@ public class WindowManagementService
             sb.AppendLine("\t" + window.ToString());
         }
         _logger?.LogInformation(sb.ToString());
+
+        UpdateWindowPositions();
     }
 
     private void OnWindowTrackingStart(Window window)
