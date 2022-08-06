@@ -33,7 +33,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private (Rect left, Rect right) Split(Rect rect)
     {
-        bool horizontalSplit = rect.Width >= rect.Height;
+        bool horizontalSplit = rect.Width >= rect.Height; // TODO account for aspect ratio
         var dimension = horizontalSplit ? rect.Width : rect.Height;
         var midpoint = dimension / 2;
         // if the space is split on an odd # of pixels, give the extra to the left partition
