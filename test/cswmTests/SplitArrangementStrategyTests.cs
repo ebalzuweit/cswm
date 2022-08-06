@@ -9,14 +9,30 @@ using Xunit;
 public class SplitArrangementStrategyTests
 {
     [Fact]
-    public void Arrange_TwoWindows_1To1Split()
+    public void Arrange_OneWindow_FillsMonitor()
     {
         var strategy = new SplitArrangementStrategy();
-        var windows = GetWindows(2).ToArray();
+        var windows = GetWindows(1);
         var monitor = GetMonitors(1).First();
         var monitorLayout = new MonitorLayout(monitor, windows);
 
-        var layouts = strategy.Arrange(new[] { monitorLayout }).ToArray();
+        var layouts = strategy.Arrange(new[] { monitorLayout });
+        var positions = layouts.Select(l => l.Position);
+
+        Assert.NotNull(layouts);
+        Assert.Equal(1, layouts.Count());
+        Assert.Contains(new Rect(0, 0, 1920, 1027), positions);
+    }
+
+    [Fact]
+    public void Arrange_TwoWindows_1To1Split()
+    {
+        var strategy = new SplitArrangementStrategy();
+        var windows = GetWindows(2);
+        var monitor = GetMonitors(1).First();
+        var monitorLayout = new MonitorLayout(monitor, windows);
+
+        var layouts = strategy.Arrange(new[] { monitorLayout });
         var positions = layouts.Select(l => l.Position);
 
         Assert.NotNull(layouts);
@@ -29,11 +45,11 @@ public class SplitArrangementStrategyTests
     public void Arrange_ThreeWindows_2To1To1Split()
     {
         var strategy = new SplitArrangementStrategy();
-        var windows = GetWindows(3).ToArray();
+        var windows = GetWindows(3);
         var monitor = GetMonitors(1).First();
         var monitorLayout = new MonitorLayout(monitor, windows);
 
-        var layouts = strategy.Arrange(new[] { monitorLayout }).ToArray();
+        var layouts = strategy.Arrange(new[] { monitorLayout });
         var positions = layouts.Select(l => l.Position);
 
         Assert.NotNull(layouts);
@@ -47,11 +63,11 @@ public class SplitArrangementStrategyTests
     public void Arrange_FourWindows_4To2To1To1Split()
     {
         var strategy = new SplitArrangementStrategy();
-        var windows = GetWindows(4).ToArray();
+        var windows = GetWindows(4);
         var monitor = GetMonitors(1).First();
         var monitorLayout = new MonitorLayout(monitor, windows);
 
-        var layouts = strategy.Arrange(new[] { monitorLayout }).ToArray();
+        var layouts = strategy.Arrange(new[] { monitorLayout });
         var positions = layouts.Select(l => l.Position);
 
         Assert.NotNull(layouts);
