@@ -33,11 +33,21 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private (Rect left, Rect right) Split(Rect rect)
     {
-        var width = rect.Width;
-        var midpoint = width / 2;
-        return (
-            left: new Rect(rect.Left, rect.Top, midpoint, rect.Bottom),
-            right: new Rect(midpoint, rect.Top, rect.Right, rect.Bottom)
-        );
+        bool horizontalSplit = rect.Width >= rect.Height;
+        var dimension = horizontalSplit ? rect.Width : rect.Height;
+        var midpoint = dimension / 2;
+        // if the space is split on an odd # of pixels, give the extra to the left partition
+        var oddDimension = dimension % 2 == 1;
+        if (oddDimension)
+            midpoint += 1;
+        return horizontalSplit
+            ? (
+                left: new Rect(rect.Left, rect.Top, rect.Left + midpoint, rect.Bottom),
+                right: new Rect(rect.Left + midpoint, rect.Top, rect.Right, rect.Bottom)
+            )
+            : (
+                left: new Rect(rect.Left, rect.Top, rect.Right, rect.Top + midpoint),
+                right: new Rect(rect.Left, rect.Top + midpoint, rect.Right, rect.Bottom)
+            );
     }
 }
