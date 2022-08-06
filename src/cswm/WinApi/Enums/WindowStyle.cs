@@ -21,6 +21,10 @@ public enum WindowStyle : long
     /// </summary>
     WS_THICKFRAME = 0x00040000L,
     /// <summary>
+    /// The window is initially minimized. Same as the WS_MINIMIZE style.
+    /// </summary>
+    WS_ICONIC = 0x20000000L,
+    /// <summary>
     /// The window is a child window. A window with this style cannot have a menu bar. This style cannot be used with the WS_POPUP style.
     /// </summary>
     WS_CHILD = 0x40000000L,

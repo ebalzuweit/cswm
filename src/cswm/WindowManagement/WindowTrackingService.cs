@@ -51,7 +51,7 @@ public class WindowTrackingService
     private bool ShouldTrackWindow(Window window)
     {
         const long requiredStyles = (long)(WindowStyle.WS_THICKFRAME | WindowStyle.WS_MAXIMIZEBOX | WindowStyle.WS_MINIMIZEBOX);
-        const long blockedStyles = (long)(WindowStyle.WS_CHILD);
+        const long blockedStyles = (long)(WindowStyle.WS_CHILD | WindowStyle.WS_ICONIC);
         const long blockedExStyles = (long)(ExtendedWindowStyle.WS_EX_NOACTIVATE | ExtendedWindowStyle.WS_EX_TOOLWINDOW);
 
         var windowStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
