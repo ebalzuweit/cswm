@@ -51,7 +51,7 @@ public class WindowTrackingService
     private bool ShouldTrackWindow(Window window)
     {
         const long requiredStyles = (long)(WindowStyle.WS_THICKFRAME | WindowStyle.WS_MAXIMIZEBOX | WindowStyle.WS_MINIMIZEBOX);
-        const long blockedStyles = (long)(WindowStyle.WS_CHILD | WindowStyle.WS_ICONIC);
+        const long blockedStyles = (long)(WindowStyle.WS_CHILD);
         const long blockedExStyles = (long)(ExtendedWindowStyle.WS_EX_NOACTIVATE | ExtendedWindowStyle.WS_EX_TOOLWINDOW);
 
         var windowStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
@@ -93,9 +93,10 @@ public class WindowTrackingService
         if (shouldNotTrackWindow)
             return;
 
-        // ignore maximized windows
+        // ignore minimized / maximized windows
+        var isIconic = User32.IsIconic(window.hWnd);
         var isZoomed = User32.IsZoomed(window.hWnd);
-        if (isZoomed)
+        if (isIconic || isZoomed)
         {
             if (_windows.Remove(window))
                 OnWindowtrackingStop?.Invoke(window);
