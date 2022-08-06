@@ -1,6 +1,5 @@
-using System;
 using cswm.WinApi;
 
 namespace cswm.WindowManagement.Arrangement;
 
-public record WindowLayout(IntPtr hWnd, Rect Position);
+public record WindowLayout(Window Window, Rect Position, Monitor Monitor);
