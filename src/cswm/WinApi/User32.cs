@@ -174,6 +174,10 @@ public static class User32
     public static extern IntPtr GetWindow(IntPtr hWnd, GetWindowType uCmd);
 
     [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsIconic(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
     public static extern bool IsZoomed(IntPtr hWnd);
 
     /// <summary>
