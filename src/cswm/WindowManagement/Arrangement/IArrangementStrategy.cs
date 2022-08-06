@@ -4,5 +4,5 @@ namespace cswm.WindowManagement.Arrangement;
 
 public interface IArrangementStrategy
 {
-    IEnumerable<WindowLayout> Arrange(IEnumerable<WindowLayout> layouts);
+    IEnumerable<WindowLayout> Arrange(IEnumerable<MonitorLayout> monitorLayouts);
 }
