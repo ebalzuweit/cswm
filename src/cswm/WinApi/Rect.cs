@@ -10,6 +10,10 @@ public struct Rect
 {
     public readonly int Left, Top, Right, Bottom;
 
+    public int Width => Right - Left;
+    public int Height => Bottom - Top;
+    public int Area => Width * Height;
+
     public Rect(int left, int top, int right, int bottom)
     {
         Left = left;
