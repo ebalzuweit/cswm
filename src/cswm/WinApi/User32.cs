@@ -23,18 +23,7 @@ public static class User32
     [DllImport("user32.dll")]
     public static extern IntPtr SetWinEventHook(EventConstant eventMin, EventConstant eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
 
-    public delegate bool EnumWindowsProc(IntPtr hWnd, int lParam);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
-
-    public static IntPtr[] EnumWindows()
-    {
-        var hWnds = new List<IntPtr>();
-        EnumWindows((hWnd, lParam) => { hWnds.Add(hWnd); return true; }, IntPtr.Zero);
-        return hWnds.ToArray();
-    }
+    #region Monitor Functions
 
     /// <summary>
     /// A MonitorEnumProc function is an application-defined callback function that is called by the EnumDisplayMonitors function.
@@ -93,6 +82,29 @@ public static class User32
             lpfnEnum: (IntPtr hMonitor, IntPtr _, ref Rect lprcMonitor, IntPtr _) => { hMonitors.Add(hMonitor); return true; },
             dwData: IntPtr.Zero);
         return hMonitors.ToArray();
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromWindow(IntPtr hWnd, MonitorFlags dwFlags);
+
+    #endregion
+
+    #region Window Functions
+
+    public delegate bool EnumWindowsProc(IntPtr hWnd, int lParam);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    public static IntPtr[] EnumWindows()
+    {
+        var hWnds = new List<IntPtr>();
+        EnumWindows((hWnd, lParam) => { hWnds.Add(hWnd); return true; }, IntPtr.Zero);
+        return hWnds.ToArray();
     }
 
     /// <summary>
@@ -189,9 +201,29 @@ public static class User32
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
-
+    /// <summary>
+    /// <see href="https://www.pinvoke.net/default.aspx/user32.getclientrect"/>
+    /// </summary>
+    /// <param name="hWnd"></param>
+    /// <param name="lpRect"></param>
+    /// <returns></returns>
     [DllImport("user32.dll")]
-    public static extern IntPtr MonitorFromWindow(IntPtr hWnd, MonitorFlags dwFlags);
+    public static extern bool GetClientRect(IntPtr hWnd, out Rect lpRect);
+
+    /// <summary>
+    /// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos"/>
+    /// </summary>
+    /// <param name="hWnd"></param>
+    /// <param name="hWndInsertAfter"></param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="cx"></param>
+    /// <param name="cy"></param>
+    /// <param name="uFlags"></param>
+    /// <returns></returns>
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SetWindowPos(IntPtr hWnd, HwndInsertAfterFlags hWndInsertAfter, int x, int y, int cx, int cy, SetWindowPosFlags uFlags);
+
+    #endregion
+
 }
