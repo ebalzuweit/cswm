@@ -12,6 +12,7 @@ public class Window
     public string Caption { get; init; }
     public string ClassName { get; init; }
     public Rect Position { get; init; }
+    public Rect ClientPosition { get; init; }
 
     public Window(IntPtr hWnd)
     {
@@ -20,6 +21,8 @@ public class Window
         ClassName = User32.GetClassName(hWnd, WINDOW_CLASS_NAME_LENGTH);
         if (User32.GetWindowRect(hWnd, out var lpRect))
             Position = lpRect;
+        if (User32.GetClientRect(hWnd, out var lpClientRect))
+            ClientPosition = lpClientRect;
     }
 
     public override string ToString()
