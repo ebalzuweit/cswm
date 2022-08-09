@@ -52,13 +52,13 @@ public class SystemTrayService
                 Visible = true,
             };
         }
-        _notifyIcon.Click += NotifyIcon_OnClick;
+        _notifyIcon.DoubleClick += NotifyIcon_OnDoubleClick;
 
         // message loop
         Application.Run();
     }
 
-    private void NotifyIcon_OnClick(object? sender, EventArgs e)
+    private void NotifyIcon_OnDoubleClick(object? sender, EventArgs e)
         => _bus.Publish(new ResetTrackedWindowsEvent());
 
     private void Close_OnClick(object? sender, EventArgs e)
