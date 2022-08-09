@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 using cswm.Events;
@@ -10,6 +11,7 @@ namespace cswm;
 public class WinHookService
 {
     private readonly ILogger? _logger;
+    private readonly List<User32.WinEventProc> _hooks = new();
     private readonly MessageBus _bus;
 
     public WinHookService(ILogger<WinHookService> logger, MessageBus bus)
@@ -40,8 +42,14 @@ public class WinHookService
 
     private IntPtr SetWinEventHook(EventConstant @event) => SetWinEventHook(@event, @event);
 
-    private IntPtr SetWinEventHook(EventConstant eventMin, EventConstant eventMax) =>
-        User32.SetWinEventHook(eventMin, eventMax, IntPtr.Zero, WindowEventHookProc, 0, 0, 0);
+    private IntPtr SetWinEventHook(EventConstant eventMin, EventConstant eventMax)
+    {
+        // hold a reference to each hook delegate to prevent garbage collection
+        User32.WinEventProc hook = new User32.WinEventProc(WindowEventHookProc);
+        _hooks.Add(hook);
+        return User32.SetWinEventHook(eventMin, eventMax, IntPtr.Zero, hook, 0, 0, 0);
+    }
+
 
     private void WindowEventHookProc(IntPtr hWinEventHook, EventConstant eventType, IntPtr hWnd, ObjectIdentifier idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
     {
