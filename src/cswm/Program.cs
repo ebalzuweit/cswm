@@ -1,6 +1,5 @@
 ﻿using System;
 using cswm.Events;
-using cswm.WinApi;
 using cswm.WindowManagement;
 using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.DependencyInjection;
