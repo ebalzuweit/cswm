@@ -2,7 +2,6 @@ using System;
 using System.Windows.Forms;
 using System.Reactive.Linq;
 using cswm.Events;
-using cswm.WinApi;
 using Microsoft.Extensions.Logging;
 using cswm.WindowManagement;
 
