@@ -11,6 +11,7 @@ public class Monitor
     public string? DeviceName { get; init; }
 
     public bool IsPrimary => Position.Left == 0 && Position.Top == 0;
+    public float Ratio => Position.Width / (float)Position.Height;
 
     public Monitor(IntPtr hMonitor)
     {

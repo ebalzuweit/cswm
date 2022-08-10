@@ -10,10 +10,10 @@ public class SplitArrangementStrategy : IArrangementStrategy
     public IEnumerable<WindowLayout> Arrange(IEnumerable<MonitorLayout> monitorLayouts)
     {
         return monitorLayouts.SelectMany(monitorLayout =>
-            PartitionSpace(monitorLayout.Monitor.WorkArea, monitorLayout.Windows));
+            PartitionSpace(monitorLayout.Monitor.WorkArea, monitorLayout.Windows, splitRatio: monitorLayout.Monitor.Ratio));
     }
 
-    private IEnumerable<WindowLayout> PartitionSpace(Rect space, IEnumerable<Window> windows)
+    private IEnumerable<WindowLayout> PartitionSpace(Rect space, IEnumerable<Window> windows, float splitRatio = 1.7777777778f)
     {
         if (windows.Count() == 0)
             return Array.Empty<WindowLayout>();
@@ -25,15 +25,15 @@ public class SplitArrangementStrategy : IArrangementStrategy
         }
 
         var (left, right) = Split(space);
-        var layouts = PartitionSpace(right, windows.Skip(1));
+        var layouts = PartitionSpace(right, windows.Skip(1), splitRatio: splitRatio);
         var leftPartition = new WindowLayout(windows.First(), left);
         layouts = layouts.Prepend(leftPartition);
         return layouts;
     }
 
-    private (Rect left, Rect right) Split(Rect rect)
+    private (Rect left, Rect right) Split(Rect rect, float splitRatio = 1.7777777778f)
     {
-        bool horizontalSplit = rect.Width >= rect.Height; // TODO account for aspect ratio
+        bool horizontalSplit = (rect.Width / (float)rect.Height) >= splitRatio;
         var dimension = horizontalSplit ? rect.Width : rect.Height;
         var midpoint = dimension / 2;
         // if the space is split on an odd # of pixels, give the extra to the left partition
