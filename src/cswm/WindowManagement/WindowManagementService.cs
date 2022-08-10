@@ -24,7 +24,7 @@ public class WindowManagementService
         IArrangementStrategy arrangementStrategy)
     {
         _logger = logger;
-        _options = configuration.GetSection(nameof(WindowManagementOptions)).Get<WindowManagementOptions>();
+        _options = configuration.GetSection(nameof(WindowManagementOptions)).Get<WindowManagementOptions>() ?? new WindowManagementOptions();
         _windowTrackingService = windowTrackingService ?? throw new ArgumentNullException(nameof(windowTrackingService));
         _arrangementStrategy = arrangementStrategy ?? throw new ArgumentNullException(nameof(arrangementStrategy));
     }
