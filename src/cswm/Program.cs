@@ -13,8 +13,6 @@ internal static class Program
     [STAThread]
     static void Main(string[] args)
     {
-        // TODO: application guid mutex
-
         using var host = BuildHost(args);
         using var scope = host.Services.CreateScope();
         var startup = scope.ServiceProvider.GetRequiredService<Startup>();

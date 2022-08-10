@@ -4,16 +4,21 @@ using System.Reactive.Linq;
 using cswm.Events;
 using Microsoft.Extensions.Logging;
 using cswm.WindowManagement;
+using System.Threading;
 
 namespace cswm;
 
 internal class Startup
 {
+    const string APPLICATION_GUID = "bdfadba0-9dda-4374-88ab-968c6eb2efde";
+
     private readonly ILogger? _logger;
     private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
     private readonly WinHookService _winHookService;
     private readonly WindowManagementService _wmService;
+
+    private Mutex? _applicationMutex;
 
     public Startup(
         ILogger<Startup> logger,
@@ -31,6 +36,13 @@ internal class Startup
 
     public void Start()
     {
+        _applicationMutex = new Mutex(true, $"Global\\{APPLICATION_GUID}", out var mutexAcquired);
+        if (mutexAcquired == false)
+        {
+            _logger?.LogError("Application already running, exiting.");
+            return;
+        }
+
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
             .Subscribe(_ => On_ExitApplicationEvent());
 
@@ -48,5 +60,7 @@ internal class Startup
         _trayService.RemoveFromSystemTray();
 
         Application.Exit();
+
+        _applicationMutex?.Dispose();
     }
 }
