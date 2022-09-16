@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Text;
 using cswm.Events;
+using cswm.Logging;
+using cswm.WinApi;
 using cswm.WindowManagement;
 using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,38 +13,69 @@ namespace cswm;
 
 internal static class Program
 {
-    [STAThread]
-    static void Main(string[] args)
-    {
-        using var host = BuildHost(args);
-        using var scope = host.Services.CreateScope();
-        var startup = scope.ServiceProvider.GetRequiredService<Startup>();
+	[STAThread]
+	static void Main(string[] args)
+	{
+		using var host = BuildHost(args);
+		using var scope = host.Services.CreateScope();
+		var startup = scope.ServiceProvider.GetRequiredService<Startup>();
 
-        host.Start();
-        startup.Start();
-    }
-
-    private static IHost BuildHost(string[] args)
-    {
-        return Host.CreateDefaultBuilder(args)
-            .ConfigureServices((_, services) =>
-            {
-                services.AddSingleton<MessageBus>();
-                services.AddSingleton<SystemTrayService>();
-                services.AddSingleton<WinHookService>();
-                services.AddSingleton<WindowManagementService>();
-                services.AddSingleton<Startup>();
-
-                services.AddTransient<WindowTrackingService>();
-                services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
-            })
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
 #if DEBUG
-                logging.AddConsole();
+		var debugLogger = scope.ServiceProvider.GetRequiredService<WinEventLogger>();
+		debugLogger.AddFilter(@event =>
+		{
+			var window = new Window(@event.hWnd);
+			if (window.ClassName.Contains("RCLIENT", StringComparison.OrdinalIgnoreCase))
+				return true;
+			if (window.ClassName.Contains("Chrome_WidgetWin_1", StringComparison.OrdinalIgnoreCase))
+				return true;
+			return false;
+		});
+		debugLogger.AddFormat(@event =>
+		{
+			var window = new Window(@event.hWnd);
+			var windowStyles = (long)User32.GetWindowLongPtr(@event.hWnd, WindowLongFlags.GWL_STYLE);
+			var sb = new StringBuilder(window.ToString());
+			sb.AppendLine($"GWL_STYLE: {windowStyles}");
+			foreach (var style in Enum.GetValues<WindowStyle>())
+			{
+				var styleName = Enum.GetName<WindowStyle>(style);
+				var hasStyle = ((long)style & windowStyles) == 0;
+				sb.AppendFormat("\n{0}: {1}", styleName, hasStyle);
+			}
+			return sb.ToString();
+		});
 #endif
-            })
-            .Build();
-    }
+
+		host.Start();
+		startup.Start();
+	}
+
+	private static IHost BuildHost(string[] args)
+	{
+		return Host.CreateDefaultBuilder(args)
+			.ConfigureServices((_, services) =>
+			{
+				services.AddSingleton<MessageBus>();
+				services.AddSingleton<SystemTrayService>();
+				services.AddSingleton<WinHookService>();
+				services.AddSingleton<WindowManagementService>();
+				services.AddSingleton<Startup>();
+
+				services.AddTransient<WindowTrackingService>();
+				services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
+
+#if DEBUG
+				services.AddTransient<WinEventLogger>();
+#endif
+			})
+			.ConfigureLogging(logging =>
+			{
+				logging.ClearProviders();
+#if DEBUG
+				logging.AddConsole();
+#endif
+			})
+			.Build();
+	}
 }
