@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 
 namespace cswm.WinApi;
 
@@ -114,9 +115,9 @@ public static class User32
 
 	#region Window Functions
 
-	public static IntPtr[] EnumWindows()
+	internal static HWND[] EnumWindows()
 	{
-		var hWnds = new List<IntPtr>();
+		var hWnds = new List<HWND>();
 		PInvoke.EnumWindows((hWnd, lParam) => { hWnds.Add(hWnd); return true; }, new(0));
 		return hWnds.ToArray();
 	}

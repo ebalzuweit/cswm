@@ -1,1 +1,8 @@
+// constants
+OBJECT_IDENTIFIER
+// types
+HWND
+WINEVENTPROC
+// functions
 EnumWindows
+SetWinEventHook
