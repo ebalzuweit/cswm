@@ -20,7 +20,7 @@ public class SplitArrangementStrategyTests
 		var positions = layouts.Select(l => l.Position);
 
 		Assert.NotNull(layouts);
-		Assert.Equal(1, layouts.Count());
+		Assert.Single(layouts);
 		Assert.Contains(new Rect(0, 0, 1920, 1027), positions);
 	}
 
