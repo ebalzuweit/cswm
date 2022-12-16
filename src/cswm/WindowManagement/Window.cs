@@ -27,7 +27,7 @@ public class Window
 
 	public override string ToString()
 	{
-		return $"[{hWnd}] {ClassName} : {Caption.Substring(0, Math.Min(Caption.Length, 24))} @ {Position}";
+		return $"{ClassName} : {Caption.Substring(0, Math.Min(Caption.Length, 24))} [{hWnd.Value}] @ {Position}";
 	}
 
 	public override bool Equals(object? obj)
