@@ -35,8 +35,10 @@ internal static class Program
 		{
 			var window = new Window(@event.hWnd);
 			var windowStyles = (long)User32.GetWindowLongPtr(@event.hWnd, WindowLongFlags.GWL_STYLE);
+			var windowExStyles = (long)User32.GetWindowLongPtr(@event.hWnd, WindowLongFlags.GWL_EXSTYLE);
 			var sb = new StringBuilder(window.ToString());
-			sb.AppendLine($"GWL_STYLE: {windowStyles}");
+			sb.AppendFormat("\nGWL_STYLE: {0}", windowStyles);
+			sb.AppendFormat("\tGWL_EX_STYLE: {0}", windowExStyles);
 			foreach (var style in Enum.GetValues<WindowStyle>())
 			{
 				var styleName = Enum.GetName<WindowStyle>(style);
