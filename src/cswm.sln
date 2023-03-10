@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cswm.Tests", "..\test\cswm.Tests\cswm.Tests.csproj", "{45C5A52A-CF9E-4F53-BE98-D501EADA3CBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{FD970275-BF9D-4B79-B4A0-B739153C3411}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD970275-BF9D-4B79-B4A0-B739153C3411}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD970275-BF9D-4B79-B4A0-B739153C3411}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45C5A52A-CF9E-4F53-BE98-D501EADA3CBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45C5A52A-CF9E-4F53-BE98-D501EADA3CBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45C5A52A-CF9E-4F53-BE98-D501EADA3CBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45C5A52A-CF9E-4F53-BE98-D501EADA3CBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
