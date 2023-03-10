@@ -24,8 +24,8 @@ public class SplitArrangementStrategy : IArrangementStrategy
 			};
 		}
 
-		var (left, right) = Split(space);
-		var layouts = PartitionSpace(right, windows.Skip(1), splitRatio: splitRatio);
+		var (left, right) = Split(space, splitRatio);
+		var layouts = PartitionSpace(right, windows.Skip(1), splitRatio);
 		var leftPartition = new WindowLayout(windows.First().hWnd, left);
 		layouts = layouts.Prepend(leftPartition);
 		return layouts;
