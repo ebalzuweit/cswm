@@ -1,6 +1,6 @@
 ![](./src/cswm/icon.ico)
 
-# cswm2
+# cswm
 
 A simple desktop window manager in C#.
 
