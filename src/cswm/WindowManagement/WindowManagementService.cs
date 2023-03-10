@@ -6,6 +6,7 @@ using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace cswm.WindowManagement;
 
@@ -18,13 +19,13 @@ public class WindowManagementService
 
 	public WindowManagementService(
 		ILogger<WindowManagementService> logger,
-		IConfiguration configuration,
+		IOptions<WindowManagementOptions> options,
 		MessageBus bus,
 		WindowTrackingService windowTrackingService,
 		IArrangementStrategy arrangementStrategy)
 	{
 		_logger = logger;
-		_options = configuration.GetSection(nameof(WindowManagementOptions)).Get<WindowManagementOptions>() ?? new WindowManagementOptions();
+		_options = options.Value ?? throw new ArgumentNullException(nameof(options));
 		_windowTrackingService = windowTrackingService ?? throw new ArgumentNullException(nameof(windowTrackingService));
 		_arrangementStrategy = arrangementStrategy ?? throw new ArgumentNullException(nameof(arrangementStrategy));
 	}
@@ -35,6 +36,11 @@ public class WindowManagementService
 		_windowTrackingService.OnWindowTrackingStart += OnWindowTrackingStart;
 		_windowTrackingService.OnWindowtrackingStop += OnWindowTrackingStop;
 		_windowTrackingService.OnWindowMoved += OnWindowMoved;
+
+		if (_options.DoNotManage)
+		{
+			_logger.LogInformation("Do not manage is enabled");
+		}
 	}
 
 	public void Stop()
@@ -76,6 +82,8 @@ public class WindowManagementService
 			right: position.Right + windowsPadding,
 			bottom: position.Bottom + windowsPadding);
 
+		if (_options.DoNotManage)
+			return true;
 		return User32.SetWindowPos(
 			window.hWnd,
 			HwndInsertAfterFlags.HWND_NOTOPMOST,

@@ -55,29 +55,33 @@ internal static class Program
 
 	private static IHost BuildHost(string[] args)
 	{
-		return Host.CreateDefaultBuilder(args)
-			.ConfigureServices((_, services) =>
-			{
-				services.AddSingleton<MessageBus>();
-				services.AddSingleton<SystemTrayService>();
-				services.AddSingleton<WinHookService>();
-				services.AddSingleton<WindowManagementService>();
-				services.AddSingleton<Startup>();
+		var builder = Host.CreateDefaultBuilder(args);
+		builder.ConfigureServices((_, services) =>
+		{
+			services.AddOptions<WindowManagementOptions>()
+				.BindConfiguration(nameof(WindowManagementOptions))
+				.ValidateOnStart();
 
-				services.AddTransient<WindowTrackingService>();
-				services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
+			services.AddSingleton<MessageBus>();
+			services.AddSingleton<SystemTrayService>();
+			services.AddSingleton<WinHookService>();
+			services.AddSingleton<WindowManagementService>();
+			services.AddSingleton<Startup>();
+
+			services.AddTransient<WindowTrackingService>();
+			services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
 
 #if DEBUG
-				services.AddTransient<WinEventLogger>();
+			services.AddTransient<WinEventLogger>();
 #endif
-			})
-			.ConfigureLogging(logging =>
-			{
-				logging.ClearProviders();
+		});
+		builder.ConfigureLogging(logging =>
+		{
+			logging.ClearProviders();
 #if DEBUG
-				logging.AddConsole();
+			logging.AddConsole();
 #endif
-			})
-			.Build();
+		});
+		return builder.Build();
 	}
 }
