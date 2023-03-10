@@ -8,14 +8,25 @@ namespace cswm.WinApi;
 [Flags]
 public enum WindowStyle : long
 {
-	/// <summary>
-	/// The window is an overlapped window. An overlapped window has a title bar and a border. Same as the WS_TILED style.
-	/// </summary>
-	WS_OVERLAPPED = 0x00000000L,
-	/// <summary>
-	/// The window has a maximize button. Cannot be combined with the WS_EX_CONTEXTHELP style. The WS_SYSMENU style must also be specified.
-	/// </summary>
-	WS_MAXIMIZEBOX = 0x00010000L,
+	// TODO: order new styles
+
+    /// <summary>
+    /// Excludes the area occupied by child windows when drawing occurs within the parent window. This style is used when creating the parent window.
+    /// </summary>
+    WS_CLIPCHILDREN = 0x02000000L,
+
+    /// <summary>
+    /// The window is an overlapped window. An overlapped window has a title bar and a border. Same as the WS_TILED style.
+    /// </summary>
+    WS_OVERLAPPED = 0x00000000L,
+    /// <summary>
+    /// The window is initially maximized.
+    /// </summary>
+    WS_MAXIMIZE = 0x01000000L,
+    /// <summary>
+    /// The window has a maximize button. Cannot be combined with the WS_EX_CONTEXTHELP style. The WS_SYSMENU style must also be specified.
+    /// </summary>
+    WS_MAXIMIZEBOX = 0x00010000L,
 	/// <summary>
 	/// The window has a minimize button. Cannot be combined with the WS_EX_CONTEXTHELP style. The WS_SYSMENU style must also be specified.
 	/// </summary>

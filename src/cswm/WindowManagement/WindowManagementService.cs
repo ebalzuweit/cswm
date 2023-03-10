@@ -1,10 +1,8 @@
 using System;
 using System.Linq;
-using System.Text;
-using cswm.Events;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
-using Microsoft.Extensions.Configuration;
+using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -20,7 +18,6 @@ public class WindowManagementService
 	public WindowManagementService(
 		ILogger<WindowManagementService> logger,
 		IOptions<WindowManagementOptions> options,
-		MessageBus bus,
 		WindowTrackingService windowTrackingService,
 		IArrangementStrategy arrangementStrategy)
 	{
@@ -32,19 +29,23 @@ public class WindowManagementService
 
 	public void Start()
 	{
-		_windowTrackingService.OnTrackedWindowsReset += OnWindowTrackingReset;
+		_logger?.LogInformation("Starting window management service...");
+
+        _windowTrackingService.OnTrackedWindowsReset += OnWindowTrackingReset;
 		_windowTrackingService.OnWindowTrackingStart += OnWindowTrackingStart;
 		_windowTrackingService.OnWindowtrackingStop += OnWindowTrackingStop;
 		_windowTrackingService.OnWindowMoved += OnWindowMoved;
 
-		if (_options.DoNotManage)
+        if (_options.DoNotManage)
 		{
-			_logger.LogInformation("Do not manage is enabled");
+			_logger?.LogWarning("Do not manage is enabled");
 		}
 	}
 
 	public void Stop()
 	{
+		_logger?.LogInformation("Stopping window management service...");
+
 #pragma warning disable CS8601
 		_windowTrackingService.OnTrackedWindowsReset -= OnWindowTrackingReset;
 		_windowTrackingService.OnWindowTrackingStart -= OnWindowTrackingStart;
@@ -82,6 +83,7 @@ public class WindowManagementService
 			right: position.Right + windowsPadding,
 			bottom: position.Bottom + windowsPadding);
 
+		_logger?.LogTrace("Moving {Window} to {Position}", window, position);
 		if (_options.DoNotManage)
 			return true;
 		return User32.SetWindowPos(
@@ -96,14 +98,7 @@ public class WindowManagementService
 
 	private void OnWindowTrackingReset()
 	{
-		var windows = _windowTrackingService.Windows;
-		var sb = new StringBuilder("Tracked windows:\n");
-		foreach (var window in windows)
-		{
-			sb.AppendLine("\t" + window.ToString());
-		}
-		_logger?.LogInformation(sb.ToString());
-
+		_logger?.LogInformation("Window tracking reset");
 		UpdateWindowPositions();
 	}
 

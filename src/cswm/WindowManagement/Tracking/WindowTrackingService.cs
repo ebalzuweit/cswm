@@ -5,15 +5,14 @@ using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using cswm.Events;
 using cswm.WinApi;
-using Microsoft.Extensions.Logging;
 
-namespace cswm.WindowManagement;
+namespace cswm.WindowManagement.Tracking;
 
 public class WindowTrackingService
 {
-    private readonly ILogger? _logger;
+    private readonly IWindowTrackingStrategy _strategy;
     private readonly MessageBus _bus;
-    private readonly HashSet<Window> _windows = new HashSet<Window>();
+    private readonly HashSet<Window> _windows = new();
 
     public Window[] Windows => _windows.ToArray();
 
@@ -25,9 +24,9 @@ public class WindowTrackingService
     public OnTrackedWindowChangeDelegate OnWindowtrackingStop = null!;
     public OnTrackedWindowChangeDelegate OnWindowMoved = null!;
 
-    public WindowTrackingService(ILogger<WindowTrackingService> logger, MessageBus bus)
+    public WindowTrackingService(IWindowTrackingStrategy strategy, MessageBus bus)
     {
-        _logger = logger;
+        _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
 
         _bus.Events.Where(@event => @event is WindowEvent)
@@ -41,35 +40,35 @@ public class WindowTrackingService
         _windows.Clear();
         var handles = User32.EnumWindows();
         var newWindows = handles.Select(h => new Window(h))
-            .Where(ShouldTrackWindow)
-            .Where(IsWindowVisible);
+            .Where(IsWindowVisible)
+            .Where(_strategy.ShouldTrack);
         foreach (var w in newWindows)
             _windows.Add(w);
         OnTrackedWindowsReset?.Invoke();
     }
 
-    private bool ShouldTrackWindow(Window window)
-    {
-        const long requiredStyles = (long)(WindowStyle.WS_THICKFRAME | WindowStyle.WS_MAXIMIZEBOX | WindowStyle.WS_MINIMIZEBOX);
-        const long blockedStyles = (long)(WindowStyle.WS_CHILD);
-        const long blockedExStyles = (long)(ExtendedWindowStyle.WS_EX_NOACTIVATE | ExtendedWindowStyle.WS_EX_TOOLWINDOW);
+    //private bool ShouldTrackWindow(Window window)
+    //{
+    //    const long requiredStyles = (long)(WindowStyle.WS_THICKFRAME | WindowStyle.WS_MAXIMIZEBOX | WindowStyle.WS_MINIMIZEBOX);
+    //    const long blockedStyles = (long)(WindowStyle.WS_CHILD);
+    //    const long blockedExStyles = (long)(ExtendedWindowStyle.WS_EX_NOACTIVATE | ExtendedWindowStyle.WS_EX_TOOLWINDOW);
 
-        var windowStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
-        var windowExStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_EXSTYLE);
+    //    var windowStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
+    //    var windowExStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_EXSTYLE);
 
-        if ((windowStyles & requiredStyles) == 0)
-            return false;
-        if ((windowStyles & blockedStyles) != 0)
-            return false;
-        if ((windowExStyles & blockedExStyles) != 0)
-            return false;
+    //    if ((windowStyles & requiredStyles) == 0)
+    //        return false;
+    //    if ((windowStyles & blockedStyles) != 0)
+    //        return false;
+    //    if ((windowExStyles & blockedExStyles) != 0)
+    //        return false;
 
-        var isAltTabWindow = User32.IsAltTabWindow(window.hWnd);
-        if (isAltTabWindow == false)
-            return false;
+    //    var isAltTabWindow = User32.IsAltTabWindow(window.hWnd);
+    //    if (isAltTabWindow == false)
+    //        return false;
 
-        return true;
-    }
+    //    return true;
+    //}
 
     private bool IsWindowVisible(Window window)
     {
@@ -89,8 +88,8 @@ public class WindowTrackingService
     private void On_WindowEvent(WindowEvent @event)
     {
         var window = new Window(@event.hWnd);
-        var shouldNotTrackWindow = ShouldTrackWindow(window) == false;
-        if (shouldNotTrackWindow)
+        var shouldTrack = _strategy.ShouldTrack(window);
+        if (shouldTrack == false)
             return;
 
         // ignore minimized / maximized windows
