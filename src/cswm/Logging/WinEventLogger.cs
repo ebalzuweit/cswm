@@ -13,8 +13,8 @@ public class WinEventLogger
 	private readonly ILogger _logger;
 	private readonly MessageBus _bus;
 
-	private ICollection<Func<WindowEvent, bool>> _predicates = new List<Func<WindowEvent, bool>>();
-	private ICollection<Func<WindowEvent, string>> _formats = new List<Func<WindowEvent, string>>();
+	private readonly ICollection<Func<WindowEvent, bool>> _predicates = new List<Func<WindowEvent, bool>>();
+	private readonly ICollection<Func<WindowEvent, string>> _formats = new List<Func<WindowEvent, string>>();
 
 	public WinEventLogger(ILogger<WinEventLogger> logger, MessageBus bus)
 	{
@@ -39,6 +39,6 @@ public class WinEventLogger
 	{
 		if (_predicates.Any(predicate => predicate(@event) == false)) return;
 		foreach (var format in _formats)
-			_logger.LogDebug(format(@event));
+            _logger.LogDebug(format(@event));
 	}
 }
