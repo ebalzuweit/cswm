@@ -26,3 +26,5 @@ jobs:
       run: dotnet build src/cswm.sln --no-restore
     - name: Test
       run: dotnet test src/cswm.sln --no-build --verbosity normal
+    - name: Publish
+      run: dotnet publish src/cswm/cswm.csproj --no-restore
