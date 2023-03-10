@@ -8,21 +8,10 @@ namespace cswm.WinApi;
 [Flags]
 public enum WindowStyle : long
 {
-	// TODO: order new styles
-
-    /// <summary>
-    /// Excludes the area occupied by child windows when drawing occurs within the parent window. This style is used when creating the parent window.
-    /// </summary>
-    WS_CLIPCHILDREN = 0x02000000L,
-
     /// <summary>
     /// The window is an overlapped window. An overlapped window has a title bar and a border. Same as the WS_TILED style.
     /// </summary>
     WS_OVERLAPPED = 0x00000000L,
-    /// <summary>
-    /// The window is initially maximized.
-    /// </summary>
-    WS_MAXIMIZE = 0x01000000L,
     /// <summary>
     /// The window has a maximize button. Cannot be combined with the WS_EX_CONTEXTHELP style. The WS_SYSMENU style must also be specified.
     /// </summary>
@@ -43,10 +32,18 @@ public enum WindowStyle : long
 	/// The window has a title bar (includes the WS_BORDER style).
 	/// </summary>
 	WS_CAPTION = 0x00C00000L,
-	/// <summary>
-	/// The window is initially minimized. Same as the WS_MINIMIZE style.
-	/// </summary>
-	WS_ICONIC = 0x20000000L,
+    /// <summary>
+    /// The window is initially maximized.
+    /// </summary>
+    WS_MAXIMIZE = 0x01000000L,
+    /// <summary>
+    /// Excludes the area occupied by child windows when drawing occurs within the parent window. This style is used when creating the parent window.
+    /// </summary>
+    WS_CLIPCHILDREN = 0x02000000L,
+    /// <summary>
+    /// The window is initially minimized. Same as the WS_MINIMIZE style.
+    /// </summary>
+    WS_ICONIC = 0x20000000L,
 	/// <summary>
 	/// The window is a child window. A window with this style cannot have a menu bar. This style cannot be used with the WS_POPUP style.
 	/// </summary>
