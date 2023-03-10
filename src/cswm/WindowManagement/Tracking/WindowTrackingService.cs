@@ -47,29 +47,6 @@ public class WindowTrackingService
         OnTrackedWindowsReset?.Invoke();
     }
 
-    //private bool ShouldTrackWindow(Window window)
-    //{
-    //    const long requiredStyles = (long)(WindowStyle.WS_THICKFRAME | WindowStyle.WS_MAXIMIZEBOX | WindowStyle.WS_MINIMIZEBOX);
-    //    const long blockedStyles = (long)(WindowStyle.WS_CHILD);
-    //    const long blockedExStyles = (long)(ExtendedWindowStyle.WS_EX_NOACTIVATE | ExtendedWindowStyle.WS_EX_TOOLWINDOW);
-
-    //    var windowStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
-    //    var windowExStyles = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_EXSTYLE);
-
-    //    if ((windowStyles & requiredStyles) == 0)
-    //        return false;
-    //    if ((windowStyles & blockedStyles) != 0)
-    //        return false;
-    //    if ((windowExStyles & blockedExStyles) != 0)
-    //        return false;
-
-    //    var isAltTabWindow = User32.IsAltTabWindow(window.hWnd);
-    //    if (isAltTabWindow == false)
-    //        return false;
-
-    //    return true;
-    //}
-
     private bool IsWindowVisible(Window window)
     {
         var isVisible = User32.IsWindowVisible(window.hWnd);
