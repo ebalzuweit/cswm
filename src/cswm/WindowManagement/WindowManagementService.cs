@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
@@ -14,6 +15,9 @@ public class WindowManagementService
 	private readonly WindowManagementOptions _options;
 	private readonly WindowTrackingService _windowTrackingService;
 	private readonly IArrangementStrategy _arrangementStrategy;
+	private readonly HashSet<IntPtr> _unmanagedWindows = new(); // TODO: should validate handles still exist periodically
+
+    public IReadOnlyCollection<Window> Windows => _windowTrackingService.Windows;
 
 	public WindowManagementService(
 		ILogger<WindowManagementService> logger,
@@ -25,6 +29,26 @@ public class WindowManagementService
 		_options = options.Value ?? throw new ArgumentNullException(nameof(options));
 		_windowTrackingService = windowTrackingService ?? throw new ArgumentNullException(nameof(windowTrackingService));
 		_arrangementStrategy = arrangementStrategy ?? throw new ArgumentNullException(nameof(arrangementStrategy));
+	}
+
+	public bool IsWindowManaged(Window window)
+	{
+		if (_windowTrackingService.Windows.Contains(window) == false)
+			throw new InvalidOperationException("Untracked windows cannot be managed");
+		return _unmanagedWindows.Contains(window.hWnd) == false;
+	}
+
+	public bool SetWindowManaged(Window window, bool managed = true)
+	{
+		if (Windows.Contains(window) == false)
+			throw new InvalidOperationException("Untracked windows cannot be managed");
+		var changed = managed
+			? _unmanagedWindows.Remove(window.hWnd)
+			: _unmanagedWindows.Add(window.hWnd);
+		// TODO: unmanaged windows stay topmost (and setting to disable behavior)
+		if (changed)
+			UpdateWindowPositions();
+		return changed;
 	}
 
 	public void Start()
@@ -56,11 +80,11 @@ public class WindowManagementService
 
 	private void UpdateWindowPositions()
 	{
-		_logger?.LogDebug("Updating window positions");
 		var monitors = WinApi.User32.EnumDisplayMonitors()
 			.Select(hMonitor => new Monitor(hMonitor))
 			.ToArray();
-		var windows = _windowTrackingService.Windows;
+		var windows = _windowTrackingService.Windows
+			.Where(w => _unmanagedWindows.Contains(w.hWnd) == false);
 		var monitorLayouts = monitors.Select(monitor =>
 			new MonitorLayout(
 				monitor.hMonitor,
@@ -105,18 +129,24 @@ public class WindowManagementService
 	private void OnWindowTrackingStart(Window window)
 	{
 		_logger?.LogInformation("Started tracking window: {window}", window);
+		if (_unmanagedWindows.Contains(window.hWnd))
+			return;
 		UpdateWindowPositions();
 	}
 
 	private void OnWindowTrackingStop(Window window)
 	{
 		_logger?.LogInformation("Stopped tracking window: {window}", window);
-		UpdateWindowPositions();
+        if (_unmanagedWindows.Contains(window.hWnd))
+            return;
+        UpdateWindowPositions();
 	}
 
 	private void OnWindowMoved(Window window)
 	{
 		_logger?.LogInformation("Window moved: {window}", window);
-		UpdateWindowPositions();
+        if (_unmanagedWindows.Contains(window.hWnd))
+            return;
+        UpdateWindowPositions();
 	}
 }

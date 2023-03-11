@@ -32,12 +32,13 @@ internal static class Program
 				.ValidateOnStart();
 
 			services.AddSingleton<MessageBus>();
-			services.AddSingleton<SystemTrayService>();
-			services.AddSingleton<WinHookService>();
-			services.AddSingleton<WindowManagementService>();
-			services.AddSingleton<Startup>();
+            services.AddSingleton<WinHookService>();
+            services.AddSingleton<WindowManagementService>();
+            services.AddSingleton<SystemTrayService>();
 
-			services.AddTransient<WindowTrackingService>();
+            services.AddTransient<WindowTrackingService>();            
+			services.AddTransient<Startup>();
+
 			services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
 			services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
 		});
