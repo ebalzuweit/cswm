@@ -1,6 +1,8 @@
-![](./src/cswm/icon.ico)
+﻿![](./src/cswm/icon.ico)
 
 # cswm
+
+_/ swɪm /_
 
 A simple desktop window manager in C#.
 
