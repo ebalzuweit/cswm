@@ -113,10 +113,10 @@ public class WindowManagementService
 		return User32.SetWindowPos(
 			window.hWnd,
 			HwndInsertAfterFlags.HWND_NOTOPMOST,
-			x: adjustedPosition.Left + _options.Padding,
-			y: adjustedPosition.Top + _options.Padding,
-			cx: adjustedPosition.Width - (_options.Padding * 2),
-			cy: adjustedPosition.Height - (_options.Padding * 2),
+			x: adjustedPosition.Left,
+			y: adjustedPosition.Top,
+			cx: adjustedPosition.Width,
+			cy: adjustedPosition.Height,
 			SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_SHOWWINDOW);
 	}
 
@@ -147,6 +147,7 @@ public class WindowManagementService
 		_logger?.LogInformation("Window moved: {window}", window);
         if (_unmanagedWindows.Contains(window.hWnd))
             return;
+		// TODO: swap windows if mouse in different partition than current window partition
         UpdateWindowPositions();
 	}
 }
