@@ -13,7 +13,7 @@ public static class RectExtensions
         return true;
     }
 
-    public static ValueTuple<Rect, Rect, bool> Split(this Rect rect, int margin = 0)
+    public static (Rect Left, Rect Right, bool VerticalSplit) Split(this Rect rect, int margin = 0)
     {
         var verticalSplit = rect.Width >= rect.Height; // slightly prefer vertical splits ( LEFT | RIGHT ) to horizontal ( TOP | BOTTOM )
         var dimension = verticalSplit ? rect.Width : rect.Height;
@@ -24,12 +24,12 @@ public static class RectExtensions
         var topMid = rect.Top + midpoint;
         // we give the left partition the extra 1/2 margin
         return verticalSplit
-            ? new(
+            ? (
                 new Rect(rect.Left, rect.Top, leftMid, rect.Bottom).AddMargin(margin, margin, 0, margin), // left partition
                 new Rect(leftMid, rect.Top, rect.Right, rect.Bottom).AddMargin(margin), // right partition
                 verticalSplit
             )
-            : new(
+            : (
                 new Rect(rect.Left, rect.Top, rect.Right, topMid).AddMargin(margin, margin, margin, 0), // top partition
                 new Rect(rect.Left, topMid, rect.Right, rect.Bottom).AddMargin(margin), // bottom partition
                 verticalSplit
