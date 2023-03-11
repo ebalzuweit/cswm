@@ -14,7 +14,7 @@ public class WindowTrackingService
     private readonly MessageBus _bus;
     private readonly HashSet<Window> _windows = new();
 
-    public Window[] Windows => _windows.ToArray();
+    public IReadOnlyCollection<Window> Windows => _windows.ToArray();
 
     public delegate void OnTrackedWindowsResetDelegate();
     public delegate void OnTrackedWindowChangeDelegate(Window window);

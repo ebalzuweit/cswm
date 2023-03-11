@@ -7,7 +7,6 @@ using System.Threading;
 using System.Windows.Forms;
 using cswm.Events;
 using cswm.WindowManagement;
-using cswm.WindowManagement.Tracking;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 
@@ -17,16 +16,16 @@ public class SystemTrayService
 {
     private readonly ILogger _logger;
 	private readonly MessageBus _bus;
-	private readonly WindowTrackingService _windowTracker;
-	private NotifyIcon _notifyIcon;
+	private readonly WindowManagementService _windowManager;
+	private NotifyIcon? _notifyIcon;
     private Thread? _thread;
     private Version? _version;
 
-	public SystemTrayService(ILogger<SystemTrayService> logger, MessageBus bus, WindowTrackingService windowTrackingService)
+	public SystemTrayService(ILogger<SystemTrayService> logger, MessageBus bus, WindowManagementService windowMgmtService)
 	{
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		_bus = bus ?? throw new ArgumentNullException(nameof(bus));
-		_windowTracker = windowTrackingService ?? throw new ArgumentNullException(nameof(windowTrackingService));
+		_windowManager = windowMgmtService ?? throw new ArgumentNullException(nameof(windowMgmtService));
 	}
 
 	public void AddToSystemTray()
@@ -67,6 +66,9 @@ public class SystemTrayService
 	private void Close_OnClick(object? sender, EventArgs e)
 		=> _bus.Publish(new ExitApplicationEvent());
 
+    private void Refresh_OnClick(object? sender, EventArgs e)
+        => _bus.Publish(new ResetTrackedWindowsEvent());
+
 	private NotifyIcon BuildNotificationIcon()
     {
         const string iconResourceName = "cswm.icon.ico";
@@ -93,21 +95,31 @@ public class SystemTrayService
 
     private void ContextMenu_Opening(object? sender, CancelEventArgs e)
     {
+        if (_notifyIcon is null)
+            throw new InvalidOperationException("Notification icon has not been built, cannot open context menu.");
+
         _logger.LogDebug("Updating context menu");
+
+        var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
         var contextMenu = _notifyIcon.ContextMenuStrip;
         contextMenu.Items.Clear();
-        contextMenu.Items.Add(new ToolStripMenuItem() { Text = $"cswm {_version}", Enabled = false });
+        contextMenu.Items.Add($"cswm v{_version}");
         contextMenu.Items.Add(new ToolStripSeparator());
-        if (_windowTracker.Windows.Any())
-        {
-            foreach (var window in _windowTracker.Windows)
-            {
-                contextMenu.Items.Add(new ToolStripMenuItem() { Text = window.Caption.Truncate(40), Enabled = true });
-            }
-            contextMenu.Items.Add(new ToolStripSeparator());
-        }
+        contextMenu.Items.Add(WindowListMenu(windowItems));
+        contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
+        contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Close", null, Close_OnClick);
 
         e.Cancel = false;
+
+        ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
+        ToolStripMenuItem WindowMenu(Window window)
+        {
+            var managed = _windowManager.IsWindowManaged(window);
+            return new(window.Caption.Truncate(40), null, (s, e) => _windowManager.SetWindowManaged(window, !managed))
+            {
+                Checked = managed,
+            };
+        }
     }
 }
