@@ -65,14 +65,11 @@ public class WindowTrackingService
     private void On_WindowEvent(WindowEvent @event)
     {
         var window = new Window(@event.hWnd);
-        var shouldTrack = _strategy.ShouldTrack(window);
-        if (shouldTrack == false)
-            return;
 
-        // ignore minimized / maximized windows
         var isIconic = User32.IsIconic(window.hWnd);
         var isZoomed = User32.IsZoomed(window.hWnd);
-        if (isIconic || isZoomed)
+        var shouldTrack = _strategy.ShouldTrack(window);
+        if (isIconic || isZoomed || shouldTrack == false)
         {
             if (_windows.Remove(window))
                 OnWindowtrackingStop?.Invoke(window);
