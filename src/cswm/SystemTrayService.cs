@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -103,15 +104,16 @@ public class SystemTrayService
         var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
         var contextMenu = _notifyIcon.ContextMenuStrip;
         contextMenu.Items.Clear();
-        contextMenu.Items.Add($"cswm v{_version}");
+        contextMenu.Items.Add(AboutMenu());
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add(WindowListMenu(windowItems));
         contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Close", null, Close_OnClick);
-
         e.Cancel = false;
 
+        const string AboutUrl = "https://github.com/ebalzuweit/cswm#readme";
+        ToolStripMenuItem AboutMenu() => new($"cswm v{_version}", null, (s, e) => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
         ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
         ToolStripMenuItem WindowMenu(Window window)
         {
