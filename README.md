@@ -4,7 +4,7 @@
 
 _/ swɪm /_
 
-A simple desktop window manager in C#.
+A simple window manager in C#.
 
 ## Acknowledgments
 
