@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using Windows.Win32;
@@ -44,31 +45,42 @@ public static class User32
 	[DllImport("user32.dll")]
 	public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
-	#region Monitor Functions
-
-	/// <summary>
-	/// A MonitorEnumProc function is an application-defined callback function that is called by the EnumDisplayMonitors function.
-	/// </summary>
+    /// <summary>
+    /// Retrieves the position of the mouse cursor, in screen coordinates.
+    /// </summary>
 	/// <remarks>
-	/// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc"/>
+	/// <see href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursorpos"/>
 	/// </remarks>
-	/// <param name="hMonitor">A handle to the display monitor. This value will always be non-NULL.</param>
-	/// <param name="hdcMonitor">
-	/// A handle to a device context.
-	/// The device context has color attributes that are appropriate for the display monitor identified by hMonitor.The clipping area of the device context is set to the intersection of the visible region of the device context identified by the hdc parameter of EnumDisplayMonitors, the rectangle pointed to by the lprcClip parameter of EnumDisplayMonitors, and the display monitor rectangle.
-	/// This value is NULL if the hdc parameter of EnumDisplayMonitors was NULL.
-	/// </param>
-	/// <param name="lprcMonitor">
-	/// A pointer to a RECT structure.
-	/// If hdcMonitor is non-NULL, this rectangle is the intersection of the clipping area of the device context identified by hdcMonitor and the display monitor rectangle.The rectangle coordinates are device-context coordinates.
-	/// If hdcMonitor is NULL, this rectangle is the display monitor rectangle. The rectangle coordinates are virtual-screen coordinates.
-	/// </param>
-	/// <param name="dwData">Application-defined data that EnumDisplayMonitors passes directly to the enumeration function.</param>
-	/// <returns>
-	/// To continue the enumeration, return TRUE.
-	/// To stop the enumeration, return FALSE.
-	/// </returns>
-	public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
+    /// <param name="lpPoint">A pointer to a <see cref="Point"/> structure that receives the screen coordinates of the cursor.</param>
+    /// <returns>Returns nonzero if successful or zero otherwise. To get extended error information, call GetLastError.</returns>
+    [DllImport("user32.dll")]
+    public static extern bool GetCursorPos(ref Point lpPoint);
+
+    #region Monitor Functions
+
+    /// <summary>
+    /// A MonitorEnumProc function is an application-defined callback function that is called by the EnumDisplayMonitors function.
+    /// </summary>
+    /// <remarks>
+    /// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-monitorenumproc"/>
+    /// </remarks>
+    /// <param name="hMonitor">A handle to the display monitor. This value will always be non-NULL.</param>
+    /// <param name="hdcMonitor">
+    /// A handle to a device context.
+    /// The device context has color attributes that are appropriate for the display monitor identified by hMonitor.The clipping area of the device context is set to the intersection of the visible region of the device context identified by the hdc parameter of EnumDisplayMonitors, the rectangle pointed to by the lprcClip parameter of EnumDisplayMonitors, and the display monitor rectangle.
+    /// This value is NULL if the hdc parameter of EnumDisplayMonitors was NULL.
+    /// </param>
+    /// <param name="lprcMonitor">
+    /// A pointer to a RECT structure.
+    /// If hdcMonitor is non-NULL, this rectangle is the intersection of the clipping area of the device context identified by hdcMonitor and the display monitor rectangle.The rectangle coordinates are device-context coordinates.
+    /// If hdcMonitor is NULL, this rectangle is the display monitor rectangle. The rectangle coordinates are virtual-screen coordinates.
+    /// </param>
+    /// <param name="dwData">Application-defined data that EnumDisplayMonitors passes directly to the enumeration function.</param>
+    /// <returns>
+    /// To continue the enumeration, return TRUE.
+    /// To stop the enumeration, return FALSE.
+    /// </returns>
+    public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
 
 	/// <summary>
 	/// The EnumDisplayMonitors function enumerates display monitors (including invisible pseudo-monitors associated with the mirroring drivers) that intersect a region formed by the intersection of a specified clipping rectangle and the visible region of a device context. EnumDisplayMonitors calls an application-defined MonitorEnumProc callback function once for each monitor that is enumerated. Note that GetSystemMetrics (SM_CMONITORS) counts only the display monitors.
