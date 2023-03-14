@@ -12,7 +12,7 @@ Grab the latest release from [here](https://github.com/ebalzuweit/cswm/releases/
 
 Unzip the folder and run `cswm.exe`.
 
-~\* Releases not ready yet~
+<sup><sub>* Releases not ready yet</sub></sup>
 
 ## How it Works
 
