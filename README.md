@@ -6,6 +6,19 @@ _/ swɪm /_
 
 A simple window manager in C#.
 
+## Getting Started
+
+Grab the latest release from [here](https://github.com/ebalzuweit/cswm/releases/latest)*.
+
+Unzip the folder and run `cswm.exe`.
+
+~\* Releases not ready yet~
+
+## How it Works
+
+cswm tracks active windows on the user's desktop,
+moving and resizing them to fill the screen without overlapping.
+
 ## Acknowledgments
 
 - [GlazeWM](https://github.com/lars-berger/GlazeWM)
