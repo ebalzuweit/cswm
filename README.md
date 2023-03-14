@@ -8,11 +8,9 @@ A simple window manager in C#.
 
 ## Getting Started
 
-Grab the latest release from [here](https://github.com/ebalzuweit/cswm/releases/latest)*.
+Grab the latest release from [here](https://github.com/ebalzuweit/cswm/releases/latest).
 
 Unzip the folder and run `cswm.exe`.
-
-<sup><sub>* Releases not ready yet</sub></sup>
 
 ## How it Works
 
