@@ -1,13 +1,29 @@
+using System;
+
 namespace cswm.WinApi;
 
 public static class RectExtensions
 {
-    public static bool Overlaps(this Rect rect, Rect other)
+    public static bool Intersects(this Rect a, Rect b)
     {
-        if (rect.Left >= other.Right || rect.Right <= other.Left ||
-            rect.Top >= other.Bottom || rect.Bottom <= other.Top)
+        if (a.Left >= b.Right || a.Right <= b.Left ||
+            a.Top >= b.Bottom || a.Bottom <= b.Top)
             return false;
         return true;
+    }
+
+    public static float IntersectionAreaPct(this Rect a, Rect b)
+    {
+        if (a.Intersects(b) == false)
+            return 0;
+
+        return Math.Min(a.Right - b.Left, b.Right - a.Left) * Math.Min(a.Bottom - b.Top, b.Bottom - a.Top);
+        //var intersection =
+        //    Math.Max(0, Math.Min(a.Right, b.Right) - Math.Max(a.Left, b.Left)) *
+        //    Math.Max(0, Math.Min(a.Bottom, b.Bottom) - Math.Max(a.Top, b.Top));
+        //var union = a.Area + b.Area - intersection;
+
+        //return intersection / (float)union;
     }
 
     public static (Rect Left, Rect Right, bool VerticalSplit) Split(this Rect rect, int margin = 0)

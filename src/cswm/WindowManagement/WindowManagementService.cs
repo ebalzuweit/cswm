@@ -78,7 +78,7 @@ public class WindowManagementService
 #pragma warning restore CS8601
 	}
 
-	private void UpdateWindowPositions()
+	private void UpdateWindowPositions(Window? preferredWindow = default)
 	{
 		var monitors = WinApi.User32.EnumDisplayMonitors()
 			.Select(hMonitor => new Monitor(hMonitor))
@@ -93,7 +93,9 @@ public class WindowManagementService
 					.Select(w => new WindowLayout(w.hWnd, w.Position))
 			)
 		);
-		var windowLayouts = _arrangementStrategy.Arrange(monitorLayouts);
+		var windowLayouts = preferredWindow is null
+			? _arrangementStrategy.Arrange(monitorLayouts)
+			: _arrangementStrategy.ArrangeOnWindowMove(monitorLayouts, preferredWindow);
 		foreach (var layout in windowLayouts)
 			SetWindowPos(new Window((Windows.Win32.Foundation.HWND)layout.hWnd), layout.Position); // TODO: don't recreate Window object
 	}
@@ -147,7 +149,6 @@ public class WindowManagementService
 		_logger?.LogInformation("Window moved: {window}", window);
         if (_unmanagedWindows.Contains(window.hWnd))
             return;
-		// TODO: swap windows if mouse in different partition than current window partition
-        UpdateWindowPositions();
+        UpdateWindowPositions(window);
 	}
 }

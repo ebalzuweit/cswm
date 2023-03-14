@@ -6,7 +6,7 @@ namespace cswm.WinApi;
 /// <see href="https://www.pinvoke.net/default.aspx/Structures/RECT.html"/>
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct Rect
+public readonly struct Rect
 {
     public readonly int Left, Top, Right, Bottom;
 
