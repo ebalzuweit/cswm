@@ -112,7 +112,7 @@ public class SystemTrayService
         contextMenu.Items.Add("Close", null, Close_OnClick);
         e.Cancel = false;
 
-        const string AboutUrl = "https://github.com/ebalzuweit/cswm#readme";
+        const string AboutUrl = "https://github.com/ebalzuweit/cswm";
         ToolStripMenuItem AboutMenu() => new($"cswm v{_version}", null, (s, e) => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
         ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
         ToolStripMenuItem WindowMenu(Window window)
