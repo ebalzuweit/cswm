@@ -8,6 +8,8 @@ A simple window manager in C#.
 
 ## Installation <sub><sup>_(No installation required)_</sup></sub>
 
+> **Note** Windows-only.
+
 Grab the latest release from [here](https://github.com/ebalzuweit/cswm/releases/latest).
 
 Unzip the folder and run `cswm.exe`.
