@@ -27,7 +27,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 		=> Arrange_Internal(layouts, movedWindow);
 
 	private IEnumerable<WindowLayout> Arrange_Internal(IEnumerable<MonitorLayout> layouts, Window? movedWindow = default)
-		=> layouts.SelectMany(layout => PartitionSpace(layout.Space.AddMargin(_options.Padding), layout.Windows, movedWindow));
+		=> layouts.SelectMany(layout => PartitionSpace(layout.Space.AddMargin(_options.MonitorPadding), layout.Windows, movedWindow));
 
 	/// <summary>
 	/// Recursively partition a space, assigning windows greedily.
@@ -42,7 +42,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 		if (windows.Count() == 1)
 		{
 			return new[] {
-				new WindowLayout(windows.First().hWnd, space.AddMargin(_options.Margin))
+				new WindowLayout(windows.First().hWnd, space.AddMargin(_options.WindowPadding))
 			};
 		}
 
@@ -55,11 +55,17 @@ public class SplitArrangementStrategy : IArrangementStrategy
 		IEnumerable<WindowLayout> SplitAndRecurse(Rect space, IEnumerable<WindowLayout> windows, Window? preferredWindow)
 		{
             var (left, right, verticalSplit) = space.Split();
+			var halfMargin = _options.WindowMargin / 2;
             var leftSpace = verticalSplit switch
             {
-                true => left.AddMargin(_options.Margin, _options.Margin, 0, _options.Margin),
-                false => left.AddMargin(_options.Margin, _options.Margin, _options.Margin, 0)
+                true => left.AddMargin(0, 0, halfMargin, 0),
+                false => left.AddMargin(0, 0, 0, halfMargin)
             };
+			var rightSpace = verticalSplit switch
+			{
+				true => right.AddMargin(halfMargin, 0, 0, 0),
+				false => right.AddMargin(0, halfMargin, 0, 0)
+			};
 
 			var windowList = windows.ToList();
 
@@ -79,7 +85,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
             }
 
             var leftPartition = new WindowLayout(windowList.First().hWnd, leftSpace);
-            var layouts = PartitionSpace(right, windowList.Skip(1), preferredWindow);
+            var layouts = PartitionSpace(rightSpace, windowList.Skip(1), preferredWindow);
             layouts = layouts.Prepend(leftPartition);
             return layouts;
         }

@@ -8,12 +8,17 @@ public class WindowManagementOptions
     public bool DoNotManage { get; init; }
     
     /// <summary>
-    /// Margin around all windows.
-    /// </summary>
-    public int Margin { get; init; }
-
-    /// <summary>
     /// Padding for each monitor.
     /// </summary>
-    public int Padding { get; init; }
+    public int MonitorPadding { get; init; }
+
+    /// <summary>
+    /// Margin around all windows.
+    /// </summary>
+    public int WindowMargin { get; init; }
+
+    /// <summary>
+    /// Padding around all windows.
+    /// </summary>
+    public int WindowPadding { get; init; }
 }

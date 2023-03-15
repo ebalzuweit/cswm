@@ -29,13 +29,11 @@ there are no keybindings and little user configuration.
 
 Configuration is done through the `appsettings.json` file, found in the same folder as `cswm.exe`.
 
-#### Margin
-
-Border between active, non-fullscreen windows - in pixels.
-
-#### Padding
-
-Border on the outside of all active, non-fullscreen windows - in pixels.
+| Setting         | Description | 
+|-----------------|-------------|
+| Monitor Padding | Border on the inside of each monitor, in pixels. |
+| Window Margin   | Space between adjacent windows, in pixels. |
+| Window Padding  | Border on the outside of each window, in pixels. |
 
 ## Acknowledgments
 
