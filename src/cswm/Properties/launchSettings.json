@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "cswm": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
