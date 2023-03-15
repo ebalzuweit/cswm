@@ -18,12 +18,13 @@ Delete the folder containing `cswm.exe` and its contents.
 
 ## Usage
 
+cswm is designed to be straightforward -
+there are no keybindings and little user configuration.
+
 While running, cswm automatically manages active windows on the user's desktop.
 It will arrange the active windows like a tiling window manager,
 moving and resizing them to fill the screen without overlapping.
-
-cswm is designed to be straightforward -
-there are no keybindings and little user configuration.
+You can rearrange windows by dragging them from one space to another.
 
 ### Configuration
 
