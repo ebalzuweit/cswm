@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using cswm.WinApi;
-using Humanizer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

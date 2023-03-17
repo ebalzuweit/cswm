@@ -28,7 +28,7 @@ public static class RectExtensions
 
     public static (Rect Left, Rect Right, bool VerticalSplit) Split(this Rect rect, int margin = 0)
     {
-        var verticalSplit = rect.Width >= rect.Height; // slightly prefer vertical splits ( LEFT | RIGHT ) to horizontal ( TOP | BOTTOM )
+        var verticalSplit = rect.Width / rect.Height >= 1.33; // slightly prefer vertical splits ( LEFT | RIGHT ) to horizontal ( TOP | BOTTOM )
         var dimension = verticalSplit ? rect.Width : rect.Height;
         var midpoint = dimension / 2;
         if (dimension % 2 == 1)
