@@ -6,6 +6,10 @@ public class DefaultWindowTrackingStrategy : IWindowTrackingStrategy
 {
     public bool ShouldTrack(Window window)
     {
+        var hasOwner = (long)User32.GetWindow(window.hWnd, GetWindowType.GW_OWNER) != 0;
+        if (hasOwner)
+            return false;
+
         var style = (long)User32.GetWindowLongPtr(window.hWnd, WindowLongFlags.GWL_STYLE);
         if (HasStyle(WindowStyle.WS_CAPTION) == false ||
             HasStyle(WindowStyle.WS_MINIMIZEBOX) == false ||
