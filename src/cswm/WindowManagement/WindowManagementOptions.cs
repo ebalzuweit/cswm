@@ -6,7 +6,7 @@ public class WindowManagementOptions
     /// If set, windows will be tracked but not managed.
     /// </summary>
     public bool DoNotManage { get; init; }
-
+    
     /// <summary>
     /// Padding for each monitor.
     /// </summary>

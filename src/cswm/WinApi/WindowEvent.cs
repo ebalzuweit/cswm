@@ -5,14 +5,14 @@ namespace cswm.WinApi;
 
 public class WindowEvent : Event
 {
-    internal HWND hWnd { get; init; }
-    public EventConstant EventType { get; init; }
+	internal HWND hWnd { get; init; }
+	public EventConstant EventType { get; init; }
 
-    internal WindowEvent(HWND hWnd, EventConstant eventType)
-    {
-        this.hWnd = hWnd;
-        this.EventType = eventType;
-    }
+	internal WindowEvent(HWND hWnd, EventConstant eventType)
+	{
+		this.hWnd = hWnd;
+		this.EventType = eventType;
+	}
 
-    public override string ToString() => $"{EventType} hWnd: {hWnd}";
+	public override string ToString() => $"{EventType} hWnd: {hWnd}";
 }

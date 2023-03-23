@@ -31,14 +31,17 @@ internal static class Program
                 .BindConfiguration(nameof(WindowManagementOptions))
                 .ValidateOnStart();
 
+            // Multiple services require the same instance of the following:
             services.AddSingleton<MessageBus>();
             services.AddSingleton<WinHookService>();
             services.AddSingleton<WindowManagementService>();
-            services.AddSingleton<SystemTrayService>();
 
+            // Should only be resolved by this class
+            services.AddScoped<Startup>();
+
+            // Other registrations
             services.AddTransient<WindowTrackingService>();
-            services.AddTransient<Startup>();
-
+            services.AddTransient<SystemTrayService>();
             services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
             services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
         });

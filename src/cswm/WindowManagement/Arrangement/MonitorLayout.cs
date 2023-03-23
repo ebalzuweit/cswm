@@ -1,6 +1,6 @@
-using cswm.WinApi;
 using System;
 using System.Collections.Generic;
+using cswm.WinApi;
 
 namespace cswm.WindowManagement.Arrangement;
 

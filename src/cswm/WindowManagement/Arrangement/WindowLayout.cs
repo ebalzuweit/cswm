@@ -1,5 +1,5 @@
-using cswm.WinApi;
 using System;
+using cswm.WinApi;
 
 namespace cswm.WindowManagement.Arrangement;
 
