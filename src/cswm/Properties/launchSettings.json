@@ -3,7 +3,7 @@
     "cswm": {
       "commandName": "Project",
       "environmentVariables": {
-        "ENVIRONMENT": "Development"
+        "DOTNET_ENVIRONMENT": "Development"
       }
     }
   }
