@@ -108,9 +108,9 @@ public class WindowTrackingService : IDisposable
         var isWindowVisible = IsWindowVisible(window);
         if (isWindowVisible && _startTrackingEvents.Contains(@event.EventType))
             TryStartTracking(window);
-        if (isWindowVisible == false && _stopTrackingEvents.Contains(@event.EventType))
+        else if (isWindowVisible == false && _stopTrackingEvents.Contains(@event.EventType))
             TryStopTracking(window);
-        if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
+        else if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
             OnWindowMoved?.Invoke(window);
 
         bool TryStartTracking(Window window)
