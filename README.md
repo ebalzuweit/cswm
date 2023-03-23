@@ -38,6 +38,10 @@ Configuration is done through the `appsettings.json` file, found in the same fol
 | Window Margin   | Space between adjacent windows, in pixels. |
 | Window Padding  | Border on the outside of each window, in pixels. |
 
+### Caveats
+
+- Some windows (e.g. Task Manager) require cswm to be run as an administrator to be managed.
+
 ## Acknowledgments
 
 - [GlazeWM](https://github.com/lars-berger/GlazeWM)
