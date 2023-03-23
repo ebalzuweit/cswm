@@ -1,10 +1,10 @@
-using System;
-using System.Windows.Forms;
-using System.Reactive.Linq;
 using cswm.Events;
-using Microsoft.Extensions.Logging;
 using cswm.WindowManagement;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Reactive.Linq;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace cswm;
 
@@ -51,6 +51,9 @@ internal class Startup
         _wmService.Start();
 
         _bus.Publish(new ResetTrackedWindowsEvent());
+
+        // message loop - prevents DI container from disposing our services
+        Application.Run();
     }
 
     private void On_ExitApplicationEvent()
