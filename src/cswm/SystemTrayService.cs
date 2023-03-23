@@ -113,7 +113,7 @@ public class SystemTrayService
         e.Cancel = false;
 
         const string AboutUrl = "https://github.com/ebalzuweit/cswm";
-        ToolStripMenuItem AboutMenu() => new($"cswm v{_version}", null, (s, e) => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
+        ToolStripMenuItem AboutMenu() => new(AboutString(), null, (s, e) => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
         ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
         ToolStripMenuItem WindowMenu(Window window)
         {
@@ -123,5 +123,7 @@ public class SystemTrayService
                 Checked = managed,
             };
         }
+
+        string AboutString() => $"cswm v{_version.Major}.{_version.Minor}.{_version.Build}";
     }
 }
