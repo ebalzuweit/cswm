@@ -71,9 +71,7 @@ public class WindowTrackingService : IDisposable
             _windows.Add(w);
 #if DEBUG
             if (_logger.IsEnabled(LogLevel.Trace))
-            {
                 _logger.LogTrace(w.GetDebugString());
-            }
 #endif
         }
         OnTrackedWindowsReset?.Invoke();
@@ -124,9 +122,7 @@ public class WindowTrackingService : IDisposable
                 _logger.LogDebug("Started tracking window {hWnd}", window.hWnd);
 #if DEBUG
                 if (_logger.IsEnabled(LogLevel.Trace))
-                {
                     _logger.LogTrace(window.GetDebugString());
-                }
 #endif
                 OnWindowTrackingStart?.Invoke(window);
             }
@@ -141,9 +137,7 @@ public class WindowTrackingService : IDisposable
                 _logger.LogDebug("Stopped tracking window {hWnd}", window.hWnd);
 #if DEBUG
                 if (_logger.IsEnabled(LogLevel.Trace))
-                {
                     _logger.LogTrace(window.GetDebugString());
-                }
 #endif
                 OnWindowtrackingStop?.Invoke(window);
             }
