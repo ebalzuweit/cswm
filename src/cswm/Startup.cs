@@ -51,9 +51,6 @@ internal class Startup
         _wmService.Start();
 
         _bus.Publish(new ResetTrackedWindowsEvent());
-
-        // message loop - prevents DI container from disposing our services
-        Application.Run();
     }
 
     private void On_ExitApplicationEvent()
