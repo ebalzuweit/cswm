@@ -124,6 +124,6 @@ public class SystemTrayService
             };
         }
 
-        string AboutString() => $"cswm v{_version.Major}.{_version.Minor}.{_version.Build}";
+        string AboutString() => $"cswm v{_version!.Major}.{_version.Minor}.{_version.Build}";
     }
 }
