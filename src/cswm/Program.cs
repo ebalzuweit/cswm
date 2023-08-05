@@ -51,7 +51,6 @@ internal static class Program
             logging.ClearProviders();
 #if DEBUG
             logging.AddDebug();
-            logging.AddConsole();
 #endif
         });
         return builder.Build();
