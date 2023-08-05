@@ -17,16 +17,23 @@ public class SystemTrayService
 {
     private readonly ILogger _logger;
     private readonly MessageBus _bus;
-    private readonly WindowManagementService _windowManager;
+    // private readonly WindowManagementService _windowManager;
+    private readonly WindowLayoutService _layoutService;
     private NotifyIcon? _notifyIcon;
     private Thread? _thread;
     private Version? _version;
 
-    public SystemTrayService(ILogger<SystemTrayService> logger, MessageBus bus, WindowManagementService windowMgmtService)
+    public SystemTrayService(
+        ILogger<SystemTrayService> logger,
+        MessageBus bus,
+        WindowLayoutService layoutService)
     {
+        ArgumentNullException.ThrowIfNull(layoutService);
+
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        _windowManager = windowMgmtService ?? throw new ArgumentNullException(nameof(windowMgmtService));
+        // _windowManager = windowMgmtService ?? throw new ArgumentNullException(nameof(windowMgmtService));
+        _layoutService = layoutService;
     }
 
     public void AddToSystemTray()
@@ -101,12 +108,13 @@ public class SystemTrayService
 
         _logger.LogDebug("Updating context menu");
 
-        var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
+        // var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
         var contextMenu = _notifyIcon.ContextMenuStrip;
         contextMenu.Items.Clear();
         contextMenu.Items.Add(AboutMenu());
         contextMenu.Items.Add(new ToolStripSeparator());
-        contextMenu.Items.Add(WindowListMenu(windowItems));
+        // contextMenu.Items.Add(WindowListMenu(windowItems));
+        contextMenu.Items.Add("Layout Mode - None", null);
         contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Close", null, Close_OnClick);
@@ -114,15 +122,15 @@ public class SystemTrayService
 
         const string AboutUrl = "https://github.com/ebalzuweit/cswm";
         ToolStripMenuItem AboutMenu() => new(AboutString(), null, (s, e) => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
-        ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
-        ToolStripMenuItem WindowMenu(Window window)
-        {
-            var managed = _windowManager.IsWindowManaged(window);
-            return new(window.Caption.Truncate(40), null, (s, e) => _windowManager.SetWindowManaged(window, !managed))
-            {
-                Checked = managed,
-            };
-        }
+        // ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
+        // ToolStripMenuItem WindowMenu(Window window)
+        // {
+        //     var managed = _windowManager.IsWindowManaged(window);
+        //     return new(window.Caption.Truncate(40), null, (s, e) => _windowManager.SetWindowManaged(window, !managed))
+        //     {
+        //         Checked = managed,
+        //     };
+        // }
 
         string AboutString() => $"cswm v{_version!.Major}.{_version.Minor}.{_version.Build}";
     }
