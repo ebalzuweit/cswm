@@ -18,6 +18,7 @@ public class WindowTrackingService : IDisposable
     private readonly ISet<IDisposable> _eventSubscriptions = new HashSet<IDisposable>();
 
     public IReadOnlyCollection<Window> Windows => _windows.ToArray();
+    public IReadOnlyCollection<Window> VisibleWindows => _windows.Where(x => IsWindowVisible(x)).ToArray();
 
     public delegate void OnTrackedWindowsResetDelegate();
     public delegate void OnTrackedWindowChangeDelegate(Window window);
@@ -27,6 +28,16 @@ public class WindowTrackingService : IDisposable
     public OnTrackedWindowChangeDelegate OnWindowtrackingStop = null!;
     public OnTrackedWindowChangeDelegate OnWindowMoved = null!;
 
+    /// <summary>
+    /// Tracks windows without owners, like Alt + Tab.
+    /// </summary>
+    /// <remarks>
+    /// Some windows tracked may be minimized, or not visible.
+    /// </remarks>    
+    /// <param name="logger"></param>
+    /// <param name="strategy"></param>
+    /// <param name="bus"></param>
+    /// <exception cref="ArgumentNullException"></exception>
     public WindowTrackingService(ILogger<WindowTrackingService> logger, IWindowTrackingStrategy strategy, MessageBus bus)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -34,6 +45,7 @@ public class WindowTrackingService : IDisposable
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
 
         SubscribeToEvents();
+        ResetTrackedWindows();
     }
 
     public void Dispose()
@@ -64,7 +76,6 @@ public class WindowTrackingService : IDisposable
         _windows.Clear();
         var handles = User32.EnumWindows();
         var newWindows = handles.Select(h => new Window(h))
-            .Where(IsWindowVisible)
             .Where(_strategy.ShouldTrack);
         foreach (var w in newWindows)
         {
@@ -95,53 +106,49 @@ public class WindowTrackingService : IDisposable
     private void On_WindowEvent(WindowEvent @event)
     {
         var window = new Window(@event.hWnd);
-
-        var isIconic = User32.IsIconic(window.hWnd);
-        var isZoomed = User32.IsZoomed(window.hWnd);
-        var shouldTrack = _strategy.ShouldTrack(window);
-        if (isIconic || isZoomed || shouldTrack == false)
+        var tracking = _windows.Any(x => x.hWnd == @event.hWnd);
+        if (tracking && _stopTrackingEvents.Contains(@event.EventType))
         {
             TryStopTracking(window);
-            return;
         }
 
-        var isWindowVisible = IsWindowVisible(window);
-        if (isWindowVisible && _startTrackingEvents.Contains(@event.EventType))
+        var shouldTrack = _strategy.ShouldTrack(window);
+        if (shouldTrack == false)
+            return;
+        if (_startTrackingEvents.Contains(@event.EventType))
             TryStartTracking(window);
-        else if (isWindowVisible == false && _stopTrackingEvents.Contains(@event.EventType))
-            TryStopTracking(window);
         else if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
             OnWindowMoved?.Invoke(window);
+    }
 
-        bool TryStartTracking(Window window)
+    private bool TryStartTracking(Window window)
+    {
+        var startedTracking = _windows.Add(window);
+        if (startedTracking)
         {
-            var startedTracking = _windows.Add(window);
-            if (startedTracking)
-            {
 
-                _logger.LogDebug("Started tracking window {hWnd}", window.hWnd);
+            _logger.LogDebug("Started tracking window {hWnd}", window.hWnd);
 #if DEBUG
-                if (_logger.IsEnabled(LogLevel.Trace))
-                    _logger.LogTrace(window.GetDebugString());
+            if (_logger.IsEnabled(LogLevel.Trace))
+                _logger.LogTrace(window.GetDebugString());
 #endif
-                OnWindowTrackingStart?.Invoke(window);
-            }
-            return startedTracking;
+            OnWindowTrackingStart?.Invoke(window);
         }
+        return startedTracking;
+    }
 
-        bool TryStopTracking(Window window)
+    private bool TryStopTracking(Window window)
+    {
+        var stoppedTracking = _windows.Remove(window);
+        if (stoppedTracking)
         {
-            var stoppedTracking = _windows.Remove(window);
-            if (stoppedTracking)
-            {
-                _logger.LogDebug("Stopped tracking window {hWnd}", window.hWnd);
+            _logger.LogDebug("Stopped tracking window {hWnd}", window.hWnd);
 #if DEBUG
-                if (_logger.IsEnabled(LogLevel.Trace))
-                    _logger.LogTrace(window.GetDebugString());
+            if (_logger.IsEnabled(LogLevel.Trace))
+                _logger.LogTrace(window.GetDebugString());
 #endif
-                OnWindowtrackingStop?.Invoke(window);
-            }
-            return stoppedTracking;
+            OnWindowtrackingStop?.Invoke(window);
         }
+        return stoppedTracking;
     }
 }
