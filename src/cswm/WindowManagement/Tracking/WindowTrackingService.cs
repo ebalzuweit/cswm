@@ -118,7 +118,10 @@ public class WindowTrackingService : IDisposable
         if (_startTrackingEvents.Contains(@event.EventType))
             TryStartTracking(window);
         else if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
-            OnWindowMoved?.Invoke(window);
+        {
+            _logger.LogDebug("Window moved {window}", window);
+            OnWindowMoved.Invoke(window);
+        }
     }
 
     private bool TryStartTracking(Window window)
@@ -127,7 +130,7 @@ public class WindowTrackingService : IDisposable
         if (startedTracking)
         {
 
-            _logger.LogDebug("Started tracking window {hWnd}", window.hWnd);
+            _logger.LogDebug("Started tracking window {window}", window);
 #if DEBUG
             if (_logger.IsEnabled(LogLevel.Trace))
                 _logger.LogTrace(window.GetDebugString());
@@ -142,7 +145,7 @@ public class WindowTrackingService : IDisposable
         var stoppedTracking = _windows.Remove(window);
         if (stoppedTracking)
         {
-            _logger.LogDebug("Stopped tracking window {hWnd}", window.hWnd);
+            _logger.LogDebug("Stopped tracking window {window}", window);
 #if DEBUG
             if (_logger.IsEnabled(LogLevel.Trace))
                 _logger.LogTrace(window.GetDebugString());
