@@ -17,7 +17,7 @@ public class SystemTrayService
 {
     private readonly ILogger _logger;
     private readonly MessageBus _bus;
-    // private readonly WindowManagementService _windowManager;
+    private readonly WindowManagementService _wmService;
     private readonly WindowLayoutService _layoutService;
     private NotifyIcon? _notifyIcon;
     private Thread? _thread;
@@ -26,13 +26,15 @@ public class SystemTrayService
     public SystemTrayService(
         ILogger<SystemTrayService> logger,
         MessageBus bus,
+        WindowManagementService wmService,
         WindowLayoutService layoutService)
     {
+        ArgumentNullException.ThrowIfNull(wmService);
         ArgumentNullException.ThrowIfNull(layoutService);
 
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        // _windowManager = windowMgmtService ?? throw new ArgumentNullException(nameof(windowMgmtService));
+        _wmService = wmService;
         _layoutService = layoutService;
     }
 
@@ -114,7 +116,7 @@ public class SystemTrayService
         contextMenu.Items.Add(AboutMenu());
         contextMenu.Items.Add(new ToolStripSeparator());
         // contextMenu.Items.Add(WindowListMenu(windowItems));
-        contextMenu.Items.Add("Layout Mode - None", null);
+        contextMenu.Items.Add($"Layout Mode - {_layoutService.ActiveLayoutDisplayName}", null);
         contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Close", null, Close_OnClick);

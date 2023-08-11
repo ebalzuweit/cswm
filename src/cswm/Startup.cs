@@ -16,8 +16,7 @@ internal class Startup
     private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
     private readonly WinHookService _winHookService;
-    // private readonly WindowManagementService _wmService;
-    private readonly WindowLayoutService _layoutService;
+    private readonly WindowManagementService _wmService;
 
     private Mutex? _applicationMutex;
 
@@ -26,16 +25,15 @@ internal class Startup
         MessageBus bus,
         SystemTrayService trayService,
         WinHookService winHookService,
-        WindowLayoutService layoutService)
+        WindowManagementService wmService)
     {
-        ArgumentNullException.ThrowIfNull(layoutService);
+        ArgumentNullException.ThrowIfNull(wmService);
 
         _logger = logger;
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
         _winHookService = winHookService ?? throw new ArgumentNullException(nameof(winHookService));
-        // _wmService = windowManagementService ?? throw new ArgumentNullException(nameof(windowManagementService));
-        _layoutService = layoutService;
+        _wmService = wmService;
     }
 
     public void Start()
@@ -52,8 +50,7 @@ internal class Startup
 
         _trayService.AddToSystemTray();
         _winHookService.Start();
-        // _wmService.Start();
-        _layoutService.Start();
+        _wmService.Start();
 
         _bus.Publish(new ResetTrackedWindowsEvent());
 
@@ -64,8 +61,7 @@ internal class Startup
     private void On_ExitApplicationEvent()
     {
         _logger?.LogInformation("ExitApplicationEvent received, exiting.");
-        // _wmService.Stop();
-        _layoutService.Stop();
+        _wmService.Stop();
         _trayService.RemoveFromSystemTray();
 
         Application.Exit();

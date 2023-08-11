@@ -1,6 +1,7 @@
 ﻿using cswm.Events;
 using cswm.WindowManagement;
 using cswm.WindowManagement.Arrangement;
+using cswm.WindowManagement.Arrangement.Layout;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,7 +35,7 @@ internal static class Program
             // Multiple services require the same instance of the following:
             services.AddSingleton<MessageBus>();
             services.AddSingleton<WinHookService>();
-            // services.AddSingleton<WindowManagementService>();
+            services.AddSingleton<WindowManagementService>();
             services.AddSingleton<WindowLayoutService>();
 
             // Should only be resolved by this class
