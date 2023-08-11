@@ -16,7 +16,6 @@ internal class Startup
     private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
     private readonly WinHookService _winHookService;
-    private readonly WindowManagementService _wmService;
 
     private Mutex? _applicationMutex;
 
@@ -24,16 +23,12 @@ internal class Startup
         ILogger<Startup> logger,
         MessageBus bus,
         SystemTrayService trayService,
-        WinHookService winHookService,
-        WindowManagementService wmService)
+        WinHookService winHookService)
     {
-        ArgumentNullException.ThrowIfNull(wmService);
-
         _logger = logger;
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
         _winHookService = winHookService ?? throw new ArgumentNullException(nameof(winHookService));
-        _wmService = wmService;
     }
 
     public void Start()
@@ -48,9 +43,8 @@ internal class Startup
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
             .Subscribe(_ => On_ExitApplicationEvent());
 
-        _trayService.AddToSystemTray();
+        _trayService.Start();
         _winHookService.Start();
-        _wmService.Start();
 
         _bus.Publish(new ResetTrackedWindowsEvent());
 
@@ -61,8 +55,7 @@ internal class Startup
     private void On_ExitApplicationEvent()
     {
         _logger?.LogInformation("ExitApplicationEvent received, exiting.");
-        _wmService.Stop();
-        _trayService.RemoveFromSystemTray();
+        _trayService.Stop();
 
         Application.Exit();
 

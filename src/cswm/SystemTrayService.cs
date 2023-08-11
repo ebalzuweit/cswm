@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace cswm;
 
-public class SystemTrayService
+public class SystemTrayService : IService
 {
     private readonly ILogger _logger;
     private readonly MessageBus _bus;
@@ -38,7 +38,19 @@ public class SystemTrayService
         _layoutService = layoutService;
     }
 
-    public void AddToSystemTray()
+    public void Start()
+    {
+        AddToSystemTray();
+        _wmService.Start();
+    }
+
+    public void Stop()
+    {
+        _wmService.Stop();
+        RemoveFromSystemTray();
+    }
+
+    private void AddToSystemTray()
     {
         _logger.LogInformation("Adding notification icon to system tray...");
 
@@ -51,7 +63,7 @@ public class SystemTrayService
         _thread.Start();
     }
 
-    public void RemoveFromSystemTray()
+    private void RemoveFromSystemTray()
     {
         _logger.LogInformation("Removing notification icon from system tray...");
 
