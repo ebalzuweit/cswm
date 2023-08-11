@@ -55,7 +55,6 @@ public sealed class WindowLayoutService : IService
 	public void SetLayoutMode(ILayoutMode layoutMode)
 	{
 		_activeLayoutMode = layoutMode;
-		RelayoutWindows();
 	}
 
 	public void RelayoutWindows()

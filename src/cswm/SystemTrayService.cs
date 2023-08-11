@@ -1,5 +1,6 @@
 using cswm.Events;
 using cswm.WindowManagement;
+using cswm.WindowManagement.Arrangement.Layout;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 using System;
@@ -41,6 +42,7 @@ public class SystemTrayService : IService
     public void Start()
     {
         AddToSystemTray();
+        _wmService.SetLayoutMode<NoLayoutMode>();
         _wmService.Start();
     }
 
