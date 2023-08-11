@@ -58,6 +58,19 @@ public class WindowTrackingService : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    public bool IsWindowVisible(Window window)
+    {
+        var isVisible = User32.IsWindowVisible(window.hWnd);
+        if (isVisible == false)
+            return false;
+
+        _ = DwmApi.DwmGetWindowAttribute(window.hWnd, DwmWindowAttribute.DWMWA_CLOAKED, out var isCloaked, Marshal.SizeOf<bool>());
+        if (isCloaked)
+            return false;
+
+        return true;
+    }
+
     private void SubscribeToEvents()
     {
         _logger.LogDebug("Subscribing to event bus");
@@ -86,19 +99,6 @@ public class WindowTrackingService : IDisposable
 #endif
         }
         OnTrackedWindowsReset?.Invoke();
-    }
-
-    private bool IsWindowVisible(Window window)
-    {
-        var isVisible = User32.IsWindowVisible(window.hWnd);
-        if (isVisible == false)
-            return false;
-
-        _ = DwmApi.DwmGetWindowAttribute(window.hWnd, DwmWindowAttribute.DWMWA_CLOAKED, out var isCloaked, Marshal.SizeOf<bool>());
-        if (isCloaked)
-            return false;
-
-        return true;
     }
 
     private readonly EventConstant[] _startTrackingEvents = new[] { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND, EventConstant.EVENT_OBJECT_LOCATIONCHANGE };
