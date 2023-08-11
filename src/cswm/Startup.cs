@@ -46,8 +46,6 @@ internal class Startup
 
         _trayService.Start();
 
-        _bus.Publish(new ResetTrackedWindowsEvent());
-
         // message loop - prevents DI container from disposing our services
         Application.Run();
     }

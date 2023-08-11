@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace cswm.WindowManagement.Tracking;
 
-public class WindowTrackingService : IDisposable
+public class WindowTrackingService : IService, IDisposable
 {
     private readonly ILogger _logger;
     private readonly IWindowTrackingStrategy _strategy;
@@ -18,7 +18,6 @@ public class WindowTrackingService : IDisposable
     private readonly ISet<IDisposable> _eventSubscriptions = new HashSet<IDisposable>();
 
     public IReadOnlyCollection<Window> Windows => _windows.ToArray();
-    public IReadOnlyCollection<Window> VisibleWindows => _windows.Where(x => IsWindowVisible(x)).ToArray();
 
     public delegate void OnTrackedWindowsResetDelegate();
     public delegate void OnTrackedWindowChangeDelegate(Window window);
@@ -43,17 +42,24 @@ public class WindowTrackingService : IDisposable
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+    }
 
-        SubscribeToEvents();
+    public void Start()
+    {
         ResetTrackedWindows();
+        SubscribeToEvents();
+    }
+
+    public void Stop()
+    {
+        foreach (var subscription in _eventSubscriptions)
+            subscription.Dispose();
+        _eventSubscriptions.Clear();
     }
 
     public void Dispose()
     {
-        _logger.LogDebug("Unsubscribing from event bus");
-        foreach (var subscription in _eventSubscriptions)
-            subscription.Dispose();
-        _eventSubscriptions.Clear();
+        Stop();
 
         GC.SuppressFinalize(this);
     }
@@ -71,9 +77,10 @@ public class WindowTrackingService : IDisposable
         return true;
     }
 
+    public bool IsNotMinOrMaximized(Window window) => !User32.IsIconic(window.hWnd) && !User32.IsZoomed(window.hWnd);
+
     private void SubscribeToEvents()
     {
-        _logger.LogDebug("Subscribing to event bus");
         Subscribe(@event => @event is WindowEvent, @event => On_WindowEvent((@event as WindowEvent)!));
         Subscribe(@event => @event is ResetTrackedWindowsEvent, _ => ResetTrackedWindows());
 
@@ -89,15 +96,13 @@ public class WindowTrackingService : IDisposable
         _windows.Clear();
         var handles = User32.EnumWindows();
         var newWindows = handles.Select(h => new Window(h))
+            .Where(IsNotMinOrMaximized)
             .Where(_strategy.ShouldTrack);
         foreach (var w in newWindows)
         {
             _windows.Add(w);
-#if DEBUG
-            if (_logger.IsEnabled(LogLevel.Trace))
-                _logger.LogTrace(w.GetDebugString());
-#endif
         }
+        _logger.LogDebug("Reset tracked windows, {WindowsCount} windows tracked.", _windows.Count);
         OnTrackedWindowsReset?.Invoke();
     }
 
@@ -131,10 +136,6 @@ public class WindowTrackingService : IDisposable
         {
 
             _logger.LogDebug("Started tracking window {window}", window);
-#if DEBUG
-            if (_logger.IsEnabled(LogLevel.Trace))
-                _logger.LogTrace(window.GetDebugString());
-#endif
             OnWindowTrackingStart?.Invoke(window);
         }
         return startedTracking;
@@ -146,10 +147,6 @@ public class WindowTrackingService : IDisposable
         if (stoppedTracking)
         {
             _logger.LogDebug("Stopped tracking window {window}", window);
-#if DEBUG
-            if (_logger.IsEnabled(LogLevel.Trace))
-                _logger.LogTrace(window.GetDebugString());
-#endif
             OnWindowtrackingStop?.Invoke(window);
         }
         return stoppedTracking;

@@ -56,13 +56,13 @@ public sealed class WindowLayoutService : IService
 	public void SetLayoutMode(ILayoutMode layoutMode)
 	{
 		_activeLayoutMode = layoutMode;
-		_activeLayoutMode.Initialize(_activeWindows);
+		RelayoutWindows();
 	}
 
 	public void RelayoutWindows()
 	{
 		_logger.LogDebug("Laying out windows from scratch...");
-		LogTrackedWindows();
+		_activeLayoutMode.Initialize(_trackingService.Windows);
 	}
 
 	/*
@@ -76,12 +76,12 @@ public sealed class WindowLayoutService : IService
 
 	private void OnWindowTrackingStart(Window window)
 	{
-
+		LogTrackedWindows();
 	}
 
 	private void OnWindowTrackingStop(Window window)
 	{
-
+		LogTrackedWindows();
 	}
 
 	private void OnWindowMoved(Window window)
@@ -91,9 +91,9 @@ public sealed class WindowLayoutService : IService
 
 	private void LogTrackedWindows()
 	{
-		var windows = _trackingService.VisibleWindows;
+		var windows = _trackingService.Windows;
 		var sb = new StringBuilder();
-		sb.Append($"{windows.Count} visible windows:");
+		sb.Append($"{windows.Count} windows:");
 		foreach (var window in windows)
 		{
 			sb.Append($"\n - {window.Caption} [{window.ClassName}]");

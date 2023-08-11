@@ -31,6 +31,10 @@ public class DefaultWindowTrackingStrategy : IWindowTrackingStrategy
             if (HasExStyle(exstyle, ExtendedWindowStyle.WS_EX_NOACTIVATE))
                 return false;
 
+            // TODO: Can we update logic to catch this exception?
+            if (window.ClassName == "ApplicationFrameWindow")
+                return false;
+
             return true;
         }
         return false;

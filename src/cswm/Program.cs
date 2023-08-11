@@ -35,15 +35,15 @@ internal static class Program
             // Multiple services require the same instance of the following:
             services.AddSingleton<MessageBus>();
             services.AddSingleton<WinHookService>();
-            services.AddSingleton<WindowManagementService>();
+            services.AddSingleton<WindowTrackingService>();
             services.AddSingleton<WindowLayoutService>();
+            services.AddSingleton<WindowManagementService>();
+            services.AddTransient<SystemTrayService>();
 
             // Should only be resolved by this class
             services.AddScoped<Startup>();
 
             // Other registrations
-            services.AddTransient<WindowTrackingService>();
-            services.AddTransient<SystemTrayService>();
             services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
             services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
         });

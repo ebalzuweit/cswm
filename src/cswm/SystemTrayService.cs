@@ -44,6 +44,7 @@ public class SystemTrayService : IService
         AddToSystemTray();
 
         _wmService.Start();
+        // Trigger initial layout
         _wmService.SetLayoutMode<NoLayoutMode>();
     }
 
