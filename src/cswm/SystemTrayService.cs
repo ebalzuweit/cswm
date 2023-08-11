@@ -122,22 +122,44 @@ public class SystemTrayService : IService
         if (_notifyIcon is null)
             throw new InvalidOperationException("Notification icon has not been built, cannot open context menu.");
 
-        _logger.LogDebug("Updating context menu");
-
         // var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
         var contextMenu = _notifyIcon.ContextMenuStrip;
         contextMenu.Items.Clear();
         contextMenu.Items.Add(AboutMenu());
         contextMenu.Items.Add(new ToolStripSeparator());
+        contextMenu.Items.Add(BuildLayoutMenu());
+        // contextMenu.Items.Add($"Layout Mode - {_layoutService.ActiveLayoutDisplayName}", null);
         // contextMenu.Items.Add(WindowListMenu(windowItems));
-        contextMenu.Items.Add($"Layout Mode - {_layoutService.ActiveLayoutDisplayName}", null);
         contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Close", null, Close_OnClick);
         e.Cancel = false;
 
         const string AboutUrl = "https://github.com/ebalzuweit/cswm";
-        ToolStripMenuItem AboutMenu() => new(AboutString(), null, (s, e) => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
+        ToolStripMenuItem AboutMenu() => new(AboutString(), null, (s, e)
+            => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
+        ToolStripMenuItem BuildLayoutMenu() => new("Layout", null, BuildLayoutMenuItems());
+        ToolStripMenuItem[] BuildLayoutMenuItems()
+        {
+            var none = new ToolStripMenuItem("None", null, (s, e) =>
+            {
+                _wmService.SetLayoutMode<NoLayoutMode>();
+            });
+            var oneTwo3 = new ToolStripMenuItem("One, two, 3", null, (s, e) =>
+            {
+                _wmService.SetLayoutMode<FixedHierarchyLayoutMode>();
+            });
+            if (_layoutService.ActiveLayoutMode == typeof(NoLayoutMode))
+            {
+                none.Checked = true;
+            }
+            else
+            {
+                oneTwo3.Checked = true;
+            }
+
+            return new[] { none, oneTwo3 };
+        }
         // ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
         // ToolStripMenuItem WindowMenu(Window window)
         // {

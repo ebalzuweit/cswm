@@ -33,6 +33,7 @@ public sealed class WindowLayoutService : IService
 	}
 
 	public string ActiveLayoutDisplayName => _activeLayoutMode.DisplayName;
+	public Type ActiveLayoutMode => _activeLayoutMode.GetType();
 
 	public void Start()
 	{
@@ -55,6 +56,7 @@ public sealed class WindowLayoutService : IService
 	public void SetLayoutMode(ILayoutMode layoutMode)
 	{
 		_activeLayoutMode = layoutMode;
+		_activeLayoutMode.Initialize(_activeWindows);
 	}
 
 	public void RelayoutWindows()
@@ -63,7 +65,9 @@ public sealed class WindowLayoutService : IService
 		LogTrackedWindows();
 	}
 
-	// TODO: We're tracking all windows, but we only want to layout visible, non-minimized windows
+	/*
+	* TODO: We're tracking all windows, but we only want to layout visible, non-minimized windows
+	*/
 
 	private void OnWindowTrackingReset()
 	{

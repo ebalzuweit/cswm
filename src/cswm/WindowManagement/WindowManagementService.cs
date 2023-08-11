@@ -32,7 +32,7 @@ public class WindowManagementService : IService
 
 	public void SetLayoutMode<T>() where T : ILayoutMode, new()
 	{
-		_logger.LogInformation($"Creating new layout '{nameof(T)}'");
+		_logger.LogInformation($"Creating new layout '{typeof(T).Name}'");
 		var layout = new T();
 		_layoutService.SetLayoutMode(layout);
 	}
