@@ -15,20 +15,21 @@ internal class Startup
     private readonly ILogger? _logger;
     private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
-    private readonly WinHookService _winHookService;
 
     private Mutex? _applicationMutex;
 
     public Startup(
         ILogger<Startup> logger,
         MessageBus bus,
-        SystemTrayService trayService,
-        WinHookService winHookService)
+        SystemTrayService trayService)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(bus);
+        ArgumentNullException.ThrowIfNull(trayService);
+
         _logger = logger;
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
-        _winHookService = winHookService ?? throw new ArgumentNullException(nameof(winHookService));
+        _bus = bus;
+        _trayService = trayService;
     }
 
     public void Start()
@@ -44,7 +45,6 @@ internal class Startup
             .Subscribe(_ => On_ExitApplicationEvent());
 
         _trayService.Start();
-        _winHookService.Start();
 
         _bus.Publish(new ResetTrackedWindowsEvent());
 

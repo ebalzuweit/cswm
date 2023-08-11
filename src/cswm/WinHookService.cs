@@ -1,5 +1,6 @@
 using cswm.Events;
 using cswm.WinApi;
+using cswm.WindowManagement;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,13 @@ using Windows.Win32.UI.Accessibility;
 
 namespace cswm;
 
-public class WinHookService
+public class WinHookService : IService
 {
     private readonly ILogger? _logger;
     private readonly List<WINEVENTPROC> _hooks = new();
     private readonly MessageBus _bus;
+
+    private Thread? _thread;
 
     public WinHookService(ILogger<WinHookService> logger, MessageBus bus)
     {
@@ -24,11 +27,16 @@ public class WinHookService
 
     public void Start()
     {
-        var thread = new Thread(() => SetWinEventHooks())
+        _thread = new Thread(() => SetWinEventHooks())
         {
             Name = "cswmhook"
         };
-        thread.Start();
+        _thread.Start();
+    }
+
+    public void Stop()
+    {
+        _thread = null;
     }
 
     private void SetWinEventHooks()

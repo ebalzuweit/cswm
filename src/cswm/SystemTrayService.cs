@@ -42,13 +42,15 @@ public class SystemTrayService : IService
     public void Start()
     {
         AddToSystemTray();
-        _wmService.SetLayoutMode<NoLayoutMode>();
+
         _wmService.Start();
+        _wmService.SetLayoutMode<NoLayoutMode>();
     }
 
     public void Stop()
     {
         _wmService.Stop();
+
         RemoveFromSystemTray();
     }
 
