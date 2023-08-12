@@ -37,7 +37,7 @@ internal static class Program
             services.AddSingleton<WindowTrackingService>();
             services.AddSingleton<WindowLayoutService>();
             services.AddSingleton<WindowManagementService>();
-            services.AddTransient<SystemTrayService>();
+            services.AddSingleton<SystemTrayService>();
 
             // Should only be resolved by this class
             services.AddScoped<Startup>();
