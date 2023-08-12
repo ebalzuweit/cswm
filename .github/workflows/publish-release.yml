@@ -1,1 +1,49 @@
+name: CD
 
+on:
+  push:
+    tags:
+      - '*'
+    branches: [ "feature/publish-release-action" ]
+
+jobs:
+  publish_release:
+    name: Publish Release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore src/cswm.sln
+    - name: Publish
+      run: dotnet publish src/cswm/cswm.csproj --no-restore -c Release -o cswm
+    - name: Create Release
+      uses: ncipollo/release-action@v1.12.0
+      with:
+        artifacts: "cswm/**"
+        draft: true
+        prerelease: true
+        generateReleaseNotes: true
+      # uses: actions/create-release@v1
+      # with:
+      #   draft: true
+      #   prerelease: true
+      #   release_name: ${{ steps.version.outputs.version }}
+      #   tag_name: ${{ github.ref }}
+    # - name: Upload a Build Artifact
+    #   uses: actions/upload-artifact@v3.1.2
+    #   with:
+    #     # Artifact name
+    #     name: cswm # optional, default is artifact
+    #     # A file, directory or wildcard pattern that describes what to upload
+    #     path: cswm/**
+    #     # The desired behavior if no files are found using the provided path.
+    #     if-no-files-found: error # optional, default is warn
+    #     # Duration after which artifact will expire in days. 0 means using default retention.
+    #     retention-days: 0 # optional
