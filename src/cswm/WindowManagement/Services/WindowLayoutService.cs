@@ -93,10 +93,10 @@ public sealed class WindowLayoutService : IService
 					.Select(w => new WindowLayout(w, w.Position))
 			)
 		);
-		var arrangedMonitorLayouts = movedWindow is null
+		lastArrangement = movedWindow is null
 			? ArrangementStrategy.Arrange(monitorLayouts)
 			: ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, movedWindow);
-		foreach (var layout in arrangedMonitorLayouts)
+		foreach (var layout in lastArrangement)
 		{
 			foreach (var windowLayout in layout.Windows)
 				SetWindowPos(windowLayout.Window, windowLayout.Position);
