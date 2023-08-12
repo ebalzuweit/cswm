@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
@@ -12,6 +13,8 @@ public sealed class WindowLayoutService : IService
 	private readonly ILogger _logger;
 	private readonly WindowManagementOptions _options;
 	private readonly WindowTrackingService _trackingService;
+
+	private IEnumerable<MonitorLayout>? lastArrangement;
 
 	public WindowLayoutService(
 		ILogger<WindowLayoutService> logger,
@@ -32,6 +35,7 @@ public sealed class WindowLayoutService : IService
 	}
 
 	public IArrangementStrategy ArrangementStrategy;
+	public IEnumerable<MonitorLayout> LastArrangement => lastArrangement ?? Array.Empty<MonitorLayout>();
 
 	public void Start()
 	{
@@ -90,10 +94,10 @@ public sealed class WindowLayoutService : IService
 					.Select(w => new WindowLayout(w, w.Position))
 			)
 		);
-		var arrangedMonitorLayouts = movedWindow is null
+		lastArrangement = movedWindow is null
 			? ArrangementStrategy.Arrange(monitorLayouts)
 			: ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, movedWindow);
-		foreach (var layout in arrangedMonitorLayouts)
+		foreach (var layout in lastArrangement)
 		{
 			foreach (var windowLayout in layout.Windows)
 				SetWindowPos(windowLayout.Window, windowLayout.Position);
