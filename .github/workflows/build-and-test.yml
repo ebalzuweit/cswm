@@ -5,26 +5,25 @@ on:
     branches: [ "main" ]
 
 jobs:
-  is_build_change:
+  is_build_required:
     name: Check if Build required
     runs-on: ubuntu-latest
     outputs:
-      build_required: ${{ steps.set_output.outputs.build_required }}
+      build_required: ${{ steps.filter.outputs.build_required }}
     steps:
     - uses: dorny/paths-filter@v2
-      id: changes
+      id: filter
       with:
         filters: |
-          src:
+          build_required:
             - .github/workflows/*
             - src/**
             - test/**
-    - id: set_output
-      run: echo "::set-output name=build_required::{{ steps.changes.outputs.src }}"
   build_and_test:
     name: Build & Test
     runs-on: windows-latest
-    if: needs.is_build_change.outputs.build_required == 'true'
+    needs: is_build_required
+    if: ${{ needs.is_build_required.outputs.build_required == 'true' }}
 
     steps:
     - uses: actions/checkout@v3
