@@ -23,10 +23,17 @@ jobs:
       run: dotnet restore src/cswm.sln
     - name: Publish
       run: dotnet publish src/cswm/cswm.csproj --no-restore -c Release -o cswm
+    - name: Zip Release
+      uses: TheDoctor0/zip-release@0.7.1
+      with:
+        type: "zip"
+        filename: "cswm.zip"
+        path: "cswm"
+        
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
-        artifacts: "cswm/**"
+        artifacts: "cswm.zip"
         draft: true
         prerelease: true
         generateReleaseNotes: true
