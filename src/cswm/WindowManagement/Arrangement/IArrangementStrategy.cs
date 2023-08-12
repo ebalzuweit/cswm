@@ -4,7 +4,7 @@ namespace cswm.WindowManagement.Arrangement;
 
 public interface IArrangementStrategy
 {
-    static string DisplayName { get; }
+    static string DisplayName { get; } = null!;
 
     IEnumerable<WindowLayout> Arrange(IEnumerable<MonitorLayout> layouts);
 
