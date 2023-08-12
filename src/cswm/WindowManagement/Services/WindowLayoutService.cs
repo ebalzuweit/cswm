@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
-using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace cswm.WindowManagement;
+namespace cswm.WindowManagement.Services;
 
 public sealed class WindowLayoutService : IService
 {

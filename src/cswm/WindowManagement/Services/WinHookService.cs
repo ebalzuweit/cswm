@@ -1,6 +1,5 @@
 using cswm.Events;
 using cswm.WinApi;
-using cswm.WindowManagement;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ using System.Windows.Forms;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Accessibility;
 
-namespace cswm;
+namespace cswm.WindowManagement.Services;
 
 public class WinHookService : IService
 {

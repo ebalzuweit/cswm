@@ -1,5 +1,5 @@
 using cswm.Events;
-using cswm.WindowManagement;
+using cswm.WindowManagement.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Reactive.Linq;
