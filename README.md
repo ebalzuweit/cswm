@@ -28,6 +28,8 @@ It will arrange the active windows like a tiling window manager,
 moving and resizing them to fill the screen without overlapping.
 You can rearrange windows by dragging them from one space to another.
 
+cswm runs in the system tray, right-click on the icon to access the menu.
+
 ### Configuration
 
 Configuration is done through the `appsettings.json` file, found in the same folder as `cswm.exe`.
