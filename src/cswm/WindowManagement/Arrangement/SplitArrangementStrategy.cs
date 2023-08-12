@@ -41,7 +41,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
         if (windows.Count() == 1)
         {
             return new[] {
-                new WindowLayout(windows.First().hWnd, space.AddMargin(_options.WindowPadding))
+                new WindowLayout(windows.First().Window, space.AddMargin(_options.WindowPadding))
             };
         }
 
@@ -71,7 +71,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
             // preferred window
             if (preferredWindow is not null)
             {
-                var layout = windowList.Where(x => x.hWnd == preferredWindow.hWnd).SingleOrDefault();
+                var layout = windowList.Where(x => x.Window.hWnd == preferredWindow.hWnd).SingleOrDefault();
                 if (layout is not null)
                 {
                     windowList.Remove(layout);
@@ -83,7 +83,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 }
             }
 
-            var leftPartition = new WindowLayout(windowList.First().hWnd, leftSpace);
+            var leftPartition = new WindowLayout(windowList.First().Window, leftSpace);
             var layouts = PartitionSpace(rightSpace, windowList.Skip(1), preferredWindow);
             layouts = layouts.Prepend(leftPartition);
             return layouts;

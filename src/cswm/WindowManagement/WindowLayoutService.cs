@@ -102,14 +102,14 @@ public sealed class WindowLayoutService : IService
 				monitor.hMonitor,
 				monitor.WorkArea,
 				windows.Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == monitor.hMonitor)
-					.Select(w => new WindowLayout(w.hWnd, w.Position))
+					.Select(w => new WindowLayout(w, w.Position))
 			)
 		);
 		var windowLayouts = preferredWindow is null
 			? _arrangementStrategy.Arrange(monitorLayouts)
 			: _arrangementStrategy.ArrangeOnWindowMove(monitorLayouts, preferredWindow);
 		foreach (var layout in windowLayouts)
-			SetWindowPos(new Window((Windows.Win32.Foundation.HWND)layout.hWnd), layout.Position); // TODO: don't recreate Window object
+			SetWindowPos(layout.Window, layout.Position);
 	}
 
 	private bool SetWindowPos(Window window, Rect position)
