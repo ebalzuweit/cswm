@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>cswm</AssemblyName>
-    <Version>0.2.2</Version>
+    <Version>0.3.0</Version>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
