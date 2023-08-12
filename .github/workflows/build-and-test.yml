@@ -10,6 +10,7 @@ on:
 
 jobs:
   is_build_change:
+    name: Check if Build required
     runs-on: ubuntu-latest
     outputs:
       build_required: ${{ steps.set_output.outputs.build_required }}
