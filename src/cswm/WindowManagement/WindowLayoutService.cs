@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using cswm.WinApi;
+using cswm.WindowManagement.Arrangement;
 using cswm.WindowManagement.Arrangement.Layout;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
@@ -13,23 +16,26 @@ public sealed class WindowLayoutService : IService
 	private readonly ILogger _logger;
 	private readonly WindowManagementOptions _options;
 	private readonly WindowTrackingService _trackingService;
+	private readonly IArrangementStrategy _arrangementStrategy;
 
 	private ILayoutMode _activeLayoutMode;
-	private ICollection<Window> _activeWindows = new List<Window>();
 
 	public WindowLayoutService(
 		ILogger<WindowLayoutService> logger,
 		IOptions<WindowManagementOptions> options,
-		WindowTrackingService trackingService
+		WindowTrackingService trackingService,
+		IArrangementStrategy arrangementStrategy
 	)
 	{
 		ArgumentNullException.ThrowIfNull(logger);
 		ArgumentNullException.ThrowIfNull(options);
 		ArgumentNullException.ThrowIfNull(trackingService);
+		ArgumentNullException.ThrowIfNull(arrangementStrategy);
 
 		_logger = logger;
 		_options = options.Value;
 		_trackingService = trackingService;
+		_arrangementStrategy = arrangementStrategy;
 	}
 
 	public string ActiveLayoutDisplayName => _activeLayoutMode.DisplayName;
@@ -62,12 +68,8 @@ public sealed class WindowLayoutService : IService
 	public void RelayoutWindows()
 	{
 		_logger.LogDebug("Laying out windows from scratch...");
-		_activeLayoutMode.Initialize(_trackingService.Windows);
+		UpdateWindowPositions();
 	}
-
-	/*
-	* TODO: We're tracking all windows, but we only want to layout visible, non-minimized windows
-	*/
 
 	private void OnWindowTrackingReset()
 	{
@@ -76,28 +78,59 @@ public sealed class WindowLayoutService : IService
 
 	private void OnWindowTrackingStart(Window window)
 	{
-		LogTrackedWindows();
+		UpdateWindowPositions();
 	}
 
 	private void OnWindowTrackingStop(Window window)
 	{
-		LogTrackedWindows();
+		UpdateWindowPositions();
 	}
 
 	private void OnWindowMoved(Window window)
 	{
-
+		UpdateWindowPositions();
 	}
 
-	private void LogTrackedWindows()
+	private void UpdateWindowPositions(Window? preferredWindow = default)
 	{
+		var monitors = User32.EnumDisplayMonitors()
+			.Select(hMonitor => new Monitor(hMonitor))
+			.ToArray();
 		var windows = _trackingService.Windows;
-		var sb = new StringBuilder();
-		sb.Append($"{windows.Count} windows:");
-		foreach (var window in windows)
-		{
-			sb.Append($"\n - {window.Caption} [{window.ClassName}]");
-		}
-		_logger.LogDebug(sb.ToString());
+		var monitorLayouts = monitors.Select(monitor =>
+			new MonitorLayout(
+				monitor.hMonitor,
+				monitor.WorkArea,
+				windows.Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == monitor.hMonitor)
+					.Select(w => new WindowLayout(w.hWnd, w.Position))
+			)
+		);
+		var windowLayouts = preferredWindow is null
+			? _arrangementStrategy.Arrange(monitorLayouts)
+			: _arrangementStrategy.ArrangeOnWindowMove(monitorLayouts, preferredWindow);
+		foreach (var layout in windowLayouts)
+			SetWindowPos(new Window((Windows.Win32.Foundation.HWND)layout.hWnd), layout.Position); // TODO: don't recreate Window object
+	}
+
+	private bool SetWindowPos(Window window, Rect position)
+	{
+		var windowsPadding = (window.Position.Width - window.ClientPosition.Width) / 2;
+		var adjustedPosition = new Rect(
+			left: position.Left - windowsPadding,
+			top: position.Top,
+			right: position.Right + windowsPadding,
+			bottom: position.Bottom + windowsPadding);
+
+		_logger.LogDebug("Moving {Window} to {Position}", window, position);
+		if (_options.DoNotManage)
+			return true;
+		return User32.SetWindowPos(
+			window.hWnd,
+			HwndInsertAfterFlags.HWND_NOTOPMOST,
+			x: adjustedPosition.Left,
+			y: adjustedPosition.Top,
+			cx: adjustedPosition.Width,
+			cy: adjustedPosition.Height,
+			SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_SHOWWINDOW);
 	}
 }
