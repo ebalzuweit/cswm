@@ -140,10 +140,11 @@ public class SystemTrayService : IService
         ToolStripMenuItem[] BuildArrangementMenuList() => new[]
         {
             BuildArrangementMenuItem<SplitArrangementStrategy>(),
+            BuildArrangementMenuItem<SilentArrangementStrategy>()
         };
         ToolStripMenuItem BuildArrangementMenuItem<T>() where T : IArrangementStrategy
             => new(typeof(T).Name[..^"ArrangementStrategy".Length], null, (s, e)
-                => _wmService.SetArrangement<SplitArrangementStrategy>());
+                => _wmService.SetArrangement<T>());
         // ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
         // ToolStripMenuItem WindowMenu(Window window)
         // {

@@ -49,8 +49,8 @@ public class WindowManagementService : IService
 
 	public void SetArrangement<T>() where T : IArrangementStrategy
 	{
-		_logger.LogDebug("Applying new arrangement {ArrangementType}", typeof(T).Name);
 		var arrangement = (T)_provider.GetService(typeof(T))!;
+		_logger.LogDebug("Applying new arrangement {ArrangementType}", arrangement.GetType().Name);
 		_layoutService.ArrangementStrategy = arrangement;
 		_layoutService.Rearrange();
 	}

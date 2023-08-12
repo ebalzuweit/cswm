@@ -45,6 +45,7 @@ internal static class Program
             // Other registrations
             services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
             services.AddTransient<SplitArrangementStrategy>();
+            services.AddTransient<SilentArrangementStrategy>();
         });
         builder.ConfigureLogging(logging =>
         {
