@@ -1,5 +1,4 @@
 using cswm.Events;
-using cswm.WindowManagement;
 using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,7 +9,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace cswm;
+namespace cswm.WindowManagement.Services;
 
 public class SystemTrayService : IService
 {

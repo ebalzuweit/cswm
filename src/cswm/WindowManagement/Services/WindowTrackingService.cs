@@ -1,5 +1,6 @@
 using cswm.Events;
 using cswm.WinApi;
+using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 
-namespace cswm.WindowManagement.Tracking;
+namespace cswm.WindowManagement.Services;
 
 public class WindowTrackingService : IService, IDisposable
 {

@@ -1,6 +1,7 @@
 ﻿using cswm.Events;
 using cswm.WindowManagement;
 using cswm.WindowManagement.Arrangement;
+using cswm.WindowManagement.Services;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

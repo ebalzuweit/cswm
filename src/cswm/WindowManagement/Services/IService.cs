@@ -1,4 +1,4 @@
-namespace cswm.WindowManagement;
+namespace cswm.WindowManagement.Services;
 
 public interface IService
 {

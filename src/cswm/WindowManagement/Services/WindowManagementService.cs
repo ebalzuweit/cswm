@@ -1,9 +1,9 @@
 ﻿using System;
 using cswm.WindowManagement.Arrangement;
-using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 
-namespace cswm.WindowManagement;
+namespace cswm.WindowManagement.Services;
+
 public class WindowManagementService : IService
 {
 	private readonly ILogger _logger;
