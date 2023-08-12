@@ -76,10 +76,10 @@ public sealed class WindowLayoutService : IService
 
 	private void OnWindowMoved(Window window)
 	{
-		UpdateWindowPositions();
+		UpdateWindowPositions(window);
 	}
 
-	private void UpdateWindowPositions(Window? preferredWindow = default)
+	private void UpdateWindowPositions(Window? movedWindow = default)
 	{
 		var monitors = User32.EnumDisplayMonitors()
 			.Select(hMonitor => new Monitor(hMonitor))
@@ -93,9 +93,9 @@ public sealed class WindowLayoutService : IService
 					.Select(w => new WindowLayout(w, w.Position))
 			)
 		);
-		var windowLayouts = preferredWindow is null
+		var windowLayouts = movedWindow is null
 			? ArrangementStrategy.Arrange(monitorLayouts)
-			: ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, preferredWindow);
+			: ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, movedWindow);
 		foreach (var layout in windowLayouts)
 			SetWindowPos(layout.Window, layout.Position);
 	}
