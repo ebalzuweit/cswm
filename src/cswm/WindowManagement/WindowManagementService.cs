@@ -38,6 +38,7 @@ public class WindowManagementService : IService
 		_winHookService.Start();
 		_trackingService.Start();
 		_layoutService.Start();
+		_layoutService.Rearrange();
 	}
 
 	public void Stop()
