@@ -1,0 +1,17 @@
+name: Skip CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - .github/workflows/*
+      - src/**
+      - test/**
+
+jobs:
+  build_and_test:
+    name: Skip Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: 'echo "No build required" '
