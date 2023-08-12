@@ -21,14 +21,22 @@ public class SplitArrangementStrategy : IArrangementStrategy
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public IEnumerable<WindowLayout> Arrange(IEnumerable<MonitorLayout> layouts)
+    public IEnumerable<MonitorLayout> Arrange(IEnumerable<MonitorLayout> layouts)
         => Arrange_Internal(layouts);
 
-    public IEnumerable<WindowLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow)
+    public IEnumerable<MonitorLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow)
         => Arrange_Internal(layouts, movedWindow);
 
-    private IEnumerable<WindowLayout> Arrange_Internal(IEnumerable<MonitorLayout> layouts, Window? movedWindow = default)
-        => layouts.SelectMany(layout => PartitionSpace(layout.Space.AddMargin(_options.MonitorPadding), layout.Windows, movedWindow));
+    private IEnumerable<MonitorLayout> Arrange_Internal(IEnumerable<MonitorLayout> layouts, Window? movedWindow = default)
+        => layouts.Select(layout => ArrangeMonitor(layout, movedWindow));
+
+    private MonitorLayout ArrangeMonitor(MonitorLayout layout, Window? movedWindow)
+    {
+        var space = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
+        var arrangedWindows = PartitionSpace(space, layout.Windows, movedWindow);
+
+        return layout with { Windows = arrangedWindows };
+    }
 
     /// <summary>
     /// Recursively partition a space, assigning windows greedily.

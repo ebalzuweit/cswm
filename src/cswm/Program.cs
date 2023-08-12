@@ -47,6 +47,7 @@ internal static class Program
             services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
             services.AddTransient<SplitArrangementStrategy>();
             services.AddTransient<SilentArrangementStrategy>();
+            services.AddTransient<SystemTrayMenu>();
         });
         builder.ConfigureLogging(logging =>
         {

@@ -6,7 +6,7 @@ public interface IArrangementStrategy
 {
     static string DisplayName { get; } = null!;
 
-    IEnumerable<WindowLayout> Arrange(IEnumerable<MonitorLayout> layouts);
+    IEnumerable<MonitorLayout> Arrange(IEnumerable<MonitorLayout> layouts);
 
-    IEnumerable<WindowLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow);
+    IEnumerable<MonitorLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow);
 }

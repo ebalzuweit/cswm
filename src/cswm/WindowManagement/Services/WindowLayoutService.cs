@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
@@ -12,6 +13,8 @@ public sealed class WindowLayoutService : IService
 	private readonly ILogger _logger;
 	private readonly WindowManagementOptions _options;
 	private readonly WindowTrackingService _trackingService;
+
+	private IEnumerable<MonitorLayout>? lastArrangement;
 
 	public WindowLayoutService(
 		ILogger<WindowLayoutService> logger,
@@ -32,6 +35,7 @@ public sealed class WindowLayoutService : IService
 	}
 
 	public IArrangementStrategy ArrangementStrategy;
+	public IEnumerable<MonitorLayout> LastArrangement => lastArrangement ?? Array.Empty<MonitorLayout>();
 
 	public void Start()
 	{
@@ -84,17 +88,19 @@ public sealed class WindowLayoutService : IService
 		var windows = _trackingService.Windows;
 		var monitorLayouts = monitors.Select(monitor =>
 			new MonitorLayout(
-				monitor.hMonitor,
-				monitor.WorkArea,
+				monitor,
 				windows.Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == monitor.hMonitor)
 					.Select(w => new WindowLayout(w, w.Position))
 			)
 		);
-		var windowLayouts = movedWindow is null
+		lastArrangement = movedWindow is null
 			? ArrangementStrategy.Arrange(monitorLayouts)
 			: ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, movedWindow);
-		foreach (var layout in windowLayouts)
-			SetWindowPos(layout.Window, layout.Position);
+		foreach (var layout in lastArrangement)
+		{
+			foreach (var windowLayout in layout.Windows)
+				SetWindowPos(windowLayout.Window, windowLayout.Position);
+		}
 	}
 
 	private bool SetWindowPos(Window window, Rect position)

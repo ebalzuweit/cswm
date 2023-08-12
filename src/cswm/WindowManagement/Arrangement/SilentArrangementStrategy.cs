@@ -7,9 +7,9 @@ public class SilentArrangementStrategy : IArrangementStrategy
 {
 	public static string DisplayName => "Silent";
 
-	public IEnumerable<WindowLayout> Arrange(IEnumerable<MonitorLayout> layouts)
-		=> Array.Empty<WindowLayout>();
+	public IEnumerable<MonitorLayout> Arrange(IEnumerable<MonitorLayout> layouts)
+		=> Array.Empty<MonitorLayout>();
 
-	public IEnumerable<WindowLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow)
-		=> Array.Empty<WindowLayout>();
+	public IEnumerable<MonitorLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow)
+		=> Array.Empty<MonitorLayout>();
 }

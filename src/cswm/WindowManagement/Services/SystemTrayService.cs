@@ -1,9 +1,7 @@
 using cswm.Events;
-using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Threading;
@@ -16,22 +14,26 @@ public class SystemTrayService : IService
     private readonly ILogger _logger;
     private readonly MessageBus _bus;
     private readonly WindowManagementService _wmService;
+    private readonly SystemTrayMenu _trayMenu;
+
     private NotifyIcon? _notifyIcon;
     private Thread? _thread;
-    private Version? _version;
 
     public SystemTrayService(
         ILogger<SystemTrayService> logger,
         MessageBus bus,
-        WindowManagementService wmService)
+        WindowManagementService wmService,
+        SystemTrayMenu trayMenu)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(bus);
         ArgumentNullException.ThrowIfNull(wmService);
+        ArgumentNullException.ThrowIfNull(trayMenu);
 
         _logger = logger;
         _bus = bus;
         _wmService = wmService;
+        _trayMenu = trayMenu;
     }
 
     public void Start()
@@ -95,7 +97,6 @@ public class SystemTrayService : IService
 
         NotifyIcon icon;
         var assembly = Assembly.GetEntryAssembly()!;
-        _version = assembly.GetName().Version;
         using (var stream = assembly.GetManifestResourceStream(iconResourceName))
         {
             var contextMenu = new ContextMenuStrip();
@@ -113,48 +114,14 @@ public class SystemTrayService : IService
         return icon;
     }
 
-    // TODO: Move this logic out
     private void ContextMenu_Opening(object? sender, CancelEventArgs e)
     {
         if (_notifyIcon is null)
             throw new InvalidOperationException("Notification icon has not been built, cannot open context menu.");
 
-        // var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
         var contextMenu = _notifyIcon.ContextMenuStrip;
         contextMenu.Items.Clear();
-        contextMenu.Items.Add(AboutMenu());
-        contextMenu.Items.Add(new ToolStripSeparator());
-        contextMenu.Items.Add(BuildArrangementMenu());
-        // contextMenu.Items.Add(WindowListMenu(windowItems));
-        contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
-        contextMenu.Items.Add(new ToolStripSeparator());
-        contextMenu.Items.Add("Close", null, Close_OnClick);
+        contextMenu.Items.AddRange(_trayMenu.BuildTrayMenu());
         e.Cancel = false;
-
-        ToolStripMenuItem AboutMenu()
-            => new($"cswm v{_version!.Major}.{_version.Minor}.{_version.Build}", null, (s, e)
-                => Process.Start(new ProcessStartInfo("https://github.com/ebalzuweit/cswm") { UseShellExecute = true }));
-        ToolStripMenuItem BuildArrangementMenu()
-            => new("Arrangement", null, BuildArrangementMenuList());
-        ToolStripMenuItem[] BuildArrangementMenuList() => new[]
-        {
-            BuildArrangementMenuItem<SplitArrangementStrategy>(),
-            BuildArrangementMenuItem<SilentArrangementStrategy>()
-        };
-        ToolStripMenuItem BuildArrangementMenuItem<T>() where T : IArrangementStrategy
-            => new(typeof(T).Name[..^"ArrangementStrategy".Length], null, (s, e)
-                => _wmService.SetArrangement<T>())
-            {
-                Checked = typeof(T) == _wmService.GetArrangement().GetType()
-            };
-        // ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
-        // ToolStripMenuItem WindowMenu(Window window)
-        // {
-        //     var managed = _windowManager.IsWindowManaged(window);
-        //     return new(window.Caption.Truncate(40), null, (s, e) => _windowManager.SetWindowManaged(window, !managed))
-        //     {
-        //         Checked = managed,
-        //     };
-        // }
     }
 }
