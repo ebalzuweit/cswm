@@ -9,9 +9,25 @@ on:
       - test/**
 
 jobs:
+  is_build_change:
+    runs-on: ubuntu-latest
+    outputs:
+      build_required: ${{ steps.set_output.outputs.build_required }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          src:
+            - .github/workflows/*
+            - src/**
+            - test/**
+    - id: set_output
+      run: echo "::set-output name=build_required::{{ steps.changes.outputs.src }}"
   build_and_test:
     name: Build & Test
     runs-on: windows-latest
+    if: needs.is_build_change.outputs.build_required == 'true'
 
     steps:
     - uses: actions/checkout@v3
