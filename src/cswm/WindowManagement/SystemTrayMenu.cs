@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using cswm.Events;
+using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
 using cswm.WindowManagement.Services;
 using Humanizer;
@@ -66,7 +67,7 @@ public class SystemTrayMenu
 		return layouts.Select(BuildMonitorMenuItem).ToArray();
 
 		ToolStripMenuItem BuildMonitorMenuItem(MonitorLayout layout)
-			=> new("Monitor", null, layout.Windows.Select(BuildWindowMenuItem).ToArray());
+			=> new(layout.Monitor.DeviceName, null, layout.Windows.Select(BuildWindowMenuItem).ToArray());
 
 		ToolStripMenuItem BuildWindowMenuItem(WindowLayout windowLayout)
 			=> new(windowLayout.Window.Caption.Truncate(40));

@@ -88,8 +88,7 @@ public sealed class WindowLayoutService : IService
 		var windows = _trackingService.Windows;
 		var monitorLayouts = monitors.Select(monitor =>
 			new MonitorLayout(
-				monitor.hMonitor,
-				monitor.WorkArea,
+				monitor,
 				windows.Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == monitor.hMonitor)
 					.Select(w => new WindowLayout(w, w.Position))
 			)

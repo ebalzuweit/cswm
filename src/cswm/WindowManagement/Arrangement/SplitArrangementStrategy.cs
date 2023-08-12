@@ -32,7 +32,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private MonitorLayout ArrangeMonitor(MonitorLayout layout, Window? movedWindow)
     {
-        var space = layout.Space.AddMargin(_options.MonitorPadding);
+        var space = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
         var arrangedWindows = PartitionSpace(space, layout.Windows, movedWindow);
 
         return layout with { Windows = arrangedWindows };
