@@ -50,9 +50,6 @@ internal static class Program
         builder.ConfigureLogging(logging =>
         {
             logging.ClearProviders();
-#if DEBUG
-            logging.AddDebug();
-#endif
         });
         return builder.Build();
     }
