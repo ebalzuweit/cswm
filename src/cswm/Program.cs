@@ -1,7 +1,6 @@
 ﻿using cswm.Events;
 using cswm.WindowManagement;
 using cswm.WindowManagement.Arrangement;
-using cswm.WindowManagement.Arrangement.Layout;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -45,7 +44,7 @@ internal static class Program
 
             // Other registrations
             services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
-            services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
+            services.AddTransient<SplitArrangementStrategy>();
         });
         builder.ConfigureLogging(logging =>
         {

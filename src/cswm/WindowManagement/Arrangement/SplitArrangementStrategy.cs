@@ -10,6 +10,8 @@ namespace cswm.WindowManagement.Arrangement;
 
 public class SplitArrangementStrategy : IArrangementStrategy
 {
+    public static string DisplayName => "Split";
+
     private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
 

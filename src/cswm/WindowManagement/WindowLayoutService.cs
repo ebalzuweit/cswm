@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
-using cswm.WindowManagement.Arrangement.Layout;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,30 +15,26 @@ public sealed class WindowLayoutService : IService
 	private readonly ILogger _logger;
 	private readonly WindowManagementOptions _options;
 	private readonly WindowTrackingService _trackingService;
-	private readonly IArrangementStrategy _arrangementStrategy;
-
-	private ILayoutMode _activeLayoutMode;
 
 	public WindowLayoutService(
 		ILogger<WindowLayoutService> logger,
 		IOptions<WindowManagementOptions> options,
 		WindowTrackingService trackingService,
-		IArrangementStrategy arrangementStrategy
+		SplitArrangementStrategy defaultArrangementStrategy
 	)
 	{
 		ArgumentNullException.ThrowIfNull(logger);
 		ArgumentNullException.ThrowIfNull(options);
 		ArgumentNullException.ThrowIfNull(trackingService);
-		ArgumentNullException.ThrowIfNull(arrangementStrategy);
+		ArgumentNullException.ThrowIfNull(defaultArrangementStrategy);
 
 		_logger = logger;
 		_options = options.Value;
 		_trackingService = trackingService;
-		_arrangementStrategy = arrangementStrategy;
+		ArrangementStrategy = defaultArrangementStrategy;
 	}
 
-	public string ActiveLayoutDisplayName => _activeLayoutMode.DisplayName;
-	public Type ActiveLayoutMode => _activeLayoutMode.GetType();
+	public IArrangementStrategy ArrangementStrategy;
 
 	public void Start()
 	{
@@ -59,21 +54,14 @@ public sealed class WindowLayoutService : IService
 #pragma warning restore CS8601
 	}
 
-	public void SetLayoutMode(ILayoutMode layoutMode)
+	public void Rearrange()
 	{
-		_activeLayoutMode = layoutMode;
-		RelayoutWindows();
-	}
-
-	public void RelayoutWindows()
-	{
-		_logger.LogDebug("Laying out windows from scratch...");
 		UpdateWindowPositions();
 	}
 
 	private void OnWindowTrackingReset()
 	{
-		RelayoutWindows();
+		Rearrange();
 	}
 
 	private void OnWindowTrackingStart(Window window)
@@ -106,8 +94,8 @@ public sealed class WindowLayoutService : IService
 			)
 		);
 		var windowLayouts = preferredWindow is null
-			? _arrangementStrategy.Arrange(monitorLayouts)
-			: _arrangementStrategy.ArrangeOnWindowMove(monitorLayouts, preferredWindow);
+			? ArrangementStrategy.Arrange(monitorLayouts)
+			: ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, preferredWindow);
 		foreach (var layout in windowLayouts)
 			SetWindowPos(layout.Window, layout.Position);
 	}

@@ -1,5 +1,5 @@
 ﻿using System;
-using cswm.WindowManagement.Arrangement.Layout;
+using cswm.WindowManagement.Arrangement;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 
@@ -7,23 +7,27 @@ namespace cswm.WindowManagement;
 public class WindowManagementService : IService
 {
 	private readonly ILogger _logger;
+	private readonly IServiceProvider _provider;
 	private readonly WinHookService _winHookService;
 	private readonly WindowTrackingService _trackingService;
 	private readonly WindowLayoutService _layoutService;
 
 	public WindowManagementService(
 		ILogger<WindowManagementService> logger,
+		IServiceProvider provider,
 		WinHookService winHookService,
 		WindowTrackingService trackingService,
 		WindowLayoutService layoutService
 	)
 	{
 		ArgumentNullException.ThrowIfNull(logger);
+		ArgumentNullException.ThrowIfNull(provider);
 		ArgumentNullException.ThrowIfNull(winHookService);
 		ArgumentNullException.ThrowIfNull(trackingService);
 		ArgumentNullException.ThrowIfNull(layoutService);
 
 		_logger = logger;
+		_provider = provider;
 		_winHookService = winHookService;
 		_trackingService = trackingService;
 		_layoutService = layoutService;
@@ -43,10 +47,11 @@ public class WindowManagementService : IService
 		_winHookService.Stop();
 	}
 
-	public void SetLayoutMode<T>() where T : ILayoutMode, new()
+	public void SetArrangement<T>() where T : IArrangementStrategy
 	{
-		_logger.LogInformation($"Creating new layout '{typeof(T).Name}'");
-		var layout = new T();
-		_layoutService.SetLayoutMode(layout);
+		_logger.LogDebug("Applying new arrangement {ArrangementType}", typeof(T).Name);
+		var arrangement = (T)_provider.GetService(typeof(T))!;
+		_layoutService.ArrangementStrategy = arrangement;
+		_layoutService.Rearrange();
 	}
 }

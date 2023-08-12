@@ -1,13 +1,11 @@
 using cswm.Events;
 using cswm.WindowManagement;
-using cswm.WindowManagement.Arrangement.Layout;
-using Humanizer;
+using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -19,7 +17,6 @@ public class SystemTrayService : IService
     private readonly ILogger _logger;
     private readonly MessageBus _bus;
     private readonly WindowManagementService _wmService;
-    private readonly WindowLayoutService _layoutService;
     private NotifyIcon? _notifyIcon;
     private Thread? _thread;
     private Version? _version;
@@ -27,16 +24,15 @@ public class SystemTrayService : IService
     public SystemTrayService(
         ILogger<SystemTrayService> logger,
         MessageBus bus,
-        WindowManagementService wmService,
-        WindowLayoutService layoutService)
+        WindowManagementService wmService)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(bus);
         ArgumentNullException.ThrowIfNull(wmService);
-        ArgumentNullException.ThrowIfNull(layoutService);
 
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+        _logger = logger;
+        _bus = bus;
         _wmService = wmService;
-        _layoutService = layoutService;
     }
 
     public void Start()
@@ -44,8 +40,6 @@ public class SystemTrayService : IService
         AddToSystemTray();
 
         _wmService.Start();
-        // Trigger initial layout
-        _wmService.SetLayoutMode<NoLayoutMode>();
     }
 
     public void Stop()
@@ -120,6 +114,7 @@ public class SystemTrayService : IService
         return icon;
     }
 
+    // TODO: Move this logic out
     private void ContextMenu_Opening(object? sender, CancelEventArgs e)
     {
         if (_notifyIcon is null)
@@ -130,39 +125,25 @@ public class SystemTrayService : IService
         contextMenu.Items.Clear();
         contextMenu.Items.Add(AboutMenu());
         contextMenu.Items.Add(new ToolStripSeparator());
-        contextMenu.Items.Add(BuildLayoutMenu());
-        // contextMenu.Items.Add($"Layout Mode - {_layoutService.ActiveLayoutDisplayName}", null);
+        contextMenu.Items.Add(BuildArrangementMenu());
         // contextMenu.Items.Add(WindowListMenu(windowItems));
         contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Close", null, Close_OnClick);
         e.Cancel = false;
 
-        const string AboutUrl = "https://github.com/ebalzuweit/cswm";
-        ToolStripMenuItem AboutMenu() => new(AboutString(), null, (s, e)
-            => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
-        ToolStripMenuItem BuildLayoutMenu() => new("Layout", null, BuildLayoutMenuItems());
-        ToolStripMenuItem[] BuildLayoutMenuItems()
+        ToolStripMenuItem AboutMenu()
+            => new($"cswm v{_version!.Major}.{_version.Minor}.{_version.Build}", null, (s, e)
+                => Process.Start(new ProcessStartInfo("https://github.com/ebalzuweit/cswm") { UseShellExecute = true }));
+        ToolStripMenuItem BuildArrangementMenu()
+            => new("Arrangement", null, BuildArrangementMenuList());
+        ToolStripMenuItem[] BuildArrangementMenuList() => new[]
         {
-            var none = new ToolStripMenuItem("None", null, (s, e) =>
-            {
-                _wmService.SetLayoutMode<NoLayoutMode>();
-            });
-            var oneTwo3 = new ToolStripMenuItem("One, two, 3", null, (s, e) =>
-            {
-                _wmService.SetLayoutMode<FixedHierarchyLayoutMode>();
-            });
-            if (_layoutService.ActiveLayoutMode == typeof(NoLayoutMode))
-            {
-                none.Checked = true;
-            }
-            else
-            {
-                oneTwo3.Checked = true;
-            }
-
-            return new[] { none, oneTwo3 };
-        }
+            BuildArrangementMenuItem<SplitArrangementStrategy>(),
+        };
+        ToolStripMenuItem BuildArrangementMenuItem<T>() where T : IArrangementStrategy
+            => new(typeof(T).Name[..^"ArrangementStrategy".Length], null, (s, e)
+                => _wmService.SetArrangement<SplitArrangementStrategy>());
         // ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
         // ToolStripMenuItem WindowMenu(Window window)
         // {
@@ -172,7 +153,5 @@ public class SystemTrayService : IService
         //         Checked = managed,
         //     };
         // }
-
-        string AboutString() => $"cswm v{_version!.Major}.{_version.Minor}.{_version.Build}";
     }
 }
