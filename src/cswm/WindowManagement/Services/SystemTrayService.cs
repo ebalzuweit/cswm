@@ -143,7 +143,10 @@ public class SystemTrayService : IService
         };
         ToolStripMenuItem BuildArrangementMenuItem<T>() where T : IArrangementStrategy
             => new(typeof(T).Name[..^"ArrangementStrategy".Length], null, (s, e)
-                => _wmService.SetArrangement<T>());
+                => _wmService.SetArrangement<T>())
+            {
+                Checked = typeof(T) == _wmService.GetArrangement().GetType()
+            };
         // ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
         // ToolStripMenuItem WindowMenu(Window window)
         // {

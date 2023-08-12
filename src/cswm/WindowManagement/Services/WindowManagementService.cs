@@ -48,6 +48,8 @@ public class WindowManagementService : IService
 		_winHookService.Stop();
 	}
 
+	public IArrangementStrategy GetArrangement() => _layoutService.ArrangementStrategy;
+
 	public void SetArrangement<T>() where T : IArrangementStrategy
 	{
 		var arrangement = (T)_provider.GetService(typeof(T))!;
