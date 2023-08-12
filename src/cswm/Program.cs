@@ -34,23 +34,24 @@ internal static class Program
             // Multiple services require the same instance of the following:
             services.AddSingleton<MessageBus>();
             services.AddSingleton<WinHookService>();
+            services.AddSingleton<WindowTrackingService>();
+            services.AddSingleton<WindowLayoutService>();
             services.AddSingleton<WindowManagementService>();
+            services.AddSingleton<SystemTrayService>();
 
             // Should only be resolved by this class
             services.AddScoped<Startup>();
 
             // Other registrations
-            services.AddTransient<WindowTrackingService>();
-            services.AddTransient<SystemTrayService>();
             services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
-            services.AddTransient<IArrangementStrategy, SplitArrangementStrategy>();
+            services.AddTransient<SplitArrangementStrategy>();
+            services.AddTransient<SilentArrangementStrategy>();
         });
         builder.ConfigureLogging(logging =>
         {
             logging.ClearProviders();
 #if DEBUG
             logging.AddDebug();
-            logging.AddConsole();
 #endif
         });
         return builder.Build();

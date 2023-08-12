@@ -1,35 +1,55 @@
 using cswm.Events;
 using cswm.WindowManagement;
-using Humanizer;
+using cswm.WindowManagement.Arrangement;
 using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
 namespace cswm;
 
-public class SystemTrayService
+public class SystemTrayService : IService
 {
     private readonly ILogger _logger;
     private readonly MessageBus _bus;
-    private readonly WindowManagementService _windowManager;
+    private readonly WindowManagementService _wmService;
     private NotifyIcon? _notifyIcon;
     private Thread? _thread;
     private Version? _version;
 
-    public SystemTrayService(ILogger<SystemTrayService> logger, MessageBus bus, WindowManagementService windowMgmtService)
+    public SystemTrayService(
+        ILogger<SystemTrayService> logger,
+        MessageBus bus,
+        WindowManagementService wmService)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        _windowManager = windowMgmtService ?? throw new ArgumentNullException(nameof(windowMgmtService));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(bus);
+        ArgumentNullException.ThrowIfNull(wmService);
+
+        _logger = logger;
+        _bus = bus;
+        _wmService = wmService;
     }
 
-    public void AddToSystemTray()
+    public void Start()
+    {
+        AddToSystemTray();
+
+        _wmService.Start();
+    }
+
+    public void Stop()
+    {
+        _wmService.Stop();
+
+        RemoveFromSystemTray();
+    }
+
+    private void AddToSystemTray()
     {
         _logger.LogInformation("Adding notification icon to system tray...");
 
@@ -42,7 +62,7 @@ public class SystemTrayService
         _thread.Start();
     }
 
-    public void RemoveFromSystemTray()
+    private void RemoveFromSystemTray()
     {
         _logger.LogInformation("Removing notification icon from system tray...");
 
@@ -94,36 +114,45 @@ public class SystemTrayService
         return icon;
     }
 
+    // TODO: Move this logic out
     private void ContextMenu_Opening(object? sender, CancelEventArgs e)
     {
         if (_notifyIcon is null)
             throw new InvalidOperationException("Notification icon has not been built, cannot open context menu.");
 
-        _logger.LogDebug("Updating context menu");
-
-        var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
+        // var windowItems = _windowManager.Windows.Select(w => WindowMenu(w)).ToArray();
         var contextMenu = _notifyIcon.ContextMenuStrip;
         contextMenu.Items.Clear();
         contextMenu.Items.Add(AboutMenu());
         contextMenu.Items.Add(new ToolStripSeparator());
-        contextMenu.Items.Add(WindowListMenu(windowItems));
+        contextMenu.Items.Add(BuildArrangementMenu());
+        // contextMenu.Items.Add(WindowListMenu(windowItems));
         contextMenu.Items.Add("Refresh", null, Refresh_OnClick);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Close", null, Close_OnClick);
         e.Cancel = false;
 
-        const string AboutUrl = "https://github.com/ebalzuweit/cswm";
-        ToolStripMenuItem AboutMenu() => new(AboutString(), null, (s, e) => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true }));
-        ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
-        ToolStripMenuItem WindowMenu(Window window)
+        ToolStripMenuItem AboutMenu()
+            => new($"cswm v{_version!.Major}.{_version.Minor}.{_version.Build}", null, (s, e)
+                => Process.Start(new ProcessStartInfo("https://github.com/ebalzuweit/cswm") { UseShellExecute = true }));
+        ToolStripMenuItem BuildArrangementMenu()
+            => new("Arrangement", null, BuildArrangementMenuList());
+        ToolStripMenuItem[] BuildArrangementMenuList() => new[]
         {
-            var managed = _windowManager.IsWindowManaged(window);
-            return new(window.Caption.Truncate(40), null, (s, e) => _windowManager.SetWindowManaged(window, !managed))
-            {
-                Checked = managed,
-            };
-        }
-
-        string AboutString() => $"cswm v{_version.Major}.{_version.Minor}.{_version.Build}";
+            BuildArrangementMenuItem<SplitArrangementStrategy>(),
+            BuildArrangementMenuItem<SilentArrangementStrategy>()
+        };
+        ToolStripMenuItem BuildArrangementMenuItem<T>() where T : IArrangementStrategy
+            => new(typeof(T).Name[..^"ArrangementStrategy".Length], null, (s, e)
+                => _wmService.SetArrangement<T>());
+        // ToolStripMenuItem WindowListMenu(ToolStripMenuItem[] windowItems) => new("Tracked windows", null, windowItems);
+        // ToolStripMenuItem WindowMenu(Window window)
+        // {
+        //     var managed = _windowManager.IsWindowManaged(window);
+        //     return new(window.Caption.Truncate(40), null, (s, e) => _windowManager.SetWindowManaged(window, !managed))
+        //     {
+        //         Checked = managed,
+        //     };
+        // }
     }
 }

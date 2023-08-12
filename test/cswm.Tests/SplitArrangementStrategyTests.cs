@@ -76,15 +76,15 @@ public class SplitArrangementStrategyTests
     //	Assert.Contains(new Rect(1440, 514, 1920, 1027), positions);
     //}
 
-    private WindowLayout[] GetWindowLayouts(int n)
-    {
-        var windows = new WindowLayout[n];
-        for (int i = 0; i < n; i++)
-        {
-            windows[i] = new WindowLayout(IntPtr.Zero, new Rect());
-        }
-        return windows;
-    }
+    // private WindowLayout[] GetWindowLayouts(int n)
+    // {
+    //     var windows = new WindowLayout[n];
+    //     for (int i = 0; i < n; i++)
+    //     {
+    //         windows[i] = new WindowLayout(new Window(IntPtr.Zero), new Rect());
+    //     }
+    //     return windows;
+    // }
 
     private Monitor[] GetMonitors(int n)
     {

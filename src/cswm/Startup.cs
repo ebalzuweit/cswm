@@ -15,23 +15,21 @@ internal class Startup
     private readonly ILogger? _logger;
     private readonly MessageBus _bus;
     private readonly SystemTrayService _trayService;
-    private readonly WinHookService _winHookService;
-    private readonly WindowManagementService _wmService;
 
     private Mutex? _applicationMutex;
 
     public Startup(
         ILogger<Startup> logger,
         MessageBus bus,
-        SystemTrayService trayService,
-        WinHookService winHookService,
-        WindowManagementService windowManagementService)
+        SystemTrayService trayService)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(bus);
+        ArgumentNullException.ThrowIfNull(trayService);
+
         _logger = logger;
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
-        _winHookService = winHookService ?? throw new ArgumentNullException(nameof(winHookService));
-        _wmService = windowManagementService ?? throw new ArgumentNullException(nameof(windowManagementService));
+        _bus = bus;
+        _trayService = trayService;
     }
 
     public void Start()
@@ -46,11 +44,7 @@ internal class Startup
         _bus.Events.Where(@event => @event is ExitApplicationEvent)
             .Subscribe(_ => On_ExitApplicationEvent());
 
-        _trayService.AddToSystemTray();
-        _winHookService.Start();
-        _wmService.Start();
-
-        _bus.Publish(new ResetTrackedWindowsEvent());
+        _trayService.Start();
 
         // message loop - prevents DI container from disposing our services
         Application.Run();
@@ -59,8 +53,7 @@ internal class Startup
     private void On_ExitApplicationEvent()
     {
         _logger?.LogInformation("ExitApplicationEvent received, exiting.");
-        _wmService.Stop();
-        _trayService.RemoveFromSystemTray();
+        _trayService.Stop();
 
         Application.Exit();
 

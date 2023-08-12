@@ -56,6 +56,20 @@ public static class User32
     [DllImport("user32.dll")]
     public static extern bool GetCursorPos(ref Point lpPoint);
 
+    /// <summary>
+    ///     Retrieves a handle to the Shell's desktop window.
+    ///     <para>
+    ///     Go to https://msdn.microsoft.com/en-us/library/windows/desktop/ms633512%28v=vs.85%29.aspx for more
+    ///     information
+    ///     </para>
+    /// </summary>
+    /// <returns>
+    ///     C++ ( Type: HWND )<br />The return value is the handle of the Shell's desktop window. If no Shell process is
+    ///     present, the return value is NULL.
+    /// </returns>
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetShellWindow();
+
     #region Monitor Functions
 
     /// <summary>
@@ -195,8 +209,8 @@ public static class User32
         IntPtr hWndTry;
         while ((hWndTry = GetLastActivePopup(hWndWalk)) != hWndTry)
         {
-            if (IsWindowVisible(hWndTry))
-                break;
+            // if (IsWindowVisible(hWndTry))
+            //     break;
             hWndWalk = hWndTry;
         }
         return hWndWalk == hWnd;
