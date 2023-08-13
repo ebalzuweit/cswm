@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using cswm.Events;
 using cswm.Events;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
@@ -19,6 +21,7 @@ public sealed class WindowLayoutService : IService
 	private readonly MessageBus _bus;
 	private readonly WindowTrackingService _trackingService;
 
+	private List<IDisposable> _subscriptions = new();
 	private IEnumerable<MonitorLayout>? lastArrangement;
 
 	public WindowLayoutService(
@@ -99,17 +102,7 @@ public sealed class WindowLayoutService : IService
 
 	private void UpdateWindowPositions(Window? movedWindow = default)
 	{
-		var monitors = User32.EnumDisplayMonitors()
-			.Select(hMonitor => new Monitor(hMonitor))
-			.ToArray();
-		var windows = _trackingService.Windows;
-		var monitorLayouts = monitors.Select(monitor =>
-			new MonitorLayout(
-				monitor,
-				windows.Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == monitor.hMonitor)
-					.Select(w => new WindowLayout(w, w.Position))
-			)
-		);
+		var monitorLayouts = _trackingService.GetCurrentLayouts();
 		lastArrangement = movedWindow is null
 			? ArrangementStrategy.Arrange(monitorLayouts)
 			: ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, movedWindow);

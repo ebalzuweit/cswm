@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using cswm.Events;
-using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
 using cswm.WindowManagement.Services;
 using Humanizer;
@@ -17,16 +16,22 @@ namespace cswm.WindowManagement;
 /// </summary>
 public class SystemTrayMenu
 {
+	private readonly IServiceProvider _provider;
 	private readonly MessageBus _bus;
-	private readonly WindowLayoutService _layoutService;
+	private readonly WindowTrackingService _trackingService;
 
-	public SystemTrayMenu(MessageBus bus, WindowLayoutService layoutService)
+	public SystemTrayMenu(
+		IServiceProvider provider,
+		MessageBus bus,
+		WindowTrackingService trackingService)
 	{
+		ArgumentNullException.ThrowIfNull(provider);
 		ArgumentNullException.ThrowIfNull(bus);
-		ArgumentNullException.ThrowIfNull(layoutService);
+		ArgumentNullException.ThrowIfNull(trackingService);
 
+		_provider = provider;
 		_bus = bus;
-		_layoutService = layoutService;
+		_trackingService = trackingService;
 	}
 
 	public ToolStripItem[] BuildTrayMenu()
@@ -36,10 +41,8 @@ public class SystemTrayMenu
 			BuildAboutMenuItem(),
 			new ToolStripSeparator()
 		};
-		if (_layoutService.LastArrangement is not null)
-		{
-			items.AddRange(BuildMonitorMenuItems(_layoutService.LastArrangement));
-		}
+		var monitorLayouts = _trackingService.GetCurrentLayouts();
+		items.AddRange(BuildMonitorMenuItems(monitorLayouts));
 		items.Add(new ToolStripSeparator());
 		items.Add(BuildCloseMenuItem());
 
@@ -70,9 +73,34 @@ public class SystemTrayMenu
 		return layouts.Select(BuildMonitorMenuItem).ToArray();
 
 		ToolStripMenuItem BuildMonitorMenuItem(MonitorLayout layout)
-			=> new(layout.Monitor.DeviceName, null, layout.Windows.Select(BuildWindowMenuItem).ToArray());
+			=> new(layout.Monitor.DeviceName, null, BuildMonitorMenuList(layout));
+
+		ToolStripMenuItem[] BuildMonitorMenuList(MonitorLayout layout)
+		{
+			var items = new List<ToolStripMenuItem>()
+			{
+				BuildArrangementMenuItem<SplitArrangementStrategy>(layout),
+				BuildArrangementMenuItem<SilentArrangementStrategy>(layout)
+			};
+#if DEBUG
+			items.Add(new("--- Windows ---"));
+			items.AddRange(layout.Windows.Select(BuildWindowMenuItem));
+#endif
+			return items.ToArray();
+		}
 
 		ToolStripMenuItem BuildWindowMenuItem(WindowLayout windowLayout)
 			=> new(windowLayout.Window.Caption.Truncate(40));
+	}
+
+	private ToolStripMenuItem BuildArrangementMenuItem<T>(MonitorLayout layout)
+		where T : IArrangementStrategy
+	{
+		var n = typeof(T).Name;
+		var name = n[..n.IndexOf("ArrangementStrategy")];
+		return new(name, null, OnClick);
+
+		void OnClick(object? sender, EventArgs eventArgs)
+			=> _bus.Publish(new SetArrangementStrategyEvent((IArrangementStrategy)_provider.GetService(typeof(T))!, layout.Monitor));
 	}
 }
