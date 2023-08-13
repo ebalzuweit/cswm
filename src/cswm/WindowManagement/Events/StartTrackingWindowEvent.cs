@@ -1,18 +1,18 @@
-using System;
 using cswm.Events;
+using System;
 
 namespace cswm.WindowManagement.Events;
 
 public class StartTrackingWindowEvent : Event
 {
-	private readonly Window _window;
+    private readonly Window _window;
 
-	public StartTrackingWindowEvent(Window window)
-	{
-		ArgumentNullException.ThrowIfNull(window);
+    public StartTrackingWindowEvent(Window window)
+    {
+        ArgumentNullException.ThrowIfNull(window);
 
-		_window = window;
-	}
+        _window = window;
+    }
 
-	public Window Window => _window;
+    public Window Window => _window;
 }
