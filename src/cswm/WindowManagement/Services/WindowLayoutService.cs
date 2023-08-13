@@ -44,7 +44,6 @@ public sealed class WindowLayoutService : IService
     }
 
     public IArrangementStrategy ArrangementStrategy;
-    public IEnumerable<MonitorLayout> LastArrangement => lastArrangement ?? Array.Empty<MonitorLayout>();
 
     public void Start()
     {
