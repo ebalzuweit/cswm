@@ -1,36 +1,33 @@
 ﻿using System;
-using cswm.WindowManagement.Arrangement;
-using Microsoft.Extensions.Logging;
 
 namespace cswm.WindowManagement.Services;
 
+/// <summary>
+/// Main service, manages the other services.
+/// </summary>
 public class WindowManagementService : IService
 {
-	private readonly ILogger _logger;
-	private readonly IServiceProvider _provider;
 	private readonly WinHookService _winHookService;
 	private readonly WindowTrackingService _trackingService;
 	private readonly WindowLayoutService _layoutService;
+	private readonly SystemTrayService _trayService;
 
 	public WindowManagementService(
-		ILogger<WindowManagementService> logger,
-		IServiceProvider provider,
 		WinHookService winHookService,
 		WindowTrackingService trackingService,
-		WindowLayoutService layoutService
+		WindowLayoutService layoutService,
+		SystemTrayService trayService
 	)
 	{
-		ArgumentNullException.ThrowIfNull(logger);
-		ArgumentNullException.ThrowIfNull(provider);
 		ArgumentNullException.ThrowIfNull(winHookService);
 		ArgumentNullException.ThrowIfNull(trackingService);
 		ArgumentNullException.ThrowIfNull(layoutService);
+		ArgumentNullException.ThrowIfNull(trayService);
 
-		_logger = logger;
-		_provider = provider;
 		_winHookService = winHookService;
 		_trackingService = trackingService;
 		_layoutService = layoutService;
+		_trayService = trayService;
 	}
 
 	public void Start()
@@ -38,23 +35,14 @@ public class WindowManagementService : IService
 		_winHookService.Start();
 		_trackingService.Start();
 		_layoutService.Start();
-		_layoutService.Rearrange();
+		_trayService.Start();
 	}
 
 	public void Stop()
 	{
+		_trayService.Stop();
 		_layoutService.Stop();
 		_trackingService.Stop();
 		_winHookService.Stop();
-	}
-
-	public IArrangementStrategy GetArrangement() => _layoutService.ArrangementStrategy;
-
-	public void SetArrangement<T>() where T : IArrangementStrategy
-	{
-		var arrangement = (T)_provider.GetService(typeof(T))!;
-		_logger.LogDebug("Applying new arrangement {ArrangementType}", arrangement.GetType().Name);
-		_layoutService.ArrangementStrategy = arrangement;
-		_layoutService.Rearrange();
 	}
 }

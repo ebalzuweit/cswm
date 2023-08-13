@@ -12,6 +12,9 @@ using Humanizer;
 
 namespace cswm.WindowManagement;
 
+/// <summary>
+/// Context menu for <see cref="SystemTrayService"/>.
+/// </summary>
 public class SystemTrayMenu
 {
 	private readonly MessageBus _bus;

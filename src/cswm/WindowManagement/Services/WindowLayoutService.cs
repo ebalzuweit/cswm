@@ -1,17 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using cswm.Events;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
+using cswm.WindowManagement.Events;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace cswm.WindowManagement.Services;
 
+/// <summary>
+/// Performs window layout, based on an <see cref="IArrangementStrategy"/>.
+/// </summary>
 public sealed class WindowLayoutService : IService
 {
 	private readonly ILogger _logger;
 	private readonly WindowManagementOptions _options;
+	private readonly MessageBus _bus;
 	private readonly WindowTrackingService _trackingService;
 
 	private IEnumerable<MonitorLayout>? lastArrangement;
@@ -19,17 +24,20 @@ public sealed class WindowLayoutService : IService
 	public WindowLayoutService(
 		ILogger<WindowLayoutService> logger,
 		IOptions<WindowManagementOptions> options,
+		MessageBus bus,
 		WindowTrackingService trackingService,
 		SplitArrangementStrategy defaultArrangementStrategy
 	)
 	{
 		ArgumentNullException.ThrowIfNull(logger);
 		ArgumentNullException.ThrowIfNull(options);
+		ArgumentNullException.ThrowIfNull(bus);
 		ArgumentNullException.ThrowIfNull(trackingService);
 		ArgumentNullException.ThrowIfNull(defaultArrangementStrategy);
 
 		_logger = logger;
 		_options = options.Value;
+		_bus = bus;
 		_trackingService = trackingService;
 		ArrangementStrategy = defaultArrangementStrategy;
 	}
@@ -39,23 +47,32 @@ public sealed class WindowLayoutService : IService
 
 	public void Start()
 	{
-		_trackingService.OnTrackedWindowsReset += OnWindowTrackingReset;
-		_trackingService.OnWindowTrackingStart += OnWindowTrackingStart;
-		_trackingService.OnWindowtrackingStop += OnWindowTrackingStop;
-		_trackingService.OnWindowMoved += OnWindowMoved;
+		Subscribe<SetArrangementStrategyEvent>(
+			@event =>
+			{
+				ArrangementStrategy = @event.Strategy;
+				Rearrange();
+			});
+		Subscribe<StartTrackingWindowEvent>(@event => OnWindowTrackingStart(@event.Window));
+		Subscribe<StopTrackingWindowEvent>(@event => OnWindowTrackingStop(@event.Window));
+		Subscribe<WindowMovedEvent>(@event => OnWindowMoved(@event.Window));
+		Subscribe<OnTrackedWindowsResetEvent>(@event => OnWindowTrackingReset());
+
+		Rearrange();
+
+		void Subscribe<T>(Action<T> action)
+			where T : Event
+			=> _subscriptions.Add(_bus.Subscribe<T>(action));
 	}
 
 	public void Stop()
 	{
-#pragma warning disable CS8601
-		_trackingService.OnTrackedWindowsReset -= OnWindowTrackingReset;
-		_trackingService.OnWindowTrackingStart -= OnWindowTrackingStart;
-		_trackingService.OnWindowtrackingStop -= OnWindowTrackingStop;
-		_trackingService.OnWindowMoved -= OnWindowMoved;
-#pragma warning restore CS8601
+		foreach (var subscription in _subscriptions)
+			subscription.Dispose();
+		_subscriptions.Clear();
 	}
 
-	public void Rearrange()
+	private void Rearrange()
 	{
 		UpdateWindowPositions();
 	}
