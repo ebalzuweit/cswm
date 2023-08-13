@@ -25,15 +25,6 @@ public class WindowTrackingService : IService, IDisposable
 
     public IReadOnlyCollection<Window> Windows => _windows.ToArray();
 
-    public delegate void OnTrackedWindowsResetDelegate();
-    public delegate void OnTrackedWindowChangeDelegate(Window window);
-
-    // TODO: Current users should subscribe to the message bus
-    public OnTrackedWindowsResetDelegate OnTrackedWindowsReset = null!;
-    public OnTrackedWindowChangeDelegate OnWindowTrackingStart = null!;
-    public OnTrackedWindowChangeDelegate OnWindowtrackingStop = null!;
-    public OnTrackedWindowChangeDelegate OnWindowMoved = null!;
-
     public WindowTrackingService(ILogger<WindowTrackingService> logger, IWindowTrackingStrategy strategy, MessageBus bus)
     {
         ArgumentNullException.ThrowIfNull(logger);
