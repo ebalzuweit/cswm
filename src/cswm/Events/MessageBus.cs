@@ -1,3 +1,5 @@
+using System;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace cswm.Events;
@@ -10,4 +12,10 @@ public class MessageBus
     {
         Events.OnNext(@event);
     }
+
+    public IDisposable Subscribe(Func<Event, bool> predicate, Action<Event> action)
+        => Events.Where(predicate).Subscribe(action);
+
+    public IDisposable Subscribe<T>(Action<T> action) where T : Event
+        => Events.Where(@event => @event is T).Subscribe(@event => action.Invoke((T)@event));
 }

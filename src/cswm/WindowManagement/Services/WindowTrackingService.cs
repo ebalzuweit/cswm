@@ -1,5 +1,6 @@
 using cswm.Events;
 using cswm.WinApi;
+using cswm.WindowManagement.Arrangement;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 using System;
@@ -23,6 +24,7 @@ public class WindowTrackingService : IService, IDisposable
     public delegate void OnTrackedWindowsResetDelegate();
     public delegate void OnTrackedWindowChangeDelegate(Window window);
 
+    // TODO: Current users should subscribe to the message bus
     public OnTrackedWindowsResetDelegate OnTrackedWindowsReset = null!;
     public OnTrackedWindowChangeDelegate OnWindowTrackingStart = null!;
     public OnTrackedWindowChangeDelegate OnWindowtrackingStop = null!;
@@ -65,6 +67,16 @@ public class WindowTrackingService : IService, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    public IEnumerable<MonitorLayout> GetCurrentLayouts()
+        => User32.EnumDisplayMonitors()
+            .Select(hMonitor =>
+            new MonitorLayout(
+                new Monitor(hMonitor),
+                Windows
+                    .Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == hMonitor)
+                    .Select(w => new WindowLayout(w, w.Position))
+            ));
+
     public bool IsWindowVisible(Window window)
     {
         var isVisible = User32.IsWindowVisible(window.hWnd);
@@ -82,14 +94,8 @@ public class WindowTrackingService : IService, IDisposable
 
     private void SubscribeToEvents()
     {
-        Subscribe(@event => @event is WindowEvent, @event => On_WindowEvent((@event as WindowEvent)!));
-        Subscribe(@event => @event is ResetTrackedWindowsEvent, _ => ResetTrackedWindows());
-
-        void Subscribe(Func<Event, bool> predicate, Action<Event> action)
-        {
-            var subscription = _bus.Events.Where(predicate).Subscribe(action);
-            _eventSubscriptions.Add(subscription);
-        }
+        _eventSubscriptions.Add(_bus.Subscribe<WindowEvent>(On_WindowEvent));
+        _eventSubscriptions.Add(_bus.Subscribe<ResetTrackedWindowsEvent>(_ => ResetTrackedWindows()));
     }
 
     private void ResetTrackedWindows()
