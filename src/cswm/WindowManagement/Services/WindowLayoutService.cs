@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using cswm.Events;
 using cswm.Events;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;

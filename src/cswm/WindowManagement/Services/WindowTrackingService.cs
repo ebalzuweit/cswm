@@ -1,5 +1,6 @@
 using cswm.Events;
 using cswm.WinApi;
+using cswm.WindowManagement.Arrangement;
 using cswm.WindowManagement.Events;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
