@@ -19,19 +19,23 @@ public class SystemTrayMenu
     private readonly IServiceProvider _provider;
     private readonly MessageBus _bus;
     private readonly WindowTrackingService _trackingService;
+    private readonly WindowLayoutService _layoutService;
 
     public SystemTrayMenu(
         IServiceProvider provider,
         MessageBus bus,
-        WindowTrackingService trackingService)
+        WindowTrackingService trackingService,
+        WindowLayoutService layoutService)
     {
         ArgumentNullException.ThrowIfNull(provider);
         ArgumentNullException.ThrowIfNull(bus);
         ArgumentNullException.ThrowIfNull(trackingService);
+        ArgumentNullException.ThrowIfNull(layoutService);
 
         _provider = provider;
         _bus = bus;
         _trackingService = trackingService;
+        _layoutService = layoutService;
     }
 
     public ToolStripItem[] BuildTrayMenu()
@@ -98,7 +102,11 @@ public class SystemTrayMenu
     {
         var n = typeof(T).Name;
         var name = n[..n.IndexOf("ArrangementStrategy")];
-        return new(name, null, OnClick);
+        var isChecked = typeof(T) == _layoutService.ArrangementStrategy.GetType();
+        return new(name, null, OnClick)
+        {
+            Checked = isChecked
+        };
 
         void OnClick(object? sender, EventArgs eventArgs)
             => _bus.Publish(new SetArrangementStrategyEvent((IArrangementStrategy)_provider.GetService(typeof(T))!, layout.Monitor));
