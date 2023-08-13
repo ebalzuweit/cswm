@@ -1,5 +1,5 @@
-﻿using System;
-using cswm.WinApi;
+﻿using cswm.WinApi;
+using System;
 
 namespace cswm.WindowManagement.Tracking;
 

@@ -10,6 +10,9 @@ using System;
 
 namespace cswm;
 
+/// <summary>
+/// Build services and start the application.
+/// </summary>
 internal static class Program
 {
     [STAThread]
@@ -37,8 +40,8 @@ internal static class Program
             services.AddSingleton<WinHookService>();
             services.AddSingleton<WindowTrackingService>();
             services.AddSingleton<WindowLayoutService>();
-            services.AddSingleton<WindowManagementService>();
             services.AddSingleton<SystemTrayService>();
+            services.AddSingleton<WindowManagementService>();
 
             // Should only be resolved by this class
             services.AddScoped<Startup>();

@@ -1,6 +1,7 @@
 using cswm.Events;
 using cswm.WinApi;
 using cswm.WindowManagement.Arrangement;
+using cswm.WindowManagement.Events;
 using cswm.WindowManagement.Tracking;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,6 +12,9 @@ using System.Runtime.InteropServices;
 
 namespace cswm.WindowManagement.Services;
 
+/// <summary>
+/// Tracks active windows, like Alt + Tab.
+/// </summary>
 public class WindowTrackingService : IService, IDisposable
 {
     private readonly ILogger _logger;
@@ -30,21 +34,15 @@ public class WindowTrackingService : IService, IDisposable
     public OnTrackedWindowChangeDelegate OnWindowtrackingStop = null!;
     public OnTrackedWindowChangeDelegate OnWindowMoved = null!;
 
-    /// <summary>
-    /// Tracks windows without owners, like Alt + Tab.
-    /// </summary>
-    /// <remarks>
-    /// Some windows tracked may be minimized, or not visible.
-    /// </remarks>    
-    /// <param name="logger"></param>
-    /// <param name="strategy"></param>
-    /// <param name="bus"></param>
-    /// <exception cref="ArgumentNullException"></exception>
     public WindowTrackingService(ILogger<WindowTrackingService> logger, IWindowTrackingStrategy strategy, MessageBus bus)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(strategy);
+        ArgumentNullException.ThrowIfNull(bus);
+
+        _logger = logger;
+        _strategy = strategy;
+        _bus = bus;
     }
 
     public void Start()
@@ -110,7 +108,7 @@ public class WindowTrackingService : IService, IDisposable
             _windows.Add(w);
         }
         _logger.LogDebug("Reset tracked windows, {WindowsCount} windows tracked.", _windows.Count);
-        OnTrackedWindowsReset?.Invoke();
+        _bus.Publish(new OnTrackedWindowsResetEvent());
     }
 
     private readonly EventConstant[] _startTrackingEvents = new[] { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND, EventConstant.EVENT_OBJECT_LOCATIONCHANGE };
@@ -132,7 +130,7 @@ public class WindowTrackingService : IService, IDisposable
         else if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
         {
             _logger.LogDebug("Window moved {window}", window);
-            OnWindowMoved.Invoke(window);
+            _bus.Publish(new WindowMovedEvent(window));
         }
     }
 
@@ -143,7 +141,7 @@ public class WindowTrackingService : IService, IDisposable
         {
 
             _logger.LogDebug("Started tracking window {window}", window);
-            OnWindowTrackingStart?.Invoke(window);
+            _bus.Publish(new StartTrackingWindowEvent(window));
         }
         return startedTracking;
     }
@@ -154,7 +152,7 @@ public class WindowTrackingService : IService, IDisposable
         if (stoppedTracking)
         {
             _logger.LogDebug("Stopped tracking window {window}", window);
-            OnWindowtrackingStop?.Invoke(window);
+            _bus.Publish(new StopTrackingWindowEvent(window));
         }
         return stoppedTracking;
     }

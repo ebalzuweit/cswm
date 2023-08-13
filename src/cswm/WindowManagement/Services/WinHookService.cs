@@ -10,6 +10,9 @@ using Windows.Win32.UI.Accessibility;
 
 namespace cswm.WindowManagement.Services;
 
+/// <summary>
+/// Intercept and relay Win32 events.
+/// </summary>
 public class WinHookService : IService
 {
     private readonly ILogger? _logger;
@@ -20,8 +23,10 @@ public class WinHookService : IService
 
     public WinHookService(ILogger<WinHookService> logger, MessageBus bus)
     {
+        ArgumentNullException.ThrowIfNull(bus);
+
         _logger = logger;
-        _bus = bus ?? throw new System.ArgumentNullException(nameof(bus));
+        _bus = bus;
     }
 
     public void Start()

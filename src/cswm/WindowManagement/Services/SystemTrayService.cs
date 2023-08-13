@@ -9,11 +9,13 @@ using System.Windows.Forms;
 
 namespace cswm.WindowManagement.Services;
 
+/// <summary>
+/// Icon running in the system tray.
+/// </summary>
 public class SystemTrayService : IService
 {
     private readonly ILogger _logger;
     private readonly MessageBus _bus;
-    private readonly WindowManagementService _wmService;
     private readonly SystemTrayMenu _trayMenu;
 
     private NotifyIcon? _notifyIcon;
@@ -22,31 +24,24 @@ public class SystemTrayService : IService
     public SystemTrayService(
         ILogger<SystemTrayService> logger,
         MessageBus bus,
-        WindowManagementService wmService,
         SystemTrayMenu trayMenu)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(bus);
-        ArgumentNullException.ThrowIfNull(wmService);
         ArgumentNullException.ThrowIfNull(trayMenu);
 
         _logger = logger;
         _bus = bus;
-        _wmService = wmService;
         _trayMenu = trayMenu;
     }
 
     public void Start()
     {
         AddToSystemTray();
-
-        _wmService.Start();
     }
 
     public void Stop()
     {
-        _wmService.Stop();
-
         RemoveFromSystemTray();
     }
 

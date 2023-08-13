@@ -1,6 +1,5 @@
 using cswm.WinApi;
 using cswm.WindowManagement;
-using cswm.WindowManagement.Arrangement;
 using Moq;
 using System;
 
