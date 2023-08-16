@@ -1,12 +1,10 @@
-using System.Collections.Generic;
-
 namespace cswm.WindowManagement.Arrangement;
 
 public interface IArrangementStrategy
 {
     static string DisplayName { get; } = null!;
 
-    IEnumerable<MonitorLayout> Arrange(IEnumerable<MonitorLayout> layouts);
+    MonitorLayout Arrange(MonitorLayout layout);
 
-    IEnumerable<MonitorLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow);
+    MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow);
 }
