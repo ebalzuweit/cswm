@@ -17,20 +17,18 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(options);
+
+        _logger = logger;
+        _options = options.Value;
     }
 
-    public IEnumerable<MonitorLayout> Arrange(IEnumerable<MonitorLayout> layouts)
-        => Arrange_Internal(layouts);
+    public MonitorLayout Arrange(MonitorLayout layout) => Arrange_Internal(layout);
 
-    public IEnumerable<MonitorLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow)
-        => Arrange_Internal(layouts, movedWindow);
+    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow) => Arrange_Internal(layout, movedWindow);
 
-    private IEnumerable<MonitorLayout> Arrange_Internal(IEnumerable<MonitorLayout> layouts, Window? movedWindow = default)
-        => layouts.Select(layout => ArrangeMonitor(layout, movedWindow));
-
-    private MonitorLayout ArrangeMonitor(MonitorLayout layout, Window? movedWindow)
+    private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null)
     {
         var space = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
         var arrangedWindows = PartitionSpace(space, layout.Windows, movedWindow);
@@ -75,6 +73,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 true => right.AddMargin(halfMargin, 0, 0, 0),
                 false => right.AddMargin(0, halfMargin, 0, 0)
             };
+            _logger.LogDebug("Left: {Left}; Right: {Right}", leftSpace, right);
 
             var windowList = windows.ToList();
 
@@ -93,7 +92,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 }
             }
 
-            var leftPartition = new WindowLayout(windowList.First().Window, leftSpace);
+            var leftPartition = new WindowLayout(windowList.First().Window, leftSpace.AddMargin(_options.WindowPadding));
             var layouts = PartitionSpace(rightSpace, windowList.Skip(1), preferredWindow);
             layouts = layouts.Prepend(leftPartition);
             return layouts;

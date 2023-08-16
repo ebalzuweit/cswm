@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-
 namespace cswm.WindowManagement.Arrangement;
 
 public class SilentArrangementStrategy : IArrangementStrategy
 {
     public static string DisplayName => "Silent";
 
-    public IEnumerable<MonitorLayout> Arrange(IEnumerable<MonitorLayout> layouts)
-        => Array.Empty<MonitorLayout>();
+    public MonitorLayout Arrange(MonitorLayout layout) => null!;
 
-    public IEnumerable<MonitorLayout> ArrangeOnWindowMove(IEnumerable<MonitorLayout> layouts, Window movedWindow)
-        => Array.Empty<MonitorLayout>();
+    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layouts, Window movedWindow) => null!;
 }

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace cswm.WindowManagement.Services;
 
@@ -18,9 +19,10 @@ public sealed class WindowLayoutService : IService
     private readonly WindowManagementOptions _options;
     private readonly MessageBus _bus;
     private readonly WindowTrackingService _trackingService;
+    private readonly IArrangementStrategy _defaultArrangementStrategy;
 
     private List<IDisposable> _subscriptions = new();
-    private IEnumerable<MonitorLayout>? lastArrangement;
+    private Dictionary<IntPtr, IArrangementStrategy> _monitorStrategies = new();
 
     public WindowLayoutService(
         ILogger<WindowLayoutService> logger,
@@ -40,24 +42,54 @@ public sealed class WindowLayoutService : IService
         _options = options.Value;
         _bus = bus;
         _trackingService = trackingService;
-        ArrangementStrategy = defaultArrangementStrategy;
+        _defaultArrangementStrategy = defaultArrangementStrategy;
     }
 
-    public IArrangementStrategy ArrangementStrategy;
+    public IArrangementStrategy GetArrangement(IntPtr hMon)
+    {
+        if (_monitorStrategies.ContainsKey(hMon) == false)
+            return _defaultArrangementStrategy;
+        return _monitorStrategies[hMon];
+    }
+
+    public void SetArrangement(IntPtr hMon, IArrangementStrategy strategy) => _monitorStrategies[hMon] = strategy;
+    public void SetAllArrangements(IArrangementStrategy strategy)
+    {
+        foreach (var hMon in _monitorStrategies.Keys)
+        {
+            SetArrangement(hMon, strategy);
+        }
+    }
 
     public void Start()
     {
         Subscribe<SetArrangementStrategyEvent>(
             @event =>
             {
-                ArrangementStrategy = @event.Strategy;
-                Rearrange();
+                _logger.LogDebug("Applying arrangment {ArrangementType} to {Target}",
+                    @event.Strategy.GetType().Name,
+                    @event.AllMonitors ? "ALL" : @event.Monitor!.DeviceName);
+                if (@event.AllMonitors)
+                {
+                    SetAllArrangements(@event.Strategy);
+                    Rearrange();
+                }
+                else
+                {
+                    SetArrangement(@event.Monitor!.hMonitor, @event.Strategy);
+                    Rearrange(@event.Monitor!.hMonitor);
+                }
             });
         Subscribe<StartTrackingWindowEvent>(@event => OnWindowTrackingStart(@event.Window));
         Subscribe<StopTrackingWindowEvent>(@event => OnWindowTrackingStop(@event.Window));
         Subscribe<WindowMovedEvent>(@event => OnWindowMoved(@event.Window));
         Subscribe<OnTrackedWindowsResetEvent>(@event => OnWindowTrackingReset());
 
+        var hMons = User32.EnumDisplayMonitors();
+        foreach (var hMon in hMons)
+        {
+            _monitorStrategies[hMon] = _defaultArrangementStrategy;
+        }
         Rearrange();
 
         void Subscribe<T>(Action<T> action)
@@ -72,9 +104,9 @@ public sealed class WindowLayoutService : IService
         _subscriptions.Clear();
     }
 
-    private void Rearrange()
+    private void Rearrange(IntPtr? hMon = null)
     {
-        UpdateWindowPositions();
+        UpdateWindowPositions(hMon: hMon);
     }
 
     private void OnWindowTrackingReset()
@@ -94,18 +126,22 @@ public sealed class WindowLayoutService : IService
 
     private void OnWindowMoved(Window window)
     {
-        UpdateWindowPositions(window);
+        UpdateWindowPositions(movedWindow: window);
     }
 
-    private void UpdateWindowPositions(Window? movedWindow = default)
+    private void UpdateWindowPositions(Window? movedWindow = default, IntPtr? hMon = null)
     {
-        var monitorLayouts = _trackingService.GetCurrentLayouts();
-        lastArrangement = movedWindow is null
-            ? ArrangementStrategy.Arrange(monitorLayouts)
-            : ArrangementStrategy.ArrangeOnWindowMove(monitorLayouts, movedWindow);
-        foreach (var layout in lastArrangement)
+        var monitorLayouts = _trackingService.GetCurrentLayouts()
+            .Where(x => hMon is null || x.Monitor.hMonitor == hMon);
+        foreach (var layout in monitorLayouts)
         {
-            foreach (var windowLayout in layout.Windows)
+            var strategy = _monitorStrategies[layout.Monitor.hMonitor];
+            var arrangement = movedWindow is null
+                ? strategy.Arrange(layout)
+                : strategy.ArrangeOnWindowMove(layout, movedWindow);
+            if (arrangement is null)
+                continue;
+            foreach (var windowLayout in arrangement.Windows)
                 SetWindowPos(windowLayout.Window, windowLayout.Position);
         }
     }
@@ -119,7 +155,6 @@ public sealed class WindowLayoutService : IService
             right: position.Right + windowsPadding,
             bottom: position.Bottom + windowsPadding);
 
-        _logger.LogDebug("Moving {Window} to {Position}", window, position);
         if (_options.DoNotManage)
             return true;
         return User32.SetWindowPos(
