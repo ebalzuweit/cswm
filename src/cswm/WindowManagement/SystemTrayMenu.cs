@@ -19,13 +19,13 @@ public class SystemTrayMenu
     private readonly IServiceProvider _provider;
     private readonly MessageBus _bus;
     private readonly WindowTrackingService _trackingService;
-    private readonly WindowLayoutService _layoutService;
+    private readonly WindowArrangementService _layoutService;
 
     public SystemTrayMenu(
         IServiceProvider provider,
         MessageBus bus,
         WindowTrackingService trackingService,
-        WindowLayoutService layoutService)
+        WindowArrangementService layoutService)
     {
         ArgumentNullException.ThrowIfNull(provider);
         ArgumentNullException.ThrowIfNull(bus);
