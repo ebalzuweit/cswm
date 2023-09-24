@@ -37,12 +37,14 @@ internal class Startup
 
     public void Start()
     {
+#if !DEBUG
         _applicationMutex = new Mutex(true, $"Global\\{APPLICATION_GUID}", out var mutexAcquired);
         if (mutexAcquired == false)
         {
             _logger?.LogError("Application already running, exiting.");
             return;
         }
+#endif
 
         _subscription = _bus.Subscribe<ExitApplicationEvent>(On_ExitApplicationEvent);
         _windowMgmtService.Start();
