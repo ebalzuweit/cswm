@@ -8,7 +8,10 @@
     },
     "cswm - Do Not Manage": {
       "commandName": "Project",
-      "commandLineArgs": "--WindowManagementOptions:DoNotManage=true"
+      "commandLineArgs": "--WindowManagementOptions:DoNotManage=true",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
     }
   }
 }
