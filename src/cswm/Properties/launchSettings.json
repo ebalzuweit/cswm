@@ -5,6 +5,10 @@
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }
+    },
+    "cswm - Do Not Manage": {
+      "commandName": "Project",
+      "commandLineArgs": "--WindowManagementOptions:DoNotManage=true"
     }
   }
 }
