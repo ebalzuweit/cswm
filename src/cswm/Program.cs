@@ -39,7 +39,7 @@ internal static class Program
             services.AddSingleton<MessageBus>();
             services.AddSingleton<WinHookService>();
             services.AddSingleton<WindowTrackingService>();
-            services.AddSingleton<WindowLayoutService>();
+            services.AddSingleton<WindowArrangementService>();
             services.AddSingleton<SystemTrayService>();
             services.AddSingleton<WindowManagementService>();
 

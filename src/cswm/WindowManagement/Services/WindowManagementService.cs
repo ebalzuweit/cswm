@@ -9,13 +9,13 @@ public class WindowManagementService : IService
 {
     private readonly WinHookService _winHookService;
     private readonly WindowTrackingService _trackingService;
-    private readonly WindowLayoutService _layoutService;
+    private readonly WindowArrangementService _layoutService;
     private readonly SystemTrayService _trayService;
 
     public WindowManagementService(
         WinHookService winHookService,
         WindowTrackingService trackingService,
-        WindowLayoutService layoutService,
+        WindowArrangementService layoutService,
         SystemTrayService trayService
     )
     {

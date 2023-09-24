@@ -13,7 +13,7 @@ namespace cswm.WindowManagement.Services;
 /// <summary>
 /// Performs window layout, based on an <see cref="IArrangementStrategy"/>.
 /// </summary>
-public sealed class WindowLayoutService : IService
+public sealed class WindowArrangementService : IService
 {
     private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
@@ -24,8 +24,8 @@ public sealed class WindowLayoutService : IService
     private List<IDisposable> _subscriptions = new();
     private Dictionary<IntPtr, IArrangementStrategy> _monitorStrategies = new();
 
-    public WindowLayoutService(
-        ILogger<WindowLayoutService> logger,
+    public WindowArrangementService(
+        ILogger<WindowArrangementService> logger,
         IOptions<WindowManagementOptions> options,
         MessageBus bus,
         WindowTrackingService trackingService,
