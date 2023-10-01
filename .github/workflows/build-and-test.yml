@@ -34,6 +34,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore src/cswm.sln
     - name: Build
-      run: dotnet build src/cswm.sln --no-restore
+      run: dotnet build src/cswm.sln -c Release --no-restore
     - name: Test
-      run: dotnet test src/cswm.sln --no-build --verbosity normal
+      run: dotnet test src/cswm.sln -c Release --no-build --verbosity normal
