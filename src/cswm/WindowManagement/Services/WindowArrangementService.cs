@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace cswm.WindowManagement.Services;
@@ -133,16 +134,32 @@ public sealed class WindowArrangementService : IService
     {
         var monitorLayouts = _trackingService.GetCurrentLayouts()
             .Where(x => hMon is null || x.Monitor.hMonitor == hMon);
+
         foreach (var layout in monitorLayouts)
         {
             var strategy = _monitorStrategies[layout.Monitor.hMonitor];
-            var arrangement = movedWindow is null
-                ? strategy.Arrange(layout)
-                : strategy.ArrangeOnWindowMove(layout, movedWindow);
+            var arrangement = GetArrangement(layout, strategy);
             if (arrangement is null)
                 continue;
             foreach (var windowLayout in arrangement.Windows)
                 SetWindowPos(windowLayout.Window, windowLayout.Position);
+        }
+
+        MonitorLayout? GetArrangement(MonitorLayout layout, IArrangementStrategy strategy)
+        {
+            if (movedWindow is null)
+            {
+                return strategy.Arrange(layout);
+            }
+            else
+            {
+                var cursorPosition = new Point();
+                if (User32.GetCursorPos(ref cursorPosition))
+                {
+                    return strategy.ArrangeOnWindowMove(layout, movedWindow, cursorPosition);
+                }
+            }
+            return null;
         }
     }
 
