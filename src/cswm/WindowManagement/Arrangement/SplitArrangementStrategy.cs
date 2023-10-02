@@ -26,12 +26,12 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     public MonitorLayout Arrange(MonitorLayout layout) => Arrange_Internal(layout);
 
-    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow) => Arrange_Internal(layout, movedWindow);
+    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition) => Arrange_Internal(layout, movedWindow, cursorPosition);
 
-    private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null)
+    private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
         var space = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
-        var arrangedWindows = PartitionSpace(space, layout.Windows, movedWindow);
+        var arrangedWindows = PartitionSpace(space, layout.Windows, movedWindow, cursorPosition);
 
         return layout with { Windows = arrangedWindows };
     }
@@ -42,7 +42,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
     /// <param name="space">Remaining space to partition.</param>
     /// <param name="windows">Remaining windows to assign.</param>
     /// <returns>Window assignments.</returns>
-    private IEnumerable<WindowLayout> PartitionSpace(Rect space, IEnumerable<WindowLayout> windows, Window? preferredWindow)
+    private IEnumerable<WindowLayout> PartitionSpace(Rect space, IEnumerable<WindowLayout> windows, Window? preferredWindow, Point? cursorPosition)
     {
         if (windows.Any() == false)
             return Array.Empty<WindowLayout>();
@@ -80,12 +80,12 @@ public class SplitArrangementStrategy : IArrangementStrategy
             // preferred window
             if (preferredWindow is not null)
             {
-                var layout = windowList.Where(x => x.Window.hWnd == preferredWindow.hWnd).SingleOrDefault();
+                var layout = windowList.Where(x => x.Window.hWnd == preferredWindow.hWnd).FirstOrDefault();
                 if (layout is not null)
                 {
                     windowList.Remove(layout);
-                    var cursorInLeft = IsCursorInSpace(leftSpace);
-                    if (cursorInLeft)
+                    var preferLeft = IsCursorInSpace(leftSpace);
+                    if (preferLeft)
                         windowList.Insert(0, layout);
                     else
                         windowList.Add(layout); // doesn't matter where the preferred window goes in the list
@@ -93,9 +93,19 @@ public class SplitArrangementStrategy : IArrangementStrategy
             }
 
             var leftPartition = new WindowLayout(windowList.First().Window, leftSpace.AddMargin(_options.WindowPadding));
-            var layouts = PartitionSpace(rightSpace, windowList.Skip(1), preferredWindow);
+            var layouts = PartitionSpace(rightSpace, windowList.Skip(1), preferredWindow, cursorPosition);
             layouts = layouts.Prepend(leftPartition);
             return layouts;
+        }
+
+        bool IsCursorInSpace(Rect space)
+        {
+            if (cursorPosition!.Value.X < space.Left ||
+                cursorPosition!.Value.X > space.Right ||
+                cursorPosition!.Value.Y < space.Top ||
+                cursorPosition!.Value.Y > space.Bottom)
+                return false;
+            return true;
         }
     }
 

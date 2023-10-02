@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace cswm.WindowManagement.Arrangement;
 
 public interface IArrangementStrategy
@@ -6,5 +8,5 @@ public interface IArrangementStrategy
 
     MonitorLayout Arrange(MonitorLayout layout);
 
-    MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow);
+    MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition);
 }
