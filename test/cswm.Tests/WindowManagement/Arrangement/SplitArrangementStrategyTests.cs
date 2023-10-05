@@ -124,7 +124,7 @@ public class SplitArrangementStrategyTests
         Assert.Equal(cPosition, layout.Windows.Where(x => x.Window.ClassName == "c").First().Position);
     }
 
-    [Fact(Skip = "Not implemented")]
+    [Fact]
     public void ArrangeOnWindowMove_SwapsExistingWindowPositions_IfCursorInOtherWindow()
     {
         var aPosition = new Rect(0, 0, 960, 1080);

@@ -31,9 +31,125 @@ public class SplitArrangementStrategy : IArrangementStrategy
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
         var space = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
-        var arrangedWindows = PartitionSpace(space, layout.Windows, movedWindow, cursorPosition);
+        var windowLayouts = layout.Windows.ToList();
+        var partitions = PartitionSpace(space, windowLayouts.Count);
+        var arrangedWindows = LayoutWindows(windowLayouts, partitions, movedWindow, cursorPosition);
 
         return layout with { Windows = arrangedWindows };
+    }
+
+    /// <summary>
+    /// Recursively partition a space.
+    /// </summary>
+    /// <param name="space">Remaining space to partition.</param>
+    /// <param name="count">Number of partitions.</param>
+    /// <returns></returns>
+    private IList<Rect> PartitionSpace(Rect space, int count)
+    {
+        if (count <= 0)
+        {
+            return Array.Empty<Rect>();
+        }
+        else if (count == 1)
+        {
+            return new[] { space.AddMargin(_options.WindowPadding) };
+        }
+
+        var (left, right, verticalSplit) = space.Split();
+        var halfMargin = _options.WindowMargin / 2;
+        var leftSpace = verticalSplit switch
+        {
+            true => left.AddMargin(0, 0, halfMargin, 0),
+            false => left.AddMargin(0, 0, 0, halfMargin)
+        };
+        var rightSpace = verticalSplit switch
+        {
+            true => right.AddMargin(halfMargin, 0, 0, 0),
+            false => right.AddMargin(0, halfMargin, 0, 0)
+        };
+
+        var partitions = PartitionSpace(rightSpace, count - 1);
+        var arr = new Rect[count];
+        arr[0] = leftSpace;
+        for (int i = 0; i < partitions.Count; i++)
+        {
+            arr[i + 1] = partitions[i];
+        }
+        return arr;
+    }
+
+    /// <summary>
+    /// Place windows in spaces.
+    /// </summary>
+    /// <param name="windowLayouts">Current window layouts.</param>
+    /// <param name="spaces">New window spaces.</param>
+    /// <returns>Updated window layouts.</returns>
+    private IEnumerable<WindowLayout> LayoutWindows(IList<WindowLayout> windowLayouts, IList<Rect> spaces, Window? movedWindow = null, Point? cursorPosition = null)
+    {
+        if (windowLayouts.Count != spaces.Count)
+            throw new ArgumentException("Window and Space count must be equal.");
+
+        var arrangement = new List<WindowLayout>(windowLayouts.Count);
+        var unassignedWindows = new List<Window>(windowLayouts.Select(x => x.Window));
+        var unassignedSpaces = new List<Rect>(spaces);
+
+        // Assign moved window to space containing the cursor
+        if (movedWindow is not null && cursorPosition is not null)
+        {
+            var destination = unassignedSpaces.Where(IsCursorInSpace).FirstOrDefault();
+            var source = windowLayouts.Where(x => x.Window == movedWindow).Select(x => x.Position).FirstOrDefault();
+            if (unassignedSpaces.Contains(destination))
+            {
+                // Assign moved windows to space containing the cursor
+                Assign(movedWindow, destination);
+
+                var swapWindow = windowLayouts.Where(x => x.Position.Equals(destination)).Select(x => x.Window).FirstOrDefault();
+                if (unassignedSpaces.Contains(source) && swapWindow is not null && unassignedWindows.Contains(swapWindow))
+                {
+                    // Assign window at destination to moved window's prior space
+                    Assign(swapWindow, source);
+                }
+            }
+        }
+
+        // Preserve current window positions if possible
+        var preservedArrangements = windowLayouts
+            .Where(x => unassignedWindows.Contains(x.Window) && unassignedSpaces.Contains(x.Position))
+            .ToList();
+        foreach (var pa in preservedArrangements)
+        {
+            if (unassignedWindows.Contains(pa.Window) &&
+                unassignedSpaces.Contains(pa.Position))
+                Assign(pa.Window, pa.Position);
+        }
+
+        // Assign the remaining windows to the remaining spaces
+        for (int i = unassignedWindows.Count - 1; i >= 0; i--)
+        {
+            var window = unassignedWindows[i];
+            var space = unassignedSpaces.First();
+
+            Assign(window, space);
+        }
+
+        return arrangement;
+
+        bool IsCursorInSpace(Rect space)
+        {
+            if (cursorPosition!.Value.X < space.Left ||
+                cursorPosition!.Value.X > space.Right ||
+                cursorPosition!.Value.Y < space.Top ||
+                cursorPosition!.Value.Y > space.Bottom)
+                return false;
+            return true;
+        }
+
+        void Assign(Window window, Rect space)
+        {
+            unassignedWindows!.Remove(window);
+            unassignedSpaces!.Remove(space);
+            arrangement!.Add(new(window, space));
+        }
     }
 
     /// <summary>
@@ -42,7 +158,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
     /// <param name="space">Remaining space to partition.</param>
     /// <param name="windows">Remaining windows to assign.</param>
     /// <returns>Window assignments.</returns>
-    private IEnumerable<WindowLayout> PartitionSpace(Rect space, IEnumerable<WindowLayout> windows, Window? preferredWindow, Point? cursorPosition)
+    private IEnumerable<WindowLayout> PartitionSpace_Old(Rect space, IEnumerable<WindowLayout> windows, Window? preferredWindow, Point? cursorPosition)
     {
         if (windows.Any() == false)
             return Array.Empty<WindowLayout>();
@@ -93,7 +209,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
             }
 
             var leftPartition = new WindowLayout(windowList.First().Window, leftSpace.AddMargin(_options.WindowPadding));
-            var layouts = PartitionSpace(rightSpace, windowList.Skip(1), preferredWindow, cursorPosition);
+            var layouts = PartitionSpace_Old(rightSpace, windowList.Skip(1), preferredWindow, cursorPosition);
             layouts = layouts.Prepend(leftPartition);
             return layouts;
         }
@@ -107,22 +223,6 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 return false;
             return true;
         }
-    }
-
-    private bool IsCursorInSpace(Rect space)
-    {
-        var point = new Point();
-        if (User32.GetCursorPos(ref point))
-        {
-            _logger.LogDebug("Space: {Space}\tCursor: {Cursor}", space, point);
-            if (point.X < space.Left ||
-                point.X > space.Right ||
-                point.Y < space.Top ||
-                point.Y > space.Bottom)
-                return false;
-            return true;
-        }
-        return false;
     }
 
     private class WindowLayoutIntersectionComparer : IComparer<WindowLayout>
