@@ -112,24 +112,21 @@ public class SplitArrangementStrategy : IArrangementStrategy
             }
         }
 
-        // Preserve current window positions if possible
-        var preservedArrangements = windowLayouts
-            .Where(x => unassignedWindows.Contains(x.Window) && unassignedSpaces.Contains(x.Position))
-            .ToList();
-        foreach (var pa in preservedArrangements)
+        var allArrangements = unassignedWindows.SelectMany(w => unassignedSpaces.Select(s => new WindowLayout(w, s)));
+        var sortedArrangements = allArrangements.OrderBy(a =>
         {
-            if (unassignedWindows.Contains(pa.Window) &&
-                unassignedSpaces.Contains(pa.Position))
-                Assign(pa.Window, pa.Position);
-        }
+            // Sort arrangements by geometric similarity
+            var current = windowLayouts.Where(w => w.Window == a.Window).Single();
+            var translation = Math.Abs(current.Position.Left - a.Position.Left) + Math.Abs(current.Position.Top - a.Position.Top);
+            var scaling = Math.Abs(current.Position.Width - a.Position.Width) + Math.Abs(current.Position.Height - a.Position.Height);
 
-        // Assign the remaining windows to the remaining spaces
-        for (int i = unassignedWindows.Count - 1; i >= 0; i--)
+            return translation + scaling;
+        });
+
+        while (unassignedSpaces.Any() && unassignedWindows.Any() && sortedArrangements.Any())
         {
-            var window = unassignedWindows[i];
-            var space = unassignedSpaces.First();
-
-            Assign(window, space);
+            var a = sortedArrangements.First();
+            Assign(a.Window, a.Position);
         }
 
         return arrangement;
