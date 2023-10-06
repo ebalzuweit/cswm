@@ -24,8 +24,10 @@ public class SplitArrangementStrategy : IArrangementStrategy
         _options = options.Value;
     }
 
+    /// <inheritdoc/>
     public MonitorLayout Arrange(MonitorLayout layout) => Arrange_Internal(layout);
 
+    /// <inheritdoc/>
     public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition) => Arrange_Internal(layout, movedWindow, cursorPosition);
 
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
@@ -93,22 +95,14 @@ public class SplitArrangementStrategy : IArrangementStrategy
         var unassignedWindows = new List<Window>(windowLayouts.Select(x => x.Window));
         var unassignedSpaces = new List<Rect>(spaces);
 
-        // Assign moved window to space containing the cursor
         if (movedWindow is not null && cursorPosition is not null)
         {
+            // Arrange on window move
             var destination = unassignedSpaces.Where(IsCursorInSpace).FirstOrDefault();
-            var source = windowLayouts.Where(x => x.Window == movedWindow).Select(x => x.Position).FirstOrDefault();
-            if (unassignedSpaces.Contains(destination))
+            if (unassignedSpaces.Contains(destination)) // check against default
             {
-                // Assign moved windows to space containing the cursor
+                // Assign moved window to space containing the cursor
                 Assign(movedWindow, destination);
-
-                var swapWindow = windowLayouts.Where(x => x.Position.Equals(destination)).Select(x => x.Window).FirstOrDefault();
-                if (unassignedSpaces.Contains(source) && swapWindow is not null && unassignedWindows.Contains(swapWindow))
-                {
-                    // Assign window at destination to moved window's prior space
-                    Assign(swapWindow, source);
-                }
             }
         }
 
@@ -117,16 +111,15 @@ public class SplitArrangementStrategy : IArrangementStrategy
         {
             // Sort arrangements by geometric similarity
             var current = windowLayouts.Where(w => w.Window == a.Window).Single();
-            var translation = Math.Abs(current.Position.Left - a.Position.Left) + Math.Abs(current.Position.Top - a.Position.Top);
-            var scaling = Math.Abs(current.Position.Width - a.Position.Width) + Math.Abs(current.Position.Height - a.Position.Height);
-
-            return translation + scaling;
-        });
+            var similarity = GetRectSimilarity(a.Position, current.Position);
+            return similarity;
+        }).ToList();
 
         while (unassignedSpaces.Any() && unassignedWindows.Any() && sortedArrangements.Any())
         {
             var a = sortedArrangements.First();
             Assign(a.Window, a.Position);
+            sortedArrangements.RemoveAll(x => x.Window == a.Window || x.Position.Equals(a.Position));
         }
 
         return arrangement;
@@ -150,114 +143,16 @@ public class SplitArrangementStrategy : IArrangementStrategy
     }
 
     /// <summary>
-    /// Recursively partition a space, assigning windows greedily.
+    /// Get the geometric similarity between two <see cref="Rect"/>.
     /// </summary>
-    /// <param name="space">Remaining space to partition.</param>
-    /// <param name="windows">Remaining windows to assign.</param>
-    /// <returns>Window assignments.</returns>
-    private IEnumerable<WindowLayout> PartitionSpace_Old(Rect space, IEnumerable<WindowLayout> windows, Window? preferredWindow, Point? cursorPosition)
+    /// <param name="a">The first Rect to compare.</param>
+    /// <param name="b">The second Rect to compare.</param>
+    /// <returns><c>0</c> if the <see cref="Rect"/> are equal; otherwise, the total translation and scaling difference between them.</returns>
+    private int GetRectSimilarity(Rect a, Rect b)
     {
-        if (windows.Any() == false)
-            return Array.Empty<WindowLayout>();
-        if (windows.Count() == 1)
-        {
-            return new[] {
-                new WindowLayout(windows.First().Window, space.AddMargin(_options.WindowPadding))
-            };
-        }
+        var translation = Math.Abs(b.Left - a.Left) + Math.Abs(b.Top - a.Top);
+        var scaling = Math.Abs(b.Width - a.Width) + Math.Abs(b.Height - a.Height);
 
-        var windowList = windows.ToList();
-        IComparer<WindowLayout> comparer = new WindowLayoutIntersectionComparer(_logger, space);
-        windowList.Sort(comparer);
-        windowList.Reverse();
-        return SplitAndRecurse(space, windowList, preferredWindow);
-
-        IEnumerable<WindowLayout> SplitAndRecurse(Rect space, IEnumerable<WindowLayout> windows, Window? preferredWindow)
-        {
-            var (left, right, verticalSplit) = space.Split();
-            var halfMargin = _options.WindowMargin / 2;
-            var leftSpace = verticalSplit switch
-            {
-                true => left.AddMargin(0, 0, halfMargin, 0),
-                false => left.AddMargin(0, 0, 0, halfMargin)
-            };
-            var rightSpace = verticalSplit switch
-            {
-                true => right.AddMargin(halfMargin, 0, 0, 0),
-                false => right.AddMargin(0, halfMargin, 0, 0)
-            };
-            _logger.LogDebug("Left: {Left}; Right: {Right}", leftSpace, right);
-
-            var windowList = windows.ToList();
-
-            // preferred window
-            if (preferredWindow is not null)
-            {
-                var layout = windowList.Where(x => x.Window.hWnd == preferredWindow.hWnd).FirstOrDefault();
-                if (layout is not null)
-                {
-                    windowList.Remove(layout);
-                    var preferLeft = IsCursorInSpace(leftSpace);
-                    if (preferLeft)
-                        windowList.Insert(0, layout);
-                    else
-                        windowList.Add(layout); // doesn't matter where the preferred window goes in the list
-                }
-            }
-
-            var leftPartition = new WindowLayout(windowList.First().Window, leftSpace.AddMargin(_options.WindowPadding));
-            var layouts = PartitionSpace_Old(rightSpace, windowList.Skip(1), preferredWindow, cursorPosition);
-            layouts = layouts.Prepend(leftPartition);
-            return layouts;
-        }
-
-        bool IsCursorInSpace(Rect space)
-        {
-            if (cursorPosition!.Value.X < space.Left ||
-                cursorPosition!.Value.X > space.Right ||
-                cursorPosition!.Value.Y < space.Top ||
-                cursorPosition!.Value.Y > space.Bottom)
-                return false;
-            return true;
-        }
-    }
-
-    private class WindowLayoutIntersectionComparer : IComparer<WindowLayout>
-    {
-        private readonly ILogger _logger;
-        private readonly Rect _space;
-
-        public WindowLayoutIntersectionComparer(ILogger logger, Rect space)
-        {
-            _logger = logger;
-            _space = space;
-        }
-
-        public int Compare(WindowLayout? x, WindowLayout? y)
-        {
-            var xn = x is null;
-            var yn = y is null;
-            if (xn || yn)
-            {
-                return (xn, yn) switch
-                {
-                    (true, true) => 0,
-                    (true, false) => -1,
-                    (false, true) => 1,
-                    _ => throw new NotSupportedException() // not possible
-                };
-            }
-
-            var xIntersect = _space.IntersectionAreaPct(x!.Position);
-            var yIntersect = _space.IntersectionAreaPct(y!.Position);
-            var result = xIntersect.CompareTo(yIntersect);
-
-#if DEBUG
-            if (_logger.IsEnabled(LogLevel.Trace))
-                _logger.LogTrace($"Comparing x:{x} to y:{y}\nx:{xIntersect}\ty:{yIntersect} -> {result}");
-#endif
-
-            return result;
-        }
+        return translation + scaling;
     }
 }
