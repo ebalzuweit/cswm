@@ -3,7 +3,6 @@ using cswm.Arrangement.Events;
 using cswm.Events;
 using cswm.Services.Arrangement;
 using cswm.Services.Tracking;
-using Humanizer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,15 +90,8 @@ public class SystemTrayMenu
                 BuildArrangementMenuItem<SplitArrangementStrategy>(layout),
                 BuildArrangementMenuItem<SilentArrangementStrategy>(layout)
             };
-#if DEBUG
-            items.Add(new("--- Windows ---"));
-            items.AddRange(layout.Windows.Select(BuildWindowMenuItem));
-#endif
             return items.ToArray();
         }
-
-        ToolStripMenuItem BuildWindowMenuItem(WindowLayout windowLayout)
-            => new(windowLayout.Window.Caption.Truncate(40));
     }
 
     private ToolStripMenuItem BuildArrangementMenuItem<T>(MonitorLayout layout)
