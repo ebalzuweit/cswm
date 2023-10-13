@@ -1,6 +1,6 @@
-﻿using cswm.WinApi;
-using cswm.WindowManagement;
-using cswm.WindowManagement.Arrangement;
+﻿using cswm.Arrangement;
+using cswm.Services;
+using cswm.WinApi;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;

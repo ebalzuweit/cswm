@@ -1,5 +1,5 @@
 using cswm.Events;
-using cswm.WinApi;
+using cswm.WinApi.Events;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

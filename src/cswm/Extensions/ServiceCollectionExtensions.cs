@@ -4,7 +4,7 @@ using cswm.Services.Arrangement;
 using cswm.Services.SystemTray;
 using cswm.Services.Tracking;
 using cswm.Services.WinApi;
-using cswm.WindowManagement.Tracking;
+using cswm.Tracking;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace cswm.Services;
