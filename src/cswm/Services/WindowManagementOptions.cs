@@ -1,3 +1,5 @@
+using System;
+
 namespace cswm.Services;
 
 public class WindowManagementOptions
@@ -21,4 +23,9 @@ public class WindowManagementOptions
     /// Padding around all windows.
     /// </summary>
     public int WindowPadding { get; init; }
+
+    /// <summary>
+    /// Window classes that will be ignored.
+    /// </summary>
+    public string[] IgnoredWindowClasses { get; init; } = Array.Empty<string>();
 }
