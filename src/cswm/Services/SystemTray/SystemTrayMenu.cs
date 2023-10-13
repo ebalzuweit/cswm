@@ -98,8 +98,10 @@ public class SystemTrayMenu
             return items.ToArray();
         }
 
+#if DEBUG
         ToolStripMenuItem BuildWindowMenuItem(WindowLayout windowLayout)
             => new(windowLayout.Window.Caption.Truncate(40));
+#endif
     }
 
     private ToolStripMenuItem BuildArrangementMenuItem<T>(MonitorLayout layout)
