@@ -7,6 +7,9 @@ public class DefaultWindowTrackingStrategy : IWindowTrackingStrategy
 {
     public bool ShouldTrack(Window window) => IsAltTabWindow(window);
 
+    /// <remarks>
+    /// Based on <see href="https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863"/>
+    /// </remarks>
     private bool IsAltTabWindow(Window window)
     {
         if (window.hWnd == User32.GetWindow(window.hWnd, GetWindowType.GW_OWNER))
@@ -29,10 +32,6 @@ public class DefaultWindowTrackingStrategy : IWindowTrackingStrategy
             if (HasExStyle(exstyle, ExtendedWindowStyle.WS_EX_TOOLWINDOW))
                 return false;
             if (HasExStyle(exstyle, ExtendedWindowStyle.WS_EX_NOACTIVATE))
-                return false;
-
-            // TODO: Can we update logic to catch this exception?
-            if (window.ClassName == "ApplicationFrameWindow")
                 return false;
 
             return true;

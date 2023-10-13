@@ -5,11 +5,11 @@ using cswm.Tracking.Events;
 using cswm.WinApi;
 using cswm.WinApi.Events;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Runtime.InteropServices;
 
 namespace cswm.Services.Tracking;
 
@@ -19,20 +19,25 @@ namespace cswm.Services.Tracking;
 public class WindowTrackingService : IService, IDisposable
 {
     private readonly ILogger _logger;
+    private readonly WindowManagementOptions _options;
     private readonly IWindowTrackingStrategy _strategy;
     private readonly MessageBus _bus;
     private readonly HashSet<Window> _windows = new();
     private readonly ISet<IDisposable> _eventSubscriptions = new HashSet<IDisposable>();
 
-    public IReadOnlyCollection<Window> Windows => _windows.ToArray();
-
-    public WindowTrackingService(ILogger<WindowTrackingService> logger, IWindowTrackingStrategy strategy, MessageBus bus)
+    public WindowTrackingService(
+        ILogger<WindowTrackingService> logger,
+        IOptions<WindowManagementOptions> options,
+        IWindowTrackingStrategy strategy,
+        MessageBus bus)
     {
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(options.Value);
         ArgumentNullException.ThrowIfNull(strategy);
         ArgumentNullException.ThrowIfNull(bus);
 
         _logger = logger;
+        _options = options.Value;
         _strategy = strategy;
         _bus = bus;
     }
@@ -62,25 +67,14 @@ public class WindowTrackingService : IService, IDisposable
             .Select(hMonitor =>
             new MonitorLayout(
                 new Monitor(hMonitor),
-                Windows
+                _windows
                     .Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == hMonitor)
                     .Select(w => new WindowLayout(w, w.Position))
             ));
 
-    public bool IsWindowVisible(Window window)
-    {
-        var isVisible = User32.IsWindowVisible(window.hWnd);
-        if (isVisible == false)
-            return false;
-
-        _ = DwmApi.DwmGetWindowAttribute(window.hWnd, DwmWindowAttribute.DWMWA_CLOAKED, out var isCloaked, Marshal.SizeOf<bool>());
-        if (isCloaked)
-            return false;
-
-        return true;
-    }
-
     public bool IsNotMinOrMaximized(Window window) => !User32.IsIconic(window.hWnd) && !User32.IsZoomed(window.hWnd);
+
+    public bool IsIgnoredWindowClass(Window window) => _options.IgnoredWindowClasses.Contains(window.ClassName);
 
     private void SubscribeToEvents()
     {
@@ -93,6 +87,7 @@ public class WindowTrackingService : IService, IDisposable
         _windows.Clear();
         var handles = User32.EnumWindows();
         var newWindows = handles.Select(h => new Window(h))
+            .Where(x => IsIgnoredWindowClass(x) == false)
             .Where(IsNotMinOrMaximized)
             .Where(_strategy.ShouldTrack);
         foreach (var w in newWindows)
@@ -108,6 +103,9 @@ public class WindowTrackingService : IService, IDisposable
     private void On_WindowEvent(WindowEvent @event)
     {
         var window = new Window(@event.hWnd);
+        if (IsIgnoredWindowClass(window))
+            return;
+
         var tracking = _windows.Any(x => x.hWnd == @event.hWnd);
         if (tracking && _stopTrackingEvents.Contains(@event.EventType))
         {
