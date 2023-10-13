@@ -4,9 +4,10 @@ using System.Reactive.Subjects;
 
 namespace cswm.Events;
 
-public class MessageBus
+public class MessageBus : IDisposable
 {
-    public readonly Subject<Event> Events = new(); // TODO dispose properly
+    public readonly Subject<Event> Events = new();
+    private bool disposedValue;
 
     public void Publish<T>(T @event) where T : Event
     {
@@ -18,4 +19,23 @@ public class MessageBus
 
     public IDisposable Subscribe<T>(Action<T> action) where T : Event
         => Events.Where(@event => @event is T).Subscribe(@event => action.Invoke((T)@event));
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                Events?.Dispose();
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }
