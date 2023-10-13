@@ -2,16 +2,21 @@
 
   <PropertyGroup>
     <AssemblyName>cswm</AssemblyName>
-    <Version>0.3.6</Version>
+    <Version>0.3.7</Version>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
+    <Nullable>enable</Nullable>
+    
+    <!-- Single-file deployment -->
+    <!-- <https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview> -->
+    <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DebugType>embedded</DebugType>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <Nullable>enable</Nullable>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
