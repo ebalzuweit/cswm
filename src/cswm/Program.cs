@@ -1,8 +1,4 @@
-﻿using cswm.Events;
-using cswm.WindowManagement;
-using cswm.WindowManagement.Arrangement;
-using cswm.WindowManagement.Services;
-using cswm.WindowManagement.Tracking;
+﻿using cswm.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -29,29 +25,7 @@ internal static class Program
     private static IHost BuildHost(string[] args)
     {
         var builder = Host.CreateDefaultBuilder(args);
-        builder.ConfigureServices((_, services) =>
-        {
-            services.AddOptions<WindowManagementOptions>()
-                .BindConfiguration(nameof(WindowManagementOptions))
-                .ValidateOnStart();
-
-            // Multiple services require the same instance of the following:
-            services.AddSingleton<MessageBus>();
-            services.AddSingleton<WinHookService>();
-            services.AddSingleton<WindowTrackingService>();
-            services.AddSingleton<WindowArrangementService>();
-            services.AddSingleton<SystemTrayService>();
-            services.AddSingleton<WindowManagementService>();
-
-            // Should only be resolved by this class
-            services.AddScoped<Startup>();
-
-            // Other registrations
-            services.AddTransient<IWindowTrackingStrategy, DefaultWindowTrackingStrategy>();
-            services.AddTransient<SplitArrangementStrategy>();
-            services.AddTransient<SilentArrangementStrategy>();
-            services.AddTransient<SystemTrayMenu>();
-        });
+        builder.ConfigureServices((_, services) => services.AddCswmServices());
         builder.ConfigureLogging(logging =>
         {
             logging.ClearProviders();
