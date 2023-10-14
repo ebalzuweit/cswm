@@ -36,17 +36,17 @@ public class WindowManagementService : IService
 
     public void Start()
     {
-        _win32RelayService.Start();
         _trackingService.Start();
         _layoutService.Start();
         _trayService.Start();
+        _win32RelayService.Start();
     }
 
     public void Stop()
     {
+        _win32RelayService.Stop();
         _trayService.Stop();
         _layoutService.Stop();
         _trackingService.Stop();
-        _win32RelayService.Stop();
     }
 }
