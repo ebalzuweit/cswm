@@ -15,6 +15,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
+    private Dictionary<IntPtr, PartitionedSpace> _priorPartitions = new();
 
     public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
     {
@@ -29,56 +30,32 @@ public class SplitArrangementStrategy : IArrangementStrategy
     public MonitorLayout Arrange(MonitorLayout layout) => Arrange_Internal(layout);
 
     /// <inheritdoc/>
-    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition) => Arrange_Internal(layout, movedWindow, cursorPosition);
+    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition)
+        => Arrange_Internal(layout, movedWindow, cursorPosition);
 
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
-        var space = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
+        var prior = _priorPartitions.GetValueOrDefault(layout.Monitor.hMonitor);
+        if (prior is null)
+        {
+            // Create partitions new
+            var workSpace = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
+            prior = new PartitionedSpace(workSpace);
+            prior.SetTotalSpacesCount(layout.Windows.Count());
+        }
+        else
+        {
+            // Update existing partitions
+            prior.SetTotalSpacesCount(layout.Windows.Count());
+        }
+        var spaces = prior.GetSpaces();
+        _priorPartitions[layout.Monitor.hMonitor] = prior;
+
+
         var windowLayouts = layout.Windows.ToList();
-        var partitions = PartitionSpace(space, windowLayouts.Count);
-        var arrangedWindows = LayoutWindows(windowLayouts, partitions, movedWindow, cursorPosition);
+        var arrangedWindows = LayoutWindows(windowLayouts, spaces, movedWindow, cursorPosition);
 
         return layout with { Windows = arrangedWindows };
-    }
-
-    /// <summary>
-    /// Recursively partition a space.
-    /// </summary>
-    /// <param name="space">Remaining space to partition.</param>
-    /// <param name="count">Number of partitions.</param>
-    /// <returns></returns>
-    private IList<Rect> PartitionSpace(Rect space, int count)
-    {
-        if (count <= 0)
-        {
-            return Array.Empty<Rect>();
-        }
-        else if (count == 1)
-        {
-            return new[] { space.AddMargin(_options.WindowPadding) };
-        }
-
-        var (left, right, verticalSplit) = space.Split();
-        var halfMargin = _options.WindowMargin / 2;
-        var leftSpace = verticalSplit switch
-        {
-            true => left.AddMargin(0, 0, halfMargin, 0),
-            false => left.AddMargin(0, 0, 0, halfMargin)
-        };
-        var rightSpace = verticalSplit switch
-        {
-            true => right.AddMargin(halfMargin, 0, 0, 0),
-            false => right.AddMargin(0, halfMargin, 0, 0)
-        };
-
-        var partitions = PartitionSpace(rightSpace, count - 1);
-        var arr = new Rect[count];
-        arr[0] = leftSpace;
-        for (int i = 0; i < partitions.Count; i++)
-        {
-            arr[i + 1] = partitions[i];
-        }
-        return arr;
     }
 
     /// <summary>
@@ -89,9 +66,6 @@ public class SplitArrangementStrategy : IArrangementStrategy
     /// <returns>Updated window layouts.</returns>
     private IEnumerable<WindowLayout> LayoutWindows(IList<WindowLayout> windowLayouts, IList<Rect> spaces, Window? movedWindow = null, Point? cursorPosition = null)
     {
-        if (windowLayouts.Count != spaces.Count)
-            throw new ArgumentException("Window and Space count must be equal.");
-
         var arrangement = new List<WindowLayout>(windowLayouts.Count);
         var unassignedWindows = new List<Window>(windowLayouts.Select(x => x.Window));
         var unassignedSpaces = new List<Rect>(spaces);
