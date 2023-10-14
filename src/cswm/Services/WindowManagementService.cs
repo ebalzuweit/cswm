@@ -11,13 +11,13 @@ namespace cswm.Services;
 /// </summary>
 public class WindowManagementService : IService
 {
-    private readonly WinHookService _winHookService;
+    private readonly Win32RelayService _win32RelayService;
     private readonly WindowTrackingService _trackingService;
     private readonly WindowArrangementService _layoutService;
     private readonly SystemTrayService _trayService;
 
     public WindowManagementService(
-        WinHookService winHookService,
+        Win32RelayService winHookService,
         WindowTrackingService trackingService,
         WindowArrangementService layoutService,
         SystemTrayService trayService
@@ -28,7 +28,7 @@ public class WindowManagementService : IService
         ArgumentNullException.ThrowIfNull(layoutService);
         ArgumentNullException.ThrowIfNull(trayService);
 
-        _winHookService = winHookService;
+        _win32RelayService = winHookService;
         _trackingService = trackingService;
         _layoutService = layoutService;
         _trayService = trayService;
@@ -36,7 +36,7 @@ public class WindowManagementService : IService
 
     public void Start()
     {
-        _winHookService.Start();
+        _win32RelayService.Start();
         _trackingService.Start();
         _layoutService.Start();
         _trayService.Start();
@@ -47,6 +47,6 @@ public class WindowManagementService : IService
         _trayService.Stop();
         _layoutService.Stop();
         _trackingService.Stop();
-        _winHookService.Stop();
+        _win32RelayService.Stop();
     }
 }

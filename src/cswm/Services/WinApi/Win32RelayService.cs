@@ -12,9 +12,9 @@ using Windows.Win32.UI.Accessibility;
 namespace cswm.Services.WinApi;
 
 /// <summary>
-/// Intercept and relay Win32 events.
+/// Relay Win32 events to the message bus.
 /// </summary>
-public class WinHookService : IService
+public class Win32RelayService : IService
 {
     private readonly ILogger? _logger;
     private readonly List<WINEVENTPROC> _hooks = new();
@@ -22,7 +22,7 @@ public class WinHookService : IService
 
     private Thread? _thread;
 
-    public WinHookService(ILogger<WinHookService> logger, MessageBus bus)
+    public Win32RelayService(ILogger<Win32RelayService> logger, MessageBus bus)
     {
         ArgumentNullException.ThrowIfNull(bus);
 
