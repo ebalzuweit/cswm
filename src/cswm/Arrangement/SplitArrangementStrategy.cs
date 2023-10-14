@@ -39,16 +39,15 @@ public class SplitArrangementStrategy : IArrangementStrategy
         if (prior is null)
         {
             // Create partitions new
-            var workSpace = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
-            prior = new PartitionedSpace(workSpace);
-            prior.SetTotalSpacesCount(layout.Windows.Count());
+            prior = new PartitionedSpace(layout.Monitor.WorkArea);
+            prior.SetTotalWindowCount(layout.Windows.Count());
         }
         else
         {
             // Update existing partitions
-            prior.SetTotalSpacesCount(layout.Windows.Count());
+            prior.SetTotalWindowCount(layout.Windows.Count());
         }
-        var spaces = prior.GetSpaces();
+        var spaces = prior.GetWindowSpaces(_options);
         _priorPartitions[layout.Monitor.hMonitor] = prior;
 
 

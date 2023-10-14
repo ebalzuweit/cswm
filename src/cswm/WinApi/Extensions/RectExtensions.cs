@@ -52,7 +52,6 @@ public static class RectExtensions
 
     public static (Rect Left, Rect Right) SplitAt(this Rect rect, bool verticalSplit, int splitPosition)
     {
-        // TODO: add margin?
         return verticalSplit
             ? (new(rect.Left, rect.Top, rect.Left + splitPosition, rect.Bottom), // left
                 new(rect.Left + splitPosition, rect.Top, rect.Right, rect.Bottom)) // right
