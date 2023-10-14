@@ -20,11 +20,6 @@ public class WindowManagementOptions
     public int WindowMargin { get; init; }
 
     /// <summary>
-    /// Padding around all windows.
-    /// </summary>
-    public int WindowPadding { get; init; }
-
-    /// <summary>
     /// Window classes that will be ignored.
     /// </summary>
     public string[] IgnoredWindowClasses { get; init; } = Array.Empty<string>();

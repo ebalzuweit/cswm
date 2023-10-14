@@ -64,10 +64,4 @@ public static class RectExtensions
 
     public static Rect AddMargin(this Rect rect, int left, int top, int right, int bottom)
         => new(rect.Left + left, rect.Top + top, rect.Right - right, rect.Bottom - bottom);
-
-    public static Rect AddPadding(this Rect rect, int padding)
-        => rect.AddPadding(padding, padding, padding, padding);
-
-    public static Rect AddPadding(this Rect rect, int left, int top, int right, int bottom)
-        => new(rect.Left - left, rect.Top - top, rect.Right + right, rect.Bottom + bottom);
 }
