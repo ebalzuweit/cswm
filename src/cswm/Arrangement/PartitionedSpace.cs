@@ -23,17 +23,20 @@ public sealed class PartitionedSpace
 	public void SetTotalWindowCount(int spacesCount)
 	{
 		var prevPartitions = new List<Partition>(_partitions);
-		_partitions.Clear();
-
 		var space = _space.AddMargin(_options.MonitorPadding);
+
+		// Create new partitions
+		_partitions.Clear();
 		_ = PartitionSpace(space, spacesCount).ToList();
 
-		// FIXME: this is hack
+		// Overwrite with previous partitions
 		for (var i = 0; i < _partitions.Count() && i < prevPartitions.Count(); i++)
 		{
-			_partitions[i] = prevPartitions[i];
+			if (_partitions[i].Vertical == prevPartitions[i].Vertical)
+				_partitions[i] = prevPartitions[i];
 		}
 
+		// Update spaces
 		_spaces = BuildSpacesFromPartitions();
 	}
 
@@ -44,44 +47,41 @@ public sealed class PartitionedSpace
 		if (_partitions.Count == 0)
 			return;
 
+		// Horizontal resize
 		if (from.Left != to.Left)
 		{
-			var prttn = _partitions.Where(p => p.Vertical && p.Position <= from.Left + MaxWindowsPadding).FirstOrDefault();
-			if (prttn is not default(Partition))
-			{
-				var idx = _partitions.IndexOf(prttn);
-				_partitions[idx] = new(true, to.Left);
-			}
+			var partition = _partitions.Where(p => p.Vertical && p.Position <= from.Left + MaxWindowsPadding).FirstOrDefault();
+			ResizePartition(partition, true, to.Left);
 		}
 		else if (from.Right != to.Right)
 		{
-			var prttn = _partitions.Where(p => p.Vertical && p.Position >= from.Right - MaxWindowsPadding).FirstOrDefault();
-			if (prttn is not default(Partition))
-			{
-				var idx = _partitions.IndexOf(prttn);
-				_partitions[idx] = new(true, to.Right);
-			}
+			var partition = _partitions.Where(p => p.Vertical && p.Position >= from.Right - MaxWindowsPadding).FirstOrDefault();
+			ResizePartition(partition, true, to.Right);
 		}
+
+		// Vertical resize
 		if (from.Top != to.Top)
 		{
-			var prttn = _partitions.Where(p => p.Vertical == false && p.Position <= from.Top).FirstOrDefault();
-			if (prttn is not default(Partition))
-			{
-				var idx = _partitions.IndexOf(prttn);
-				_partitions[idx] = new(false, to.Top);
-			}
+			var partition = _partitions.Where(p => p.Vertical == false && p.Position <= from.Top).FirstOrDefault();
+			ResizePartition(partition, false, to.Top);
 		}
 		else if (from.Bottom != to.Bottom)
 		{
-			var prttn = _partitions.Where(p => p.Vertical == false && p.Position >= from.Bottom - MaxWindowsPadding).FirstOrDefault();
-			if (prttn is not default(Partition))
-			{
-				var idx = _partitions.IndexOf(prttn);
-				_partitions[idx] = new(false, to.Bottom);
-			}
+			var partition = _partitions.Where(p => p.Vertical == false && p.Position >= from.Bottom - MaxWindowsPadding).FirstOrDefault();
+			ResizePartition(partition, false, to.Bottom);
 		}
 
+		// Update spaces
 		_spaces = BuildSpacesFromPartitions();
+
+		void ResizePartition(Partition? p, bool vertical, int position)
+		{
+			if (p is default(Partition))
+				return;
+
+			var idx = _partitions.IndexOf(p);
+			_partitions[idx] = new(vertical, position);
+		}
 	}
 
 	public IList<Rect> GetWindowSpaces()
