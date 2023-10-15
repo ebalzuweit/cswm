@@ -61,7 +61,6 @@ public class SplitArrangementStrategy : IArrangementStrategy
             }
             else
             {
-                // FIXME: Preserve partitions when adding / removing windows
                 prior.SetTotalWindowCount(layout.Windows.Count());
             }
         }
