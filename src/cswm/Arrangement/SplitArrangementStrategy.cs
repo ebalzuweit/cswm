@@ -34,6 +34,11 @@ public class SplitArrangementStrategy : IArrangementStrategy
     public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition)
         => Arrange_Internal(layout, movedWindow, cursorPosition);
 
+    public void Reset()
+    {
+        _priorPartitions.Clear();
+    }
+
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
         var prior = _priorPartitions.GetValueOrDefault(layout.Monitor.hMonitor);

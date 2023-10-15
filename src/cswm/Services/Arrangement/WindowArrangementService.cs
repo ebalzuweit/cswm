@@ -114,6 +114,10 @@ public sealed class WindowArrangementService : IService
 
     private void OnWindowTrackingReset()
     {
+        foreach (var strategy in _monitorStrategies.Values)
+        {
+            strategy.Reset();
+        }
         Rearrange();
     }
 
