@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing.Text;
 using System.Linq;
 using cswm.Services;
 using cswm.WinApi;
@@ -36,8 +35,7 @@ public sealed class PartitionedSpace
 				_partitions[i] = prevPartitions[i];
 		}
 
-		// Update spaces
-		_spaces = BuildSpacesFromPartitions();
+		UpdateSpacesCache();
 	}
 
 	// FIXME: This is swapping windows consistently for certain resizes (e.g. Top resize?)
@@ -71,8 +69,7 @@ public sealed class PartitionedSpace
 			ResizePartition(partition, false, to.Bottom);
 		}
 
-		// Update spaces
-		_spaces = BuildSpacesFromPartitions();
+		UpdateSpacesCache();
 
 		void ResizePartition(Partition? p, bool vertical, int position)
 		{
@@ -87,6 +84,11 @@ public sealed class PartitionedSpace
 	public IList<Rect> GetWindowSpaces()
 	{
 		return _spaces;
+	}
+
+	private void UpdateSpacesCache()
+	{
+		_spaces = BuildSpacesFromPartitions();
 	}
 
 	/// <summary>
