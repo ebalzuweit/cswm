@@ -58,7 +58,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 {
                     var handled = TryHandleMovedWindowResized(movedWindow);
                     if (handled)
-                        movedWindow = null; // place windows by similarity, cursor is not always in correct space after resizing
+                        cursorPosition = null; // place windows by similarity, cursor is not always in correct space after resizing
                 }
             }
             else
@@ -175,6 +175,9 @@ public class SplitArrangementStrategy : IArrangementStrategy
     /// <summary>
     /// Get the geometric similarity between two <see cref="Rect"/>.
     /// </summary>
+    /// <remarks>
+    /// Lower is better.
+    /// </remarks>
     /// <param name="a">The first Rect to compare.</param>
     /// <param name="b">The second Rect to compare.</param>
     /// <returns><c>0</c> if the <see cref="Rect"/> are equal; otherwise, the total translation and scaling difference between them.</returns>
@@ -183,6 +186,41 @@ public class SplitArrangementStrategy : IArrangementStrategy
         var translation = Math.Abs(b.Left - a.Left) + Math.Abs(b.Top - a.Top);
         var scaling = Math.Abs(b.Width - a.Width) + Math.Abs(b.Height - a.Height);
 
-        return translation + scaling;
+        bool l = false;
+        bool t = false;
+        bool r = false;
+        bool bo = false;
+        var s = 0;
+        if (b.Left == a.Left)
+        {
+            s++;
+            l = true;
+        }
+        if (b.Top == a.Top)
+        {
+            s++;
+            t = true;
+        }
+        if (b.Right == a.Right)
+        {
+            s++;
+            r = true;
+        }
+        if (b.Bottom == a.Bottom)
+        {
+            s++;
+            bo = true;
+        }
+
+        var score = translation + scaling;
+        // If 3 or more edges are equal it's a good match.
+        if (s > 2)
+            return score / 100;
+        // Left & Right / Top & Bottom pairs are excluded -
+        // These pairs are red herrings from our arrangement.
+        if (s == 2 && !(l && r) && !(t && bo))
+            return score / 100;
+
+        return score;
     }
 }
