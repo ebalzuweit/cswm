@@ -15,6 +15,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
+    private MonitorLayout _lastArrangement;
     private Dictionary<IntPtr, PartitionedSpace> _priorPartitions = new();
 
     public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
@@ -39,22 +40,69 @@ public class SplitArrangementStrategy : IArrangementStrategy
         if (prior is null)
         {
             // Create partitions new
-            prior = new PartitionedSpace(layout.Monitor.WorkArea);
+            prior = new PartitionedSpace(layout.Monitor.WorkArea, _options);
             prior.SetTotalWindowCount(layout.Windows.Count());
         }
         else
         {
             // Update existing partitions
-            prior.SetTotalWindowCount(layout.Windows.Count());
+            if (prior.GetWindowSpaces().Count == layout.Windows.Count())
+            {
+                // Keep existing partitions
+                if (movedWindow is not null)
+                {
+                    TryHandleMovedWindowResized(movedWindow);
+                }
+            }
+            else
+            {
+                // FIXME: Preserve partitions when adding / removing windows
+                prior.SetTotalWindowCount(layout.Windows.Count());
+            }
         }
-        var spaces = prior.GetWindowSpaces(_options);
+        var spaces = prior.GetWindowSpaces();
         _priorPartitions[layout.Monitor.hMonitor] = prior;
 
 
         var windowLayouts = layout.Windows.ToList();
         var arrangedWindows = LayoutWindows(windowLayouts, spaces, movedWindow, cursorPosition);
 
-        return layout with { Windows = arrangedWindows };
+        _lastArrangement = layout with { Windows = arrangedWindows };
+        return _lastArrangement;
+
+        // uses local var prior
+        bool TryHandleMovedWindowResized(Window moved)
+        {
+            var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == moved.hWnd).FirstOrDefault();
+            if (prev is not default(WindowLayout))
+            {
+                var wasResize = DetectWindowResize(prev.Position, moved.Position);
+                if (wasResize)
+                {
+                    prior.ResizeSpace(prev.Position, moved.Position);
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private bool DetectWindowResize(Rect from, Rect to)
+    {
+        // Count number of edges that moved
+        var c = 0;
+        if (from.Left != to.Left)
+            c++;
+        if (from.Top != to.Top)
+            c++;
+        if (from.Right != to.Right)
+            c++;
+        if (from.Bottom != to.Bottom)
+            c++;
+
+        if (c == 1 || c == 2)
+            return true;
+        return false;
     }
 
     /// <summary>
@@ -110,9 +158,11 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
         void Assign(Window window, Rect space)
         {
+            var position = space.AdjustForWindowsPadding(window);
+
             unassignedWindows!.Remove(window);
             unassignedSpaces!.Remove(space);
-            arrangement!.Add(new(window, space));
+            arrangement!.Add(new(window, position));
         }
     }
 
