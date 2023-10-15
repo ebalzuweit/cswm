@@ -38,7 +38,6 @@ public sealed class PartitionedSpace
 		UpdateSpacesCache();
 	}
 
-	// FIXME: This is swapping windows consistently for certain resizes (e.g. Top resize?)
 	public void ResizeSpace(Rect from, Rect to)
 	{
 		const int MaxWindowsPadding = 16;

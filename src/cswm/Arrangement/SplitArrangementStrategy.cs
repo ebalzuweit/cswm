@@ -56,7 +56,9 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 // Keep existing partitions
                 if (movedWindow is not null)
                 {
-                    TryHandleMovedWindowResized(movedWindow);
+                    var handled = TryHandleMovedWindowResized(movedWindow);
+                    if (handled)
+                        movedWindow = null; // place windows by similarity, cursor is not always in correct space after resizing
                 }
             }
             else
