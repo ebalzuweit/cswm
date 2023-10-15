@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
 
         // Multiple services require the same instance of the following:
         services.AddSingleton<MessageBus>();
-        services.AddSingleton<Win32RelayService>();
+        services.AddSingleton<WindowEventRelayService>();
         services.AddSingleton<WindowTrackingService>();
         services.AddSingleton<WindowArrangementService>();
         services.AddSingleton<SystemTrayService>();

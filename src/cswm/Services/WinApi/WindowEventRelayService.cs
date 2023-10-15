@@ -14,7 +14,7 @@ namespace cswm.Services.WinApi;
 /// <summary>
 /// Relay Win32 events to the message bus.
 /// </summary>
-public class Win32RelayService : IService
+public class WindowEventRelayService : IService
 {
     private readonly ILogger? _logger;
     private readonly List<WINEVENTPROC> _hooks = new();
@@ -22,7 +22,7 @@ public class Win32RelayService : IService
 
     private Thread? _thread;
 
-    public Win32RelayService(ILogger<Win32RelayService> logger, MessageBus bus)
+    public WindowEventRelayService(ILogger<WindowEventRelayService> logger, MessageBus bus)
     {
         ArgumentNullException.ThrowIfNull(bus);
 
