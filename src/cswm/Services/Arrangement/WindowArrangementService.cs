@@ -167,22 +167,16 @@ public sealed class WindowArrangementService : IService
 
     private bool SetWindowPos(Window window, Rect position)
     {
-        var windowsPadding = (window.Position.Width - window.ClientPosition.Width) / 2;
-        var adjustedPosition = new Rect(
-            left: position.Left - windowsPadding,
-            top: position.Top,
-            right: position.Right + windowsPadding,
-            bottom: position.Bottom + windowsPadding);
-
         if (_options.DoNotManage)
             return true;
+
         return User32.SetWindowPos(
             window.hWnd,
             HwndInsertAfterFlags.HWND_NOTOPMOST,
-            x: adjustedPosition.Left,
-            y: adjustedPosition.Top,
-            cx: adjustedPosition.Width,
-            cy: adjustedPosition.Height,
+            x: position.Left,
+            y: position.Top,
+            cx: position.Width,
+            cy: position.Height,
             SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_SHOWWINDOW);
     }
 }

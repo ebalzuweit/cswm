@@ -24,4 +24,25 @@ public static class RectExtensions
 
     public static Rect AddMargin(this Rect rect, int left, int top, int right, int bottom)
         => new(rect.Left + left, rect.Top + top, rect.Right - right, rect.Bottom - bottom);
+
+    /// <summary>
+    /// Adjust for padding added by Windows.
+    /// </summary>
+    /// <remarks>
+    /// Credit: <see href="https://www.forrestthewoods.com/blog/building_a_better_aerosnap/"/>
+    /// </remarks>
+    /// <param name="rect">Desired position.</param>
+    /// <param name="window">Window to be moved.</param>
+    /// <returns>Adjusted position for SetWindowPos.</returns>
+    public static Rect AdjustForWindowsPadding(this Rect rect, Window window)
+    {
+        var padding = (window.Position.Width - window.ClientPosition.Width) / 2;
+        var adjusted = new Rect(
+            left: rect.Left - padding,
+            top: rect.Top,
+            right: rect.Right + padding,
+            bottom: rect.Bottom + padding);
+
+        return adjusted;
+    }
 }
