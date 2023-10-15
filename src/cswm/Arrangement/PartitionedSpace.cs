@@ -22,10 +22,19 @@ public sealed class PartitionedSpace
 
 	public void SetTotalWindowCount(int spacesCount)
 	{
+		var prevPartitions = new List<Partition>(_partitions);
 		_partitions.Clear();
 
 		var space = _space.AddMargin(_options.MonitorPadding);
-		_spaces = PartitionSpace(space, spacesCount).ToList();
+		_ = PartitionSpace(space, spacesCount).ToList();
+
+		// FIXME: this is hack
+		for (var i = 0; i < _partitions.Count() && i < prevPartitions.Count(); i++)
+		{
+			_partitions[i] = prevPartitions[i];
+		}
+
+		_spaces = BuildSpacesFromPartitions();
 	}
 
 	// FIXME: This is swapping windows consistently for certain resizes (e.g. Top resize?)
