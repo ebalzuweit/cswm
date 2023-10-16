@@ -15,7 +15,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
-    private MonitorLayout _lastArrangement;
+    private MonitorLayout _lastArrangement = null!;
     private Dictionary<IntPtr, PartitionedSpace> _priorPartitions = new();
 
     public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
