@@ -6,6 +6,7 @@ using cswm.WinApi;
 
 namespace cswm.Arrangement;
 
+// FIXME: Revisit naming of class & methods
 public sealed class PartitionedSpace
 {
 	private readonly Rect _space;
@@ -47,36 +48,51 @@ public sealed class PartitionedSpace
 		// Horizontal resize
 		if (from.Left != to.Left)
 		{
-			var partition = _partitions.Where(p => p.Vertical && p.Position <= from.Left + MaxWindowsPadding).FirstOrDefault();
-			ResizePartition(partition, true, to.Left);
+			var partition = GetLastPartitionWhere(true, p => p <= from.Left + MaxWindowsPadding);
+			ResizePartition(partition, to.Left);
 		}
 		else if (from.Right != to.Right)
 		{
-			var partition = _partitions.Where(p => p.Vertical && p.Position >= from.Right - MaxWindowsPadding).FirstOrDefault();
-			ResizePartition(partition, true, to.Right);
+			var partition = GetLastPartitionWhere(true, p => p >= from.Right - MaxWindowsPadding);
+			ResizePartition(partition, to.Right);
 		}
 
 		// Vertical resize
 		if (from.Top != to.Top)
 		{
-			var partition = _partitions.Where(p => p.Vertical == false && p.Position <= from.Top).FirstOrDefault();
-			ResizePartition(partition, false, to.Top);
+			var partition = GetLastPartitionWhere(false, p => p <= from.Top);
+			ResizePartition(partition, to.Top);
 		}
 		else if (from.Bottom != to.Bottom)
 		{
-			var partition = _partitions.Where(p => p.Vertical == false && p.Position >= from.Bottom - MaxWindowsPadding).FirstOrDefault();
-			ResizePartition(partition, false, to.Bottom);
+			var partition = GetLastPartitionWhere(false, p => p >= from.Bottom - MaxWindowsPadding);
+			ResizePartition(partition, to.Bottom);
 		}
 
 		UpdateSpacesCache();
 
-		void ResizePartition(Partition? p, bool vertical, int position)
+		Partition? GetLastPartitionWhere(bool vertical, Func<int, bool> predicate)
+		{
+			Partition? np = null;
+			foreach (var p in _partitions)
+			{
+				if (p.Vertical != vertical)
+					continue;
+				if (predicate(p.Position))
+				{
+					np = p;
+				}
+			}
+			return np;
+		}
+
+		void ResizePartition(Partition? p, int position)
 		{
 			if (p is default(Partition))
 				return;
 
 			var idx = _partitions.IndexOf(p);
-			_partitions[idx] = new(vertical, position);
+			_partitions[idx] = new(p.Vertical, position);
 		}
 	}
 
@@ -115,10 +131,11 @@ public sealed class PartitionedSpace
 		if (dimension % 2 == 1)
 			midpoint += 1; // left split gets the extra
 
-		// TODO: determine verticalSplit by aspect ratio
+		// FIXME: determine verticalSplit by aspect ratio
 
 		// Add partition
-		_partitions.Add(new(verticalSplit, midpoint));
+		var start = verticalSplit ? space.Left : space.Top;
+		_partitions.Add(new(verticalSplit, start + midpoint));
 		(var left, var right) = space.SplitAt(verticalSplit, midpoint);
 
 		// Add window margins
@@ -158,7 +175,8 @@ public sealed class PartitionedSpace
 		var spaces = new List<Rect>();
 		foreach (var p in _partitions)
 		{
-			(var l, var r) = s.SplitAt(p.Vertical, p.Position);
+			var start = p.Vertical ? s.Left : s.Top;
+			(var l, var r) = s.SplitAt(p.Vertical, p.Position - start);
 			if (p.Vertical)
 			{
 				l = l.AddMargin(0, 0, halfMargin, 0); // left
