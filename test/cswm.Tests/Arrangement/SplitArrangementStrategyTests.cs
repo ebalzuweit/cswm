@@ -7,7 +7,7 @@ namespace cswm.Tests.Arrangement;
 
 public class SplitArrangementStrategyTests
 {
-    private SplitArrangementStrategy Strategy => new(Mocks.Logger<SplitArrangementStrategy>(), Mocks.WindowManagementOptions());
+    private SplitArrangementStrategy Strategy => new(Mocks.WindowManagementOptions());
     private Rect MonitorSize => new(0, 0, 1920, 1080);
 
     #region Window Arrange Tests

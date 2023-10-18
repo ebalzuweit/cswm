@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace cswm.Arrangement;
@@ -151,9 +150,9 @@ public sealed class BspTree : IEnumerable<BspTree>
     public override string ToString()
     {
         var sb = new StringBuilder();
-        foreach (var p in this.Where(x => x.Partition is not null))
+        foreach (var p in this)
         {
-            sb.AppendLine(p.Partition!.ToString());
+            sb.AppendLine($"{p.Space}, {p?.Partition}");
         }
         return sb.ToString();
     }

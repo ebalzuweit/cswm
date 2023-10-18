@@ -1,6 +1,5 @@
 using cswm.Services;
 using cswm.WinApi;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -13,17 +12,14 @@ public class SplitArrangementStrategy : IArrangementStrategy
 {
     public static string DisplayName => "Split";
 
-    private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
     private readonly Dictionary<IntPtr, BspSpace> _spaceCache = new();
     private MonitorLayout _lastArrangement = null!;
 
-    public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
+    public SplitArrangementStrategy(IOptions<WindowManagementOptions> options)
     {
-        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(options);
 
-        _logger = logger;
         _options = options.Value;
     }
 
