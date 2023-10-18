@@ -9,13 +9,13 @@ namespace cswm.Arrangement;
 /// <summary>
 /// Space arranged with an internal <see cref="BspTree"/>.
 /// </summary>
-public sealed class BspArrangedSpace
+public sealed class BspSpace
 {
     private readonly Rect _space;
     private readonly WindowManagementOptions _options;
     private BspTree _root = null!;
 
-    public BspArrangedSpace(Rect space, WindowManagementOptions options)
+    public BspSpace(Rect space, WindowManagementOptions options)
     {
         _space = space;
         _options = options;

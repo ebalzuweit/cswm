@@ -15,7 +15,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
-    private readonly Dictionary<IntPtr, BspArrangedSpace> _priorArrangements = new();
+    private readonly Dictionary<IntPtr, BspSpace> _spaceCache = new();
     private MonitorLayout _lastArrangement = null!;
 
     public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
@@ -36,23 +36,26 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     public void Reset()
     {
-        _priorArrangements.Clear();
+        _spaceCache.Clear();
     }
 
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
-        var arrangedSpace = _priorArrangements.GetValueOrDefault(layout.Monitor.hMonitor);
-        if (arrangedSpace is null)
+        var windowLayouts = layout.Windows.ToList();
+
+        // Setup the BSP tree
+        var bspSpace = _spaceCache.GetValueOrDefault(layout.Monitor.hMonitor);
+        if (bspSpace is null)
         {
             // Create partitions new
-            arrangedSpace = new BspArrangedSpace(layout.Monitor.WorkArea, _options);
-            arrangedSpace.SetTotalWindowCount(layout.Windows.Count());
+            bspSpace = new BspSpace(layout.Monitor.WorkArea, _options);
+            bspSpace.SetTotalWindowCount(windowLayouts.Count);
         }
         else
         {
             // Update existing partitions
-            var spacesCount = arrangedSpace.GetSpaces(0).Count();
-            if (spacesCount == layout.Windows.Count())
+            var spacesCount = bspSpace.GetSpaces(0).Count();
+            if (spacesCount == windowLayouts.Count)
             {
                 // Keep existing partitions
                 if (movedWindow is not null)
@@ -66,19 +69,18 @@ public class SplitArrangementStrategy : IArrangementStrategy
             }
             else
             {
-                arrangedSpace.SetTotalWindowCount(layout.Windows.Count());
+                bspSpace.SetTotalWindowCount(windowLayouts.Count);
             }
         }
-        _priorArrangements[layout.Monitor.hMonitor] = arrangedSpace;
+        var spaces = bspSpace.GetSpaces(_options.WindowMargin / 2).ToList();
+        _spaceCache[layout.Monitor.hMonitor] = bspSpace;
 
-        var windowLayouts = layout.Windows.ToList();
-        var spaces = arrangedSpace.GetSpaces(_options.WindowMargin / 2).ToList();
+        // Arrange windows to spaces
         var arrangedWindows = LayoutWindows(windowLayouts, spaces, movedWindow, cursorPosition);
-
         _lastArrangement = layout with { Windows = arrangedWindows };
+
         return _lastArrangement;
 
-        // uses local var prior
         bool TryHandleMovedWindowResized(Window moved)
         {
             var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == moved.hWnd).FirstOrDefault();
@@ -87,7 +89,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 var wasResize = DetectWindowResize(prev.Position, moved.Position);
                 if (wasResize)
                 {
-                    return arrangedSpace.TryResize(prev.Position, moved.Position);
+                    return bspSpace.TryResize(prev.Position, moved.Position);
                 }
             }
             return false;
