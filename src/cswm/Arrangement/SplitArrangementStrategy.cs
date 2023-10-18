@@ -51,7 +51,8 @@ public class SplitArrangementStrategy : IArrangementStrategy
         else
         {
             // Update existing partitions
-            if (GetSpaces().Count /* FIXME: This is overkill */ == layout.Windows.Count())
+            var spacesCount = arrangedSpace.GetSpaces(0).Count();
+            if (spacesCount == layout.Windows.Count())
             {
                 // Keep existing partitions
                 if (movedWindow is not null)
@@ -71,7 +72,8 @@ public class SplitArrangementStrategy : IArrangementStrategy
         _priorArrangements[layout.Monitor.hMonitor] = arrangedSpace;
 
         var windowLayouts = layout.Windows.ToList();
-        var arrangedWindows = LayoutWindows(windowLayouts, GetSpaces(), movedWindow, cursorPosition);
+        var spaces = arrangedSpace.GetSpaces(_options.WindowMargin / 2).ToList();
+        var arrangedWindows = LayoutWindows(windowLayouts, spaces, movedWindow, cursorPosition);
 
         _lastArrangement = layout with { Windows = arrangedWindows };
         return _lastArrangement;
@@ -85,13 +87,11 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 var wasResize = DetectWindowResize(prev.Position, moved.Position);
                 if (wasResize)
                 {
-                    return arrangedSpace.Root.TryResize(prev.Position, moved.Position);
+                    return arrangedSpace.TryResize(prev.Position, moved.Position);
                 }
             }
             return false;
         }
-
-        IReadOnlyList<Rect> GetSpaces() => arrangedSpace?.Root.CalcSpaces(_options.WindowMargin / 2).ToList() ?? new List<Rect>(0);
     }
 
     private static bool DetectWindowResize(Rect from, Rect to)

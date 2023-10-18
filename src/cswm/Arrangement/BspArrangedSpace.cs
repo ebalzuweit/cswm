@@ -1,10 +1,14 @@
 using cswm.Services;
 using cswm.WinApi;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace cswm.Arrangement;
 
+/// <summary>
+/// Space arranged with an internal <see cref="BspTree"/>.
+/// </summary>
 public sealed class BspArrangedSpace
 {
     private readonly Rect _space;
@@ -17,8 +21,6 @@ public sealed class BspArrangedSpace
         _options = options;
     }
 
-    public BspTree Root => _root;
-
     // FIXME: Keep previous positions when partitions added / removed
     public void SetTotalWindowCount(int spacesCount)
     {
@@ -29,12 +31,16 @@ public sealed class BspArrangedSpace
         _root = PartitionSpace(space, partitionCount);
     }
 
+    public IEnumerable<Rect> GetSpaces(int halfMargin) => _root.CalcSpaces(halfMargin);
+
+    public bool TryResize(Rect from, Rect to) => _root.TryResize(from, to);
+
     /// <summary>
     /// Partition a space recursively.
     /// </summary>
     /// <remarks>
     /// This builds the tree by depth-first search traversal with a max-depth.
-	/// The right half of the tree is given preference by default.
+	/// The right half of the tree is preferred for partitioning, giving larger spaces to the "left" spaces.
     /// </remarks>
     /// <param name="space">Space to partition.</param>
     /// <param name="partitionCount">Number of partitions to create.</param>
