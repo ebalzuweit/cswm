@@ -15,8 +15,8 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
+    private readonly Dictionary<IntPtr, BspArrangedSpace> _priorArrangements = new();
     private MonitorLayout _lastArrangement = null!;
-    private Dictionary<IntPtr, PartitionedSpace> _priorPartitions = new();
 
     public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
     {
@@ -36,42 +36,42 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     public void Reset()
     {
-        _priorPartitions.Clear();
+        _priorArrangements.Clear();
     }
 
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
-        var prior = _priorPartitions.GetValueOrDefault(layout.Monitor.hMonitor);
-        if (prior is null)
+        var arrangedSpace = _priorArrangements.GetValueOrDefault(layout.Monitor.hMonitor);
+        if (arrangedSpace is null)
         {
             // Create partitions new
-            prior = new PartitionedSpace(layout.Monitor.WorkArea, _options);
-            prior.SetTotalWindowCount(layout.Windows.Count());
+            arrangedSpace = new BspArrangedSpace(layout.Monitor.WorkArea, _options);
+            arrangedSpace.SetTotalWindowCount(layout.Windows.Count());
         }
         else
         {
             // Update existing partitions
-            if (prior.GetWindowSpaces().Count == layout.Windows.Count())
+            if (GetSpaces().Count /* FIXME: This is overkill */ == layout.Windows.Count())
             {
                 // Keep existing partitions
                 if (movedWindow is not null)
                 {
                     var handled = TryHandleMovedWindowResized(movedWindow);
                     if (handled)
+                    {
                         cursorPosition = null; // place windows by similarity, cursor is not always in correct space after resizing
+                    }
                 }
             }
             else
             {
-                prior.SetTotalWindowCount(layout.Windows.Count());
+                arrangedSpace.SetTotalWindowCount(layout.Windows.Count());
             }
         }
-        var spaces = prior.GetWindowSpaces();
-        _priorPartitions[layout.Monitor.hMonitor] = prior;
-
+        _priorArrangements[layout.Monitor.hMonitor] = arrangedSpace;
 
         var windowLayouts = layout.Windows.ToList();
-        var arrangedWindows = LayoutWindows(windowLayouts, spaces, movedWindow, cursorPosition);
+        var arrangedWindows = LayoutWindows(windowLayouts, GetSpaces(), movedWindow, cursorPosition);
 
         _lastArrangement = layout with { Windows = arrangedWindows };
         return _lastArrangement;
@@ -85,15 +85,16 @@ public class SplitArrangementStrategy : IArrangementStrategy
                 var wasResize = DetectWindowResize(prev.Position, moved.Position);
                 if (wasResize)
                 {
-                    prior.ResizeSpace(prev.Position, moved.Position);
-                    return true;
+                    return arrangedSpace.Root.TryResize(prev.Position, moved.Position);
                 }
             }
             return false;
         }
+
+        IReadOnlyList<Rect> GetSpaces() => arrangedSpace?.Root.CalcSpaces(_options.WindowMargin / 2).ToList() ?? new List<Rect>(0);
     }
 
-    private bool DetectWindowResize(Rect from, Rect to)
+    private static bool DetectWindowResize(Rect from, Rect to)
     {
         // Count number of edges that moved
         var c = 0;
@@ -117,7 +118,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
     /// <param name="windowLayouts">Current window layouts.</param>
     /// <param name="spaces">New window spaces.</param>
     /// <returns>Updated window layouts.</returns>
-    private IEnumerable<WindowLayout> LayoutWindows(IList<WindowLayout> windowLayouts, IList<Rect> spaces, Window? movedWindow = null, Point? cursorPosition = null)
+    private IEnumerable<WindowLayout> LayoutWindows(IList<WindowLayout> windowLayouts, IReadOnlyList<Rect> spaces, Window? movedWindow = null, Point? cursorPosition = null)
     {
         var arrangement = new List<WindowLayout>(windowLayouts.Count);
         var unassignedWindows = new List<Window>(windowLayouts.Select(x => x.Window));
@@ -181,7 +182,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
     /// <param name="a">The first Rect to compare.</param>
     /// <param name="b">The second Rect to compare.</param>
     /// <returns><c>0</c> if the <see cref="Rect"/> are equal; otherwise, the total translation and scaling difference between them.</returns>
-    private int GetRectSimilarity(Rect a, Rect b)
+    private static int GetRectSimilarity(Rect a, Rect b)
     {
         var translation = Math.Abs(b.Left - a.Left) + Math.Abs(b.Top - a.Top);
         var scaling = Math.Abs(b.Width - a.Width) + Math.Abs(b.Height - a.Height);
