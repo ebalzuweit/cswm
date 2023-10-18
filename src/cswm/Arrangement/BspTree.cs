@@ -152,7 +152,7 @@ public sealed class BspTree : IEnumerable<BspTree>
         var sb = new StringBuilder();
         foreach (var p in this)
         {
-            sb.AppendLine($"{p.Space}, {p?.Partition}");
+            sb.AppendLine($"{p.Space}, {p?.Partition?.ToString() ?? "🚫"}");
         }
         return sb.ToString();
     }
@@ -167,6 +167,6 @@ public sealed record Partition(bool Vertical, int Position)
 {
     public override string ToString()
     {
-        return $"{(Vertical ? "|" : "——")} @ {Position}";
+        return $"{(Vertical ? "|" : "—")} @ {Position}";
     }
 }
