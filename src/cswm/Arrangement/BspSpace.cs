@@ -7,7 +7,7 @@ using System.Linq;
 namespace cswm.Arrangement;
 
 /// <summary>
-/// Space arranged with an internal <see cref="BspTree"/>.
+/// Space partitioned with an internal <see cref="BspTree"/>.
 /// </summary>
 public sealed class BspSpace
 {
