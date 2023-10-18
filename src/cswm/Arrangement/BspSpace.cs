@@ -28,7 +28,7 @@ public sealed class BspSpace
         var partitionCount = Math.Max(0, spacesCount - 1);
 
         // Rebuild partition tree
-        _root = PartitionSpace(space, partitionCount);
+        _root = PartitionSpace(space, partitionCount, prior: _root);
     }
 
     public IEnumerable<Rect> GetSpaces(int halfMargin) => _root.CalcSpaces(halfMargin);
@@ -47,30 +47,36 @@ public sealed class BspSpace
     /// <param name="depth">Current depth of tree traversal.</param>
     /// <param name="verticalSplit">If the partition should have a vertical split.</param>
     /// <returns><see cref="BspTree"/> partitioning the space.</returns>
-    private BspTree PartitionSpace(Rect space, int partitionCount, int depth = 0, bool verticalSplit = true)
+    private BspTree PartitionSpace(Rect space, int partitionCount, int depth = 0, bool verticalSplit = true, BspTree? prior = null)
     {
         if (partitionCount < 1 || depth >= 3) // TODO: _options.MaxDepth
             return new(space);
 
-        // Determine partition position
-        var dimension = verticalSplit ? space.Width : space.Height;
-        var midpoint = dimension / 2;
-        if (dimension % 2 == 1)
-            midpoint += 1; // left split gets the extra
+        // Use prior partition if found
+        var partition = prior?.Partition;
+        if (partition is null)
+        {
+            // Determine partition position
+            var start = verticalSplit ? space.Left : space.Top;
+            var dimension = verticalSplit ? space.Width : space.Height;
+            var midpoint = dimension / 2;
+            if (dimension % 2 == 1)
+                midpoint += 1; // left split gets the extra
+
+            partition = new Partition(verticalSplit, start + midpoint);
+        }
 
         // FIXME: determine verticalSplit by aspect ratio
 
-        // Add partition
-        var start = verticalSplit ? space.Left : space.Top;
-        var partition = new Partition(verticalSplit, start + midpoint);
+        // Build root
         var root = new BspTree(space, partition);
 
-        (var left, var right) = root.CalcSplits();
-
+        // Build sub-trees
         // TODO: _options.PreferRight to swap left and right partition
-
-        root.Right = PartitionSpace(right, partitionCount - 1 /* root partition */, depth + 1, !verticalSplit);
-        root.Left = PartitionSpace(left, partitionCount - 1 - root.Right.Count(), depth + 1, !verticalSplit);
+        partitionCount--; // subtract root partition
+        (var left, var right) = root.CalcSplits();
+        root.Right = PartitionSpace(right, partitionCount, depth + 1, !verticalSplit, root.Right);
+        root.Left = PartitionSpace(left, partitionCount - root.Right.Count(), depth + 1, !verticalSplit, root.Left);
 
         return root;
     }
