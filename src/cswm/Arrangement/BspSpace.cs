@@ -75,7 +75,8 @@ public sealed class BspSpace
         partitionCount--; // subtract root partition
         (var left, var right) = root.CalcSplits();
         root.Right = PartitionSpace(right, partitionCount, depth + 1, !verticalSplit, root.Right);
-        root.Left = PartitionSpace(left, partitionCount - root.Right.Count(), depth + 1, !verticalSplit, root.Left);
+        partitionCount -= root.Right.Where(x => x.Partition is not null).Count(); // subtract partitions created in right
+        root.Left = PartitionSpace(left, partitionCount, depth + 1, !verticalSplit, root.Left);
 
         return root;
     }

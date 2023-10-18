@@ -90,7 +90,6 @@ public sealed class BspTree : IEnumerable<BspTree>
         return (left, right);
     }
 
-    // FIXME: Space calculations are going wrong at 4+ partitions
     public IEnumerable<Rect> CalcSpaces(int halfMargin = 0)
     {
         if (Partition is null)
