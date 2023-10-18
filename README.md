@@ -34,11 +34,10 @@ cswm runs in the system tray, right-click on the icon to access the menu.
 
 Configuration is done through the `appsettings.json` file, found in the same folder as `cswm.exe`.
 
-| Setting         | Description | 
-|-----------------|-------------|
+| Setting         | Description                                      |
+| --------------- | ------------------------------------------------ |
 | Monitor Padding | Border on the inside of each monitor, in pixels. |
-| Window Margin   | Space between adjacent windows, in pixels. |
-| Window Padding  | Border on the outside of each window, in pixels. |
+| Window Margin   | Space between adjacent windows, in pixels.       |
 
 ### Caveats
 

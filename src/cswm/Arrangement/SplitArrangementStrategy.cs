@@ -1,6 +1,5 @@
 using cswm.Services;
 using cswm.WinApi;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -13,15 +12,14 @@ public class SplitArrangementStrategy : IArrangementStrategy
 {
     public static string DisplayName => "Split";
 
-    private readonly ILogger _logger;
     private readonly WindowManagementOptions _options;
+    private readonly Dictionary<IntPtr, BspSpace> _spaceCache = new();
+    private MonitorLayout _lastArrangement = null!;
 
-    public SplitArrangementStrategy(ILogger<SplitArrangementStrategy> logger, IOptions<WindowManagementOptions> options)
+    public SplitArrangementStrategy(IOptions<WindowManagementOptions> options)
     {
-        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(options);
 
-        _logger = logger;
         _options = options.Value;
     }
 
@@ -29,56 +27,87 @@ public class SplitArrangementStrategy : IArrangementStrategy
     public MonitorLayout Arrange(MonitorLayout layout) => Arrange_Internal(layout);
 
     /// <inheritdoc/>
-    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition) => Arrange_Internal(layout, movedWindow, cursorPosition);
+    public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition)
+        => Arrange_Internal(layout, movedWindow, cursorPosition);
+
+    public void Reset()
+    {
+        _spaceCache.Clear();
+    }
 
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
-        var space = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
         var windowLayouts = layout.Windows.ToList();
-        var partitions = PartitionSpace(space, windowLayouts.Count);
-        var arrangedWindows = LayoutWindows(windowLayouts, partitions, movedWindow, cursorPosition);
 
-        return layout with { Windows = arrangedWindows };
+        // Setup the BSP tree
+        var bspSpace = _spaceCache.GetValueOrDefault(layout.Monitor.hMonitor);
+        if (bspSpace is null)
+        {
+            // Create partitions new
+            bspSpace = new BspSpace(layout.Monitor.WorkArea, _options);
+            bspSpace.SetTotalWindowCount(windowLayouts.Count);
+        }
+        else
+        {
+            // Update existing partitions
+            var spacesCount = bspSpace.GetSpaces(0).Count();
+            if (spacesCount == windowLayouts.Count)
+            {
+                // Keep existing partitions
+                if (movedWindow is not null)
+                {
+                    var handled = TryHandleMovedWindowResized(movedWindow);
+                    if (handled)
+                    {
+                        cursorPosition = null; // place windows by similarity, cursor is not always in correct space after resizing
+                    }
+                }
+            }
+            else
+            {
+                bspSpace.SetTotalWindowCount(windowLayouts.Count);
+            }
+        }
+        var spaces = bspSpace.GetSpaces(_options.WindowMargin / 2).ToList();
+        _spaceCache[layout.Monitor.hMonitor] = bspSpace;
+
+        // Arrange windows to spaces
+        var arrangedWindows = LayoutWindows(windowLayouts, spaces, movedWindow, cursorPosition);
+        _lastArrangement = layout with { Windows = arrangedWindows };
+
+        return _lastArrangement;
+
+        bool TryHandleMovedWindowResized(Window moved)
+        {
+            var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == moved.hWnd).FirstOrDefault();
+            if (prev is not default(WindowLayout))
+            {
+                var wasResize = DetectWindowResize(prev.Position, moved.Position);
+                if (wasResize)
+                {
+                    return bspSpace.TryResize(prev.Position, moved.Position);
+                }
+            }
+            return false;
+        }
     }
 
-    /// <summary>
-    /// Recursively partition a space.
-    /// </summary>
-    /// <param name="space">Remaining space to partition.</param>
-    /// <param name="count">Number of partitions.</param>
-    /// <returns></returns>
-    private IList<Rect> PartitionSpace(Rect space, int count)
+    private static bool DetectWindowResize(Rect from, Rect to)
     {
-        if (count <= 0)
-        {
-            return Array.Empty<Rect>();
-        }
-        else if (count == 1)
-        {
-            return new[] { space.AddMargin(_options.WindowPadding) };
-        }
+        // Count number of edges that moved
+        var c = 0;
+        if (from.Left != to.Left)
+            c++;
+        if (from.Top != to.Top)
+            c++;
+        if (from.Right != to.Right)
+            c++;
+        if (from.Bottom != to.Bottom)
+            c++;
 
-        var (left, right, verticalSplit) = space.Split();
-        var halfMargin = _options.WindowMargin / 2;
-        var leftSpace = verticalSplit switch
-        {
-            true => left.AddMargin(0, 0, halfMargin, 0),
-            false => left.AddMargin(0, 0, 0, halfMargin)
-        };
-        var rightSpace = verticalSplit switch
-        {
-            true => right.AddMargin(halfMargin, 0, 0, 0),
-            false => right.AddMargin(0, halfMargin, 0, 0)
-        };
-
-        var partitions = PartitionSpace(rightSpace, count - 1);
-        var arr = new Rect[count];
-        arr[0] = leftSpace;
-        for (int i = 0; i < partitions.Count; i++)
-        {
-            arr[i + 1] = partitions[i];
-        }
-        return arr;
+        if (c == 1 || c == 2)
+            return true;
+        return false;
     }
 
     /// <summary>
@@ -87,11 +116,8 @@ public class SplitArrangementStrategy : IArrangementStrategy
     /// <param name="windowLayouts">Current window layouts.</param>
     /// <param name="spaces">New window spaces.</param>
     /// <returns>Updated window layouts.</returns>
-    private IEnumerable<WindowLayout> LayoutWindows(IList<WindowLayout> windowLayouts, IList<Rect> spaces, Window? movedWindow = null, Point? cursorPosition = null)
+    private IEnumerable<WindowLayout> LayoutWindows(IList<WindowLayout> windowLayouts, IReadOnlyList<Rect> spaces, Window? movedWindow = null, Point? cursorPosition = null)
     {
-        if (windowLayouts.Count != spaces.Count)
-            throw new ArgumentException("Window and Space count must be equal.");
-
         var arrangement = new List<WindowLayout>(windowLayouts.Count);
         var unassignedWindows = new List<Window>(windowLayouts.Select(x => x.Window));
         var unassignedSpaces = new List<Rect>(spaces);
@@ -137,23 +163,63 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
         void Assign(Window window, Rect space)
         {
+            var position = space.AdjustForWindowsPadding(window);
+
             unassignedWindows!.Remove(window);
             unassignedSpaces!.Remove(space);
-            arrangement!.Add(new(window, space));
+            arrangement!.Add(new(window, position));
         }
     }
 
     /// <summary>
     /// Get the geometric similarity between two <see cref="Rect"/>.
     /// </summary>
+    /// <remarks>
+    /// Lower is better.
+    /// </remarks>
     /// <param name="a">The first Rect to compare.</param>
     /// <param name="b">The second Rect to compare.</param>
     /// <returns><c>0</c> if the <see cref="Rect"/> are equal; otherwise, the total translation and scaling difference between them.</returns>
-    private int GetRectSimilarity(Rect a, Rect b)
+    private static int GetRectSimilarity(Rect a, Rect b)
     {
         var translation = Math.Abs(b.Left - a.Left) + Math.Abs(b.Top - a.Top);
         var scaling = Math.Abs(b.Width - a.Width) + Math.Abs(b.Height - a.Height);
 
-        return translation + scaling;
+        bool l = false;
+        bool t = false;
+        bool r = false;
+        bool bo = false;
+        var s = 0;
+        if (b.Left == a.Left)
+        {
+            s++;
+            l = true;
+        }
+        if (b.Top == a.Top)
+        {
+            s++;
+            t = true;
+        }
+        if (b.Right == a.Right)
+        {
+            s++;
+            r = true;
+        }
+        if (b.Bottom == a.Bottom)
+        {
+            s++;
+            bo = true;
+        }
+
+        var score = translation + scaling;
+        // If 3 or more edges are equal it's a good match.
+        if (s > 2)
+            return score / 100;
+        // Left & Right / Top & Bottom pairs are excluded -
+        // These pairs are red herrings from our arrangement.
+        if (s == 2 && !(l && r) && !(t && bo))
+            return score / 100;
+
+        return score;
     }
 }

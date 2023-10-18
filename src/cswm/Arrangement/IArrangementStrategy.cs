@@ -10,4 +10,6 @@ public interface IArrangementStrategy
     MonitorLayout Arrange(MonitorLayout layout);
 
     MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition);
+
+    void Reset();
 }
