@@ -1,5 +1,6 @@
 using cswm.Arrangement;
 using cswm.Events;
+using cswm.Options;
 using cswm.Tracking;
 using cswm.Tracking.Events;
 using cswm.WinApi;

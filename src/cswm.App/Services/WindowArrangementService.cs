@@ -1,7 +1,7 @@
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
-using cswm.Services.Tracking;
+using cswm.Options;
 using cswm.Tracking.Events;
 using cswm.WinApi;
 using Microsoft.Extensions.Logging;

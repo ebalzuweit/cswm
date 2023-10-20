@@ -1,14 +1,11 @@
 ﻿using cswm.Arrangement;
 using cswm.Events;
 using cswm.Options;
-using cswm.App.Services.Arrangement;
-using cswm.App.Services.SystemTray;
-using cswm.App.Services.Tracking;
-using cswm.App.Services.WinApi;
+using cswm.App.Services;
 using cswm.Tracking;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace cswm.Services;
+namespace cswm.App.Services;
 
 public static class ServiceCollectionExtensions
 {
