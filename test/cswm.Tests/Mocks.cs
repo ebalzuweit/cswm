@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using System;
+using Windows.Win32.Foundation;
 
 namespace cswm.Tests;
 
