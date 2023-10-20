@@ -1,11 +1,10 @@
 ﻿using cswm.Arrangement;
-using cswm.Services;
+using cswm.Options;
 using cswm.WinApi;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using System;
-using Windows.Win32.Foundation;
 
 namespace cswm.Tests;
 
