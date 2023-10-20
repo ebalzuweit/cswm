@@ -1,0 +1,17 @@
+{
+  "profiles": {
+    "cswm": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    "cswm - Do Not Manage": {
+      "commandName": "Project",
+      "commandLineArgs": "--WindowManagementOptions:DoNotManage=true",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
