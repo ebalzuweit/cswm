@@ -1,5 +1,5 @@
+using cswm.App.Services;
 using cswm.Events;
-using cswm.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;

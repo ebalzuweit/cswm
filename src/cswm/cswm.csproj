@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="cswm.App" />
     <InternalsVisibleTo Include="cswm.Tests" />
   </ItemGroup>
 

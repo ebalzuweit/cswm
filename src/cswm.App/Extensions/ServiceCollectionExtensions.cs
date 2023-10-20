@@ -1,11 +1,11 @@
-﻿using cswm.Arrangement;
+﻿using cswm.App.Services;
+using cswm.Arrangement;
 using cswm.Events;
 using cswm.Options;
-using cswm.App.Services;
 using cswm.Tracking;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace cswm.App.Services;
+namespace cswm.App;
 
 public static class ServiceCollectionExtensions
 {
