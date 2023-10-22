@@ -144,7 +144,9 @@ public static class User32
     internal static HWND[] EnumWindows()
     {
         var hWnds = new List<HWND>();
+#if WINDOWS
         PInvoke.EnumWindows((hWnd, lParam) => { hWnds.Add(hWnd); return true; }, new(0));
+#endif
         return hWnds.ToArray();
     }
 
