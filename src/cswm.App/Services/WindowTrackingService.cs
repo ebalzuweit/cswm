@@ -87,7 +87,7 @@ public class WindowTrackingService : IService, IDisposable
     {
         _windows.Clear();
         var handles = User32.EnumWindows();
-        var newWindows = handles.Select(h => new Window(h))
+        var newWindows = handles.Select(h => Window.FromHwnd(h))
             .Where(x => IsIgnoredWindowClass(x) == false)
             .Where(IsNotMinOrMaximized)
             .Where(_strategy.ShouldTrack);
@@ -103,7 +103,7 @@ public class WindowTrackingService : IService, IDisposable
     private readonly EventConstant[] _stopTrackingEvents = new[] { EventConstant.EVENT_OBJECT_HIDE, EventConstant.EVENT_SYSTEM_MINIMIZESTART };
     private void On_WindowEvent(WindowEvent @event)
     {
-        var window = new Window(@event.hWnd);
+        var window = Window.FromHwnd(@event.hWnd);
         if (IsIgnoredWindowClass(window))
             return;
 
