@@ -67,7 +67,7 @@ public class WindowTrackingService : IService, IDisposable
         => User32.EnumDisplayMonitors()
             .Select(hMonitor =>
             new MonitorLayout(
-                new Monitor(hMonitor),
+                Monitor.FromHmon(hMonitor),
                 _windows
                     .Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == hMonitor)
                     .Select(w => new WindowLayout(w, w.Position))

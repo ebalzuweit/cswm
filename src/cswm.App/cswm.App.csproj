@@ -5,7 +5,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     
     <!-- Project configuration -->
     <AssemblyName>cswm.App</AssemblyName>
