@@ -39,18 +39,18 @@ public sealed class BspSpace
 
     public IEnumerable<Rect> GetSpaces(int halfMargin)
     {
-        return AddWindowMargins_Recursive(_root, halfMargin);
+        return AddWindowMargins_Recursive(_space, _root, halfMargin);
 
-        IEnumerable<Rect> AddWindowMargins_Recursive(BspTree node, int halfMargin)
+        IEnumerable<Rect> AddWindowMargins_Recursive(Rect space, BspTree node, int halfMargin)
         {
             if (node.IsLeaf)
             {
-                yield return node.Space;
+                yield return space;
                 yield break;
             }
 
             // Add window margins
-            (var left, var right) = node.Space.SplitAt(node.Partition!.Vertical, node.Partition.Position);
+            (var left, var right) = space.SplitAt(node.Partition!.Vertical, node.Partition.Position);
             if (node.Partition.Vertical)
             {
                 left = left.AddMargin(0, 0, halfMargin, 0); // left
@@ -63,13 +63,10 @@ public sealed class BspSpace
             }
 
             // Traverse children
-            var leftAdj = node.Left! with { Space = left };
-            foreach (var space in AddWindowMargins_Recursive(leftAdj, halfMargin))
-                yield return space;
-
-            var rightAdj = node.Right! with { Space = right };
-            foreach (var space in AddWindowMargins_Recursive(rightAdj, halfMargin))
-                yield return space;
+            foreach (var s in AddWindowMargins_Recursive(left, node.Left!, halfMargin))
+                yield return s;
+            foreach (var s in AddWindowMargins_Recursive(right, node.Right!, halfMargin))
+                yield return s;
         }
     }
 
@@ -145,7 +142,7 @@ public sealed class BspSpace
     private BspTree PartitionSpace(Rect space, int partitionCount, int depth = 0, bool verticalSplit = true, BspTree? prior = null)
     {
         if (partitionCount < 1 || depth >= 3) // TODO: _options.MaxDepth
-            return new(space);
+            return new BspTree();
 
         // Use prior partition if found
         var partition = prior?.Partition;
@@ -171,6 +168,6 @@ public sealed class BspSpace
         partitionCount -= rightTree.Where(x => x.Partition is not null).Count(); // subtract partitions created in right
         var leftTree = PartitionSpace(left, partitionCount, depth + 1, !verticalSplit, prior?.Left);
 
-        return new BspTree(space, partition, leftTree, rightTree);
+        return new BspTree(partition, leftTree, rightTree);
     }
 }

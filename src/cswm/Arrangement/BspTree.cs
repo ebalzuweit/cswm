@@ -1,6 +1,4 @@
-﻿using cswm.WinApi;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,12 +7,10 @@ namespace cswm.Arrangement;
 /// <summary>
 /// Binary-Space-Partitioning Tree.
 /// </summary>
-public sealed record BspTree(Rect Space) : IEnumerable<BspTree>
+public sealed record BspTree() : IEnumerable<BspTree>
 {
-    public BspTree(Rect space, Partition partition, BspTree left, BspTree right)
-        : this(space)
+    public BspTree(Partition partition, BspTree left, BspTree right) : this()
     {
-        Space = space;
         Partition = partition;
         Left = left;
         Right = right;
@@ -51,7 +47,7 @@ public sealed record BspTree(Rect Space) : IEnumerable<BspTree>
         var sb = new StringBuilder();
         foreach (var p in this)
         {
-            sb.AppendLine($"{p.Space}, {(IsLeaf ? "Leaf" : p.Partition!.ToString())}");
+            sb.AppendLine($"{(IsLeaf ? "Leaf" : p.Partition!.ToString())}");
         }
         return sb.ToString();
     }
