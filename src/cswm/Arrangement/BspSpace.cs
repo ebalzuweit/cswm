@@ -175,9 +175,9 @@ public sealed class BspSpace
         // TODO: _options.PreferRight to swap left and right partition
         partitionCount--; // subtract root partition
         (var left, var right) = root.CalcSplits();
-        root.Right = PartitionSpace(right, partitionCount, depth + 1, !verticalSplit, root.Right);
+        root.Right = PartitionSpace(right, partitionCount, depth + 1, !verticalSplit, prior?.Right);
         partitionCount -= root.Right.Where(x => x.Partition is not null).Count(); // subtract partitions created in right
-        root.Left = PartitionSpace(left, partitionCount, depth + 1, !verticalSplit, root.Left);
+        root.Left = PartitionSpace(left, partitionCount, depth + 1, !verticalSplit, prior?.Left);
 
         return root;
     }
