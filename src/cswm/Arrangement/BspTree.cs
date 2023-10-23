@@ -33,42 +33,6 @@ public sealed class BspTree : IEnumerable<BspTree>
         return (left, right);
     }
 
-    public IEnumerable<Rect> CalcSpaces(int halfMargin = 0)
-    {
-        if (Partition is null)
-        {
-            yield return Space;
-            yield break;
-        }
-
-        (var left, var right) = CalcSplits();
-
-        // Add window margins
-        if (Partition.Vertical)
-        {
-            left = left.AddMargin(0, 0, halfMargin, 0); // left
-            right = right.AddMargin(halfMargin, 0, 0, 0); // right
-        }
-        else
-        {
-            left = left.AddMargin(0, 0, 0, halfMargin); // top
-            right = right.AddMargin(0, halfMargin, 0, 0); // bottom
-        }
-
-        if (Left is not null)
-        {
-            Left.Space = left;
-            foreach (var space in Left.CalcSpaces(halfMargin))
-                yield return space;
-        }
-        if (Right is not null)
-        {
-            Right.Space = right;
-            foreach (var space in Right.CalcSpaces(halfMargin))
-                yield return space;
-        }
-    }
-
     public IEnumerator<BspTree> GetEnumerator()
     {
         yield return this;

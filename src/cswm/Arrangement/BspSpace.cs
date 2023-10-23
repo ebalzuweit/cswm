@@ -37,7 +37,48 @@ public sealed class BspSpace
         _root = PartitionSpace(space, partitionCount, prior: _root);
     }
 
-    public IEnumerable<Rect> GetSpaces(int halfMargin) => _root.CalcSpaces(halfMargin);
+    public IEnumerable<Rect> GetSpaces(int halfMargin)
+    {
+        return AddWindowMargins_Recursive(_root, halfMargin);
+
+        IEnumerable<Rect> AddWindowMargins_Recursive(BspTree node, int halfMargin)
+        {
+            if (node.Partition is null)
+            {
+                // Leaf node
+                yield return node.Space;
+                yield break;
+            }
+
+            (var left, var right) = node.CalcSplits();
+
+            // Add window margins
+            if (node.Partition.Vertical)
+            {
+                left = left.AddMargin(0, 0, halfMargin, 0); // left
+                right = right.AddMargin(halfMargin, 0, 0, 0); // right
+            }
+            else
+            {
+                left = left.AddMargin(0, 0, 0, halfMargin); // top
+                right = right.AddMargin(0, halfMargin, 0, 0); // bottom
+            }
+
+            // Traverse children
+            if (node.Left is not null)
+            {
+                node.Left.Space = left;
+                foreach (var space in AddWindowMargins_Recursive(node.Left, halfMargin))
+                    yield return space;
+            }
+            if (node.Right is not null)
+            {
+                node.Right.Space = right;
+                foreach (var space in AddWindowMargins_Recursive(node.Right, halfMargin))
+                    yield return space;
+            }
+        }
+    }
 
     public bool TryResize(Rect from, Rect to)
     {
