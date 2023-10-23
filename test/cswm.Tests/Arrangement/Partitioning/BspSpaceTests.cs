@@ -9,7 +9,7 @@ namespace cswm.Tests.Arrangement.Partitioning;
 public class BspSpaceTests
 {
 	public Rect MonitorSize => new(0, 0, 1920, 1080);
-	public BspSpace Space => new(MonitorSize, new());
+	public BspSpace Space => new(MonitorSize);
 
 	[Fact]
 	public void SetTotalWindowCount_ThrowsException_IfSpaceCountLessThanOne()

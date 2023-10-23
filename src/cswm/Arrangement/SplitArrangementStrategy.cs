@@ -47,7 +47,8 @@ public class SplitArrangementStrategy : IArrangementStrategy
         if (bspSpace is null)
         {
             // Create partitions new
-            bspSpace = new BspSpace(layout.Monitor.WorkArea, _options);
+            var monitorArea = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
+            bspSpace = new BspSpace(monitorArea);
             bspSpace.SetTotalWindowCount(windowLayouts.Count);
         }
         else

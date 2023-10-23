@@ -12,13 +12,11 @@ namespace cswm.Arrangement.Partitioning;
 public sealed class BspSpace
 {
     private readonly Rect _space;
-    private readonly WindowManagementOptions _options;
     private BspTree _root = null!;
 
-    public BspSpace(Rect space, WindowManagementOptions options)
+    public BspSpace(Rect space)
     {
         _space = space;
-        _options = options;
 
         SetTotalWindowCount(1);
     }
@@ -30,11 +28,9 @@ public sealed class BspSpace
             throw new ArgumentOutOfRangeException(nameof(spaceCount));
         }
 
-        var space = _space.AddMargin(_options.MonitorPadding);
-        var partitionCount = Math.Max(0, spaceCount - 1);
-
         // Rebuild partition tree
-        _root = PartitionSpace(space, partitionCount, prior: _root);
+        var partitionCount = Math.Max(0, spaceCount - 1);
+        _root = PartitionSpace(_space, partitionCount, prior: _root);
     }
 
     public IEnumerable<Rect> GetSpaces(int halfMargin)
