@@ -19,12 +19,19 @@ public sealed class BspSpace
     {
         _space = space;
         _options = options;
+
+        SetTotalWindowCount(1);
     }
 
-    public void SetTotalWindowCount(int spacesCount)
+    public void SetTotalWindowCount(int spaceCount)
     {
+        if (spaceCount < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(spaceCount));
+        }
+
         var space = _space.AddMargin(_options.MonitorPadding);
-        var partitionCount = Math.Max(0, spacesCount - 1);
+        var partitionCount = Math.Max(0, spaceCount - 1);
 
         // Rebuild partition tree
         _root = PartitionSpace(space, partitionCount, prior: _root);
