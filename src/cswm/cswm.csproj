@@ -19,8 +19,4 @@
     <InternalsVisibleTo Include="cswm.Tests" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Arrangement\Partitioning\" />
-  </ItemGroup>
-
 </Project>
