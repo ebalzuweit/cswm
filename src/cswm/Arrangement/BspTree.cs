@@ -11,7 +11,12 @@ namespace cswm.Arrangement;
 /// </summary>
 public sealed class BspTree : IEnumerable<BspTree>
 {
-    public BspTree(Rect space, Partition? partition = null, BspTree? left = null, BspTree? right = null)
+    public BspTree(Rect space)
+    {
+        Space = space;
+    }
+
+    public BspTree(Rect space, Partition partition, BspTree left, BspTree right)
     {
         Space = space;
         Partition = partition;
@@ -24,14 +29,7 @@ public sealed class BspTree : IEnumerable<BspTree>
     public BspTree? Left { get; set; }
     public BspTree? Right { get; set; }
 
-    public (Rect, Rect) CalcSplits()
-    {
-        if (Partition is null)
-            throw new NullReferenceException("Cannot calculate splits for null partition.");
-
-        (var left, var right) = Space.SplitAt(Partition.Vertical, Partition.Position);
-        return (left, right);
-    }
+    public bool IsLeaf => Partition is null;
 
     public IEnumerator<BspTree> GetEnumerator()
     {
@@ -58,7 +56,7 @@ public sealed class BspTree : IEnumerable<BspTree>
         var sb = new StringBuilder();
         foreach (var p in this)
         {
-            sb.AppendLine($"{p.Space}, {p?.Partition?.ToString() ?? "🚫"}");
+            sb.AppendLine($"{p.Space}, {(IsLeaf ? "Leaf" : p.Partition!.ToString())}");
         }
         return sb.ToString();
     }

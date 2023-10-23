@@ -50,7 +50,7 @@ public sealed class BspSpace
                 yield break;
             }
 
-            (var left, var right) = node.CalcSplits();
+            (var left, var right) = node.Space.SplitAt(node.Partition.Vertical, node.Partition.Position);
 
             // Add window margins
             if (node.Partition.Vertical)
@@ -168,17 +168,14 @@ public sealed class BspSpace
 
         // FIXME: determine verticalSplit by aspect ratio
 
-        // Build root
-        var root = new BspTree(space, partition);
-
         // Build sub-trees
+        (var left, var right) = space.SplitAt(partition.Vertical, partition.Position);
         // TODO: _options.PreferRight to swap left and right partition
         partitionCount--; // subtract root partition
-        (var left, var right) = root.CalcSplits();
-        root.Right = PartitionSpace(right, partitionCount, depth + 1, !verticalSplit, prior?.Right);
-        partitionCount -= root.Right.Where(x => x.Partition is not null).Count(); // subtract partitions created in right
-        root.Left = PartitionSpace(left, partitionCount, depth + 1, !verticalSplit, prior?.Left);
+        var rightTree = PartitionSpace(right, partitionCount, depth + 1, !verticalSplit, prior?.Right);
+        partitionCount -= rightTree.Where(x => x.Partition is not null).Count(); // subtract partitions created in right
+        var leftTree = PartitionSpace(left, partitionCount, depth + 1, !verticalSplit, prior?.Left);
 
-        return root;
+        return new BspTree(space, partition, leftTree, rightTree);
     }
 }
