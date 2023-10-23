@@ -13,7 +13,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cswm.Tests", "..\test\cswm.Tests\cswm.Tests.csproj", "{45C5A52A-CF9E-4F53-BE98-D501EADA3CBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cswm.App", "cswm.App\cswm.App.csproj", "{1AAB59C0-5A2B-4304-ABFF-491C44D06D6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cswm.App", "cswm.App\cswm.App.csproj", "{1AAB59C0-5A2B-4304-ABFF-491C44D06D6C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{35F75A5C-DF9E-48D1-8AA8-4DD1EB95A232}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{39D28230-0CD8-4227-BA15-04F079FBA104}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +40,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FD970275-BF9D-4B79-B4A0-B739153C3411} = {35F75A5C-DF9E-48D1-8AA8-4DD1EB95A232}
+		{45C5A52A-CF9E-4F53-BE98-D501EADA3CBA} = {39D28230-0CD8-4227-BA15-04F079FBA104}
+		{1AAB59C0-5A2B-4304-ABFF-491C44D06D6C} = {35F75A5C-DF9E-48D1-8AA8-4DD1EB95A232}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD216211-0CAA-45C9-A092-AE6384D367D7}

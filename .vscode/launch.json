@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/cswm/bin/Debug/net6.0-windows/win-x64/cswm.dll",
+            "program": "${workspaceFolder}/src/cswm.App/bin/Debug/net6.0-windows/win-x64/cswm.App.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/cswm",
+            "cwd": "${workspaceFolder}/src/cswm.App",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false,
