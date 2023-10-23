@@ -39,7 +39,62 @@ public sealed class BspSpace
 
     public IEnumerable<Rect> GetSpaces(int halfMargin) => _root.CalcSpaces(halfMargin);
 
-    public bool TryResize(Rect from, Rect to) => _root.TryResize(from, to);
+    public bool TryResize(Rect from, Rect to)
+    {
+        const int MaxWindowsPadding = 16;
+        if (_root.Partition is null)
+            return false;
+
+        // Horizontal resize
+        if (from.Left != to.Left)
+        {
+            var partition = GetLastPartitionWhere(true, p => p <= from.Left + MaxWindowsPadding);
+            _ = ResizePartition(partition, to.Left);
+        }
+        else if (from.Right != to.Right)
+        {
+            var partition = GetLastPartitionWhere(true, p => p >= from.Right - MaxWindowsPadding);
+            _ = ResizePartition(partition, to.Right);
+        }
+
+        // Vertical resize
+        if (from.Top != to.Top)
+        {
+            var partition = GetLastPartitionWhere(false, p => p <= from.Top);
+            _ = ResizePartition(partition, to.Top);
+        }
+        else if (from.Bottom != to.Bottom)
+        {
+            var partition = GetLastPartitionWhere(false, p => p >= from.Bottom - MaxWindowsPadding);
+            _ = ResizePartition(partition, to.Bottom);
+        }
+
+        return true;
+
+        BspTree? GetLastPartitionWhere(bool vertical, Func<int, bool> predicate)
+        {
+            BspTree? bsp = null;
+            foreach (var p in _root)
+            {
+                if (p.Partition is null || p.Partition.Vertical != vertical)
+                    continue;
+                if (predicate(p.Partition.Position))
+                {
+                    bsp = p;
+                }
+            }
+            return bsp;
+        }
+
+        bool ResizePartition(BspTree? p, int position)
+        {
+            if (p is null || p.Partition is null)
+                return false;
+
+            p.Partition = new(p.Partition.Vertical, position);
+            return true;
+        }
+    }
 
     /// <summary>
     /// Partition a space recursively.

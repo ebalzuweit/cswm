@@ -19,67 +19,10 @@ public sealed class BspTree : IEnumerable<BspTree>
         Right = right;
     }
 
-    public Rect Space { get; private set; }
-    public Partition? Partition { get; private set; }
+    public Rect Space { get; set; }
+    public Partition? Partition { get; set; }
     public BspTree? Left { get; set; }
     public BspTree? Right { get; set; }
-
-    public bool TryResize(Rect from, Rect to)
-    {
-        const int MaxWindowsPadding = 16;
-        if (Partition is null)
-            return false;
-
-        // Horizontal resize
-        if (from.Left != to.Left)
-        {
-            var partition = GetLastPartitionWhere(true, p => p <= from.Left + MaxWindowsPadding);
-            _ = ResizePartition(partition, to.Left);
-        }
-        else if (from.Right != to.Right)
-        {
-            var partition = GetLastPartitionWhere(true, p => p >= from.Right - MaxWindowsPadding);
-            _ = ResizePartition(partition, to.Right);
-        }
-
-        // Vertical resize
-        if (from.Top != to.Top)
-        {
-            var partition = GetLastPartitionWhere(false, p => p <= from.Top);
-            _ = ResizePartition(partition, to.Top);
-        }
-        else if (from.Bottom != to.Bottom)
-        {
-            var partition = GetLastPartitionWhere(false, p => p >= from.Bottom - MaxWindowsPadding);
-            _ = ResizePartition(partition, to.Bottom);
-        }
-
-        return true;
-
-        BspTree? GetLastPartitionWhere(bool vertical, Func<int, bool> predicate)
-        {
-            BspTree? bsp = null;
-            foreach (var p in this)
-            {
-                if (p.Partition is null || p.Partition.Vertical != vertical)
-                    continue;
-                if (predicate(p.Partition.Position))
-                {
-                    bsp = p;
-                }
-            }
-            return bsp;
-        }
-
-        bool ResizePartition(BspTree? p, int position)
-        {
-            if (p is null || p.Partition is null)
-                return false;
-
-            p.Partition = new(p.Partition.Vertical, position);
-            return true;
-        }
-    }
 
     public (Rect, Rect) CalcSplits()
     {
