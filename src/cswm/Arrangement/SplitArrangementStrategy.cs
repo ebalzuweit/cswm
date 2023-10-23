@@ -38,6 +38,8 @@ public class SplitArrangementStrategy : IArrangementStrategy
     private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
     {
         var windowLayouts = layout.Windows.ToList();
+        if (windowLayouts.Count == 0)
+            return layout;
 
         // Setup the BSP tree
         var bspSpace = _spaceCache.GetValueOrDefault(layout.Monitor.hMonitor);
