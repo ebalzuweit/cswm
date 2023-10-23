@@ -43,16 +43,14 @@ public sealed class BspSpace
 
         IEnumerable<Rect> AddWindowMargins_Recursive(BspTree node, int halfMargin)
         {
-            if (node.Partition is null)
+            if (node.IsLeaf)
             {
-                // Leaf node
                 yield return node.Space;
                 yield break;
             }
 
-            (var left, var right) = node.Space.SplitAt(node.Partition.Vertical, node.Partition.Position);
-
             // Add window margins
+            (var left, var right) = node.Space.SplitAt(node.Partition!.Vertical, node.Partition.Position);
             if (node.Partition.Vertical)
             {
                 left = left.AddMargin(0, 0, halfMargin, 0); // left
@@ -65,15 +63,12 @@ public sealed class BspSpace
             }
 
             // Traverse children
-            if (node.Left is null || node.Right is null)
-                throw new InvalidOperationException();
-
-            node.Left.Space = left;
-            foreach (var space in AddWindowMargins_Recursive(node.Left, halfMargin))
+            var leftAdj = node.Left! with { Space = left };
+            foreach (var space in AddWindowMargins_Recursive(leftAdj, halfMargin))
                 yield return space;
 
-            node.Right.Space = right;
-            foreach (var space in AddWindowMargins_Recursive(node.Right, halfMargin))
+            var rightAdj = node.Right! with { Space = right };
+            foreach (var space in AddWindowMargins_Recursive(rightAdj, halfMargin))
                 yield return space;
         }
     }
@@ -130,7 +125,7 @@ public sealed class BspSpace
             if (p is null || p.Partition is null)
                 return false;
 
-            p.Partition = new(p.Partition.Vertical, position);
+            p.Partition.Position = position;
             return true;
         }
     }

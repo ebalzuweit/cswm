@@ -9,14 +9,10 @@ namespace cswm.Arrangement;
 /// <summary>
 /// Binary-Space-Partitioning Tree.
 /// </summary>
-public sealed class BspTree : IEnumerable<BspTree>
+public sealed record BspTree(Rect Space) : IEnumerable<BspTree>
 {
-    public BspTree(Rect space)
-    {
-        Space = space;
-    }
-
     public BspTree(Rect space, Partition partition, BspTree left, BspTree right)
+        : this(space)
     {
         Space = space;
         Partition = partition;
@@ -24,10 +20,9 @@ public sealed class BspTree : IEnumerable<BspTree>
         Right = right;
     }
 
-    public Rect Space { get; set; }
-    public Partition? Partition { get; set; }
-    public BspTree? Left { get; set; }
-    public BspTree? Right { get; set; }
+    public Partition? Partition { get; init; }
+    public BspTree? Left { get; init; }
+    public BspTree? Right { get; init; }
 
     public bool IsLeaf => Partition is null;
 
@@ -65,10 +60,26 @@ public sealed class BspTree : IEnumerable<BspTree>
 /// <summary>
 /// Virtual separator between spaces.
 /// </summary>
-/// <param name="Vertical"><c>true</c> if the partition is vertical (separates left / right); otherwise, <c>false</c> and the partition is horizontal (separates top / bottom).</param>
-/// <param name="Position">Position of the partition.</param>
-public sealed record Partition(bool Vertical, int Position)
+public sealed class Partition
 {
+    private readonly bool _vertical;
+
+    public Partition(bool vertical, int position)
+    {
+        _vertical = vertical;
+        Position = position;
+    }
+
+    /// <summary>
+    /// <c>true</c> if the partition is vertical (separates left / right); otherwise, <c>false</c> and the partition is horizontal (separates top / bottom).
+    /// </summary>
+    public bool Vertical => _vertical;
+
+    /// <summary>
+    /// Position of the partition.
+    /// </summary>
+    public int Position { get; set; }
+
     public override string ToString()
     {
         return $"{(Vertical ? "|" : "—")} @ {Position}";
