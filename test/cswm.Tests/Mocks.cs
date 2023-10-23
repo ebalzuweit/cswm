@@ -1,5 +1,5 @@
 ﻿using cswm.Arrangement;
-using cswm.Services;
+using cswm.Options;
 using cswm.WinApi;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,9 +22,10 @@ public static class Mocks
         var monitors = new Monitor[count];
         for (int i = 0; i < count; i++)
         {
-            var mock = new Mock<Monitor>(IntPtr.Zero);
-            mock.SetupGet(monitor => monitor.WorkArea).Returns(size);
-            monitors[i] = mock.Object;
+            monitors[i] = new Monitor
+            {
+                WorkArea = size
+            };
         }
         return monitors;
     }
@@ -42,7 +43,11 @@ public static class Mocks
     public static Window Window(string tag = "")
     {
         var hwnd = new HWND(new IntPtr(Random.Shared.Next()));
-        return new Window(hwnd) { ClassName = tag };
+        return new Window
+        {
+            hWnd = hwnd,
+            ClassName = tag
+        };
     }
 
     public static WindowLayout WindowLayout(Rect position, string tag = "")

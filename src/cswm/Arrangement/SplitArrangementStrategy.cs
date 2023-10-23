@@ -1,4 +1,4 @@
-using cswm.Services;
+using cswm.Options;
 using cswm.WinApi;
 using Microsoft.Extensions.Options;
 using System;

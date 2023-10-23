@@ -1,10 +1,6 @@
-﻿using cswm.Services.Arrangement;
-using cswm.Services.SystemTray;
-using cswm.Services.Tracking;
-using cswm.Services.WinApi;
-using System;
+﻿using System;
 
-namespace cswm.Services;
+namespace cswm.App.Services;
 
 /// <summary>
 /// Main service, manages the other services.

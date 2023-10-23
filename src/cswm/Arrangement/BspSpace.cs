@@ -1,4 +1,4 @@
-using cswm.Services;
+using cswm.Options;
 using cswm.WinApi;
 using System;
 using System.Collections.Generic;

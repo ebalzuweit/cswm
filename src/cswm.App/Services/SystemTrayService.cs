@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace cswm.Services.SystemTray;
+namespace cswm.App.Services;
 
 /// <summary>
 /// Icon running in the system tray.
@@ -93,7 +93,7 @@ public class SystemTrayService : IService
 
     private NotifyIcon BuildNotificationIcon()
     {
-        const string iconResourceName = "cswm.icon.ico";
+        const string iconResourceName = "cswm.App.icon.ico";
 
         NotifyIcon icon;
         var assembly = Assembly.GetEntryAssembly()!;

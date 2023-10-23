@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Accessibility;
 
-namespace cswm.Services.WinApi;
+namespace cswm.App.Services;
 
 /// <summary>
 /// Relay Win32 events to the message bus.

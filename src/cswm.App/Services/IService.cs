@@ -1,4 +1,4 @@
-namespace cswm.Services;
+namespace cswm.App.Services;
 
 public interface IService
 {

@@ -12,18 +12,18 @@ public class Monitor
     public bool IsPrimary => Position.Left == 0 && Position.Top == 0;
     public float Ratio => Position.Width / (float)Position.Height;
 
-    internal Monitor() { } // only for mocking
-
-    public Monitor(IntPtr hMonitor)
+    public static Monitor FromHmon(IntPtr hMonitor)
     {
-        this.hMonitor = hMonitor;
-        var monitorInfoEx = MonitorInfoEx.Create();
-        if (User32.GetMonitorInfo(hMonitor, ref monitorInfoEx))
+        MonitorInfoEx info = MonitorInfoEx.Create();
+        User32.GetMonitorInfo(hMonitor, ref info);
+
+        return new Monitor
         {
-            Position = monitorInfoEx.rcMonitor;
-            WorkArea = monitorInfoEx.rcWork;
-            DeviceName = monitorInfoEx.szDevice ?? string.Empty;
-        }
+            hMonitor = hMonitor,
+            Position = info.rcMonitor,
+            WorkArea = info.rcWork,
+            DeviceName = info.szDevice ?? string.Empty
+        };
     }
 
     public override string ToString()

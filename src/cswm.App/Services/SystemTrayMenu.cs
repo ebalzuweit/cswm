@@ -1,8 +1,6 @@
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
-using cswm.Services.Arrangement;
-using cswm.Services.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace cswm.Services.SystemTray;
+namespace cswm.App.Services;
 
 /// <summary>
 /// Context menu for <see cref="SystemTrayService"/>.

@@ -1,7 +1,7 @@
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
-using cswm.Services.Tracking;
+using cswm.Options;
 using cswm.Tracking.Events;
 using cswm.WinApi;
 using Microsoft.Extensions.Logging;
@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace cswm.Services.Arrangement;
+namespace cswm.App.Services;
 
 /// <summary>
 /// Performs window layout, based on an <see cref="IArrangementStrategy"/>.

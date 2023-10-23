@@ -1,6 +1,6 @@
 using System;
 
-namespace cswm.Services;
+namespace cswm.Options;
 
 public class WindowManagementOptions
 {

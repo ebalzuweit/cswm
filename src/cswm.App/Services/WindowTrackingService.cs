@@ -1,5 +1,6 @@
 using cswm.Arrangement;
 using cswm.Events;
+using cswm.Options;
 using cswm.Tracking;
 using cswm.Tracking.Events;
 using cswm.WinApi;
@@ -11,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 
-namespace cswm.Services.Tracking;
+namespace cswm.App.Services;
 
 /// <summary>
 /// Tracks active windows, like Alt + Tab.
@@ -66,7 +67,7 @@ public class WindowTrackingService : IService, IDisposable
         => User32.EnumDisplayMonitors()
             .Select(hMonitor =>
             new MonitorLayout(
-                new Monitor(hMonitor),
+                Monitor.FromHmon(hMonitor),
                 _windows
                     .Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == hMonitor)
                     .Select(w => new WindowLayout(w, w.Position))
@@ -86,7 +87,7 @@ public class WindowTrackingService : IService, IDisposable
     {
         _windows.Clear();
         var handles = User32.EnumWindows();
-        var newWindows = handles.Select(h => new Window(h))
+        var newWindows = handles.Select(h => Window.FromHwnd(h))
             .Where(x => IsIgnoredWindowClass(x) == false)
             .Where(IsNotMinOrMaximized)
             .Where(_strategy.ShouldTrack);
@@ -102,7 +103,7 @@ public class WindowTrackingService : IService, IDisposable
     private readonly EventConstant[] _stopTrackingEvents = new[] { EventConstant.EVENT_OBJECT_HIDE, EventConstant.EVENT_SYSTEM_MINIMIZESTART };
     private void On_WindowEvent(WindowEvent @event)
     {
-        var window = new Window(@event.hWnd);
+        var window = Window.FromHwnd(@event.hWnd);
         if (IsIgnoredWindowClass(window))
             return;
 
