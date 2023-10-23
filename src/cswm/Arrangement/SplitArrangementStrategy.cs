@@ -1,3 +1,4 @@
+using cswm.Arrangement.Partitioning;
 using cswm.Options;
 using cswm.WinApi;
 using Microsoft.Extensions.Options;
