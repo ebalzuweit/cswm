@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace cswm.Arrangement;
+namespace cswm.Arrangement.Partitioning;
 
 /// <summary>
 /// Binary-Space-Partitioning Tree.
@@ -50,34 +50,5 @@ public sealed record BspTree() : IEnumerable<BspTree>
             sb.AppendLine($"{(IsLeaf ? "Leaf" : p.Partition!.ToString())}");
         }
         return sb.ToString();
-    }
-}
-
-/// <summary>
-/// Virtual separator between spaces.
-/// </summary>
-public sealed class Partition
-{
-    private readonly bool _vertical;
-
-    public Partition(bool vertical, int position)
-    {
-        _vertical = vertical;
-        Position = position;
-    }
-
-    /// <summary>
-    /// <c>true</c> if the partition is vertical (separates left / right); otherwise, <c>false</c> and the partition is horizontal (separates top / bottom).
-    /// </summary>
-    public bool Vertical => _vertical;
-
-    /// <summary>
-    /// Position of the partition.
-    /// </summary>
-    public int Position { get; set; }
-
-    public override string ToString()
-    {
-        return $"{(Vertical ? "|" : "—")} @ {Position}";
     }
 }

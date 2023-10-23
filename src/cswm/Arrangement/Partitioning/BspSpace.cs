@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace cswm.Arrangement;
+namespace cswm.Arrangement.Partitioning;
 
 /// <summary>
 /// Space partitioned with an internal <see cref="BspTree"/>.
