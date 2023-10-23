@@ -45,4 +45,10 @@
   <ItemGroup>
     <ProjectReference Include="..\cswm\cswm.csproj" />
   </ItemGroup>
+
+  <!-- Exclude .pdb during Release -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
 </Project>
