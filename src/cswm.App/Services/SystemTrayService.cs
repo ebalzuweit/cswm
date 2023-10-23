@@ -93,7 +93,7 @@ public class SystemTrayService : IService
 
     private NotifyIcon BuildNotificationIcon()
     {
-        const string iconResourceName = "cswm.icon.ico";
+        const string iconResourceName = "cswm.App.icon.ico";
 
         NotifyIcon icon;
         var assembly = Assembly.GetEntryAssembly()!;
