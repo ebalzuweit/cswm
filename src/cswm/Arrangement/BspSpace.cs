@@ -65,18 +65,16 @@ public sealed class BspSpace
             }
 
             // Traverse children
-            if (node.Left is not null)
-            {
-                node.Left.Space = left;
-                foreach (var space in AddWindowMargins_Recursive(node.Left, halfMargin))
-                    yield return space;
-            }
-            if (node.Right is not null)
-            {
-                node.Right.Space = right;
-                foreach (var space in AddWindowMargins_Recursive(node.Right, halfMargin))
-                    yield return space;
-            }
+            if (node.Left is null || node.Right is null)
+                throw new InvalidOperationException();
+
+            node.Left.Space = left;
+            foreach (var space in AddWindowMargins_Recursive(node.Left, halfMargin))
+                yield return space;
+
+            node.Right.Space = right;
+            foreach (var space in AddWindowMargins_Recursive(node.Right, halfMargin))
+                yield return space;
         }
     }
 
