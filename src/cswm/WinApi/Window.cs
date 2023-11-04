@@ -8,13 +8,13 @@ public class Window
     private const int WINDOW_CLASS_NAME_LENGTH = 256;
     private const int WINDOW_CAPTION_TEXT_LENGTH = 255;
 
-    internal HWND hWnd { get; init; }
+    public HWND hWnd { get; init; }
     public string? Caption { get; init; }
     public string? ClassName { get; init; }
     public Rect Position { get; init; }
     public Rect ClientPosition { get; init; }
 
-    internal static Window FromHwnd(HWND hwnd)
+    public static Window FromHwnd(HWND hwnd)
     {
         Rect position, clientPosition;
         User32.GetWindowRect(hwnd, out position);

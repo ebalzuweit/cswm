@@ -141,7 +141,7 @@ public static class User32
 
     #region Window Functions
 
-    internal static HWND[] EnumWindows()
+    public static HWND[] EnumWindows()
     {
         var hWnds = new List<HWND>();
 #if WINDOWS
