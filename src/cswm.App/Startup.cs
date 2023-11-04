@@ -18,7 +18,9 @@ internal class Startup
     private readonly MessageBus _bus;
     private readonly WindowManagementService _windowMgmtService;
 
+#pragma warning disable IDE0044 // Add readonly modifier - Disable warning in Debug builds
     private Mutex? _applicationMutex;
+#pragma warning restore IDE0044 // Add readonly modifier
     private IDisposable? _subscription;
 
     public Startup(
