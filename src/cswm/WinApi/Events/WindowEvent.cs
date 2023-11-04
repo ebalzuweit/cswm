@@ -5,10 +5,10 @@ namespace cswm.WinApi.Events;
 
 public class WindowEvent : Event
 {
-    internal HWND hWnd { get; init; }
+    public HWND hWnd { get; init; }
     public EventConstant EventType { get; init; }
 
-    internal WindowEvent(HWND hWnd, EventConstant eventType)
+    public WindowEvent(HWND hWnd, EventConstant eventType)
     {
         this.hWnd = hWnd;
         this.EventType = eventType;
