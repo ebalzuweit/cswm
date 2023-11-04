@@ -1,4 +1,5 @@
 using cswm.Arrangement;
+using cswm.Options;
 using cswm.WinApi;
 using System.Linq;
 using Xunit;
@@ -8,6 +9,10 @@ namespace cswm.Tests.Arrangement;
 public class SplitArrangementStrategyTests
 {
     private SplitArrangementStrategy Strategy => new(Mocks.WindowManagementOptions());
+    private SplitArrangementStrategy StrategyWithPadding => new(Mocks.WindowManagementOptions(new()
+    {
+        MonitorPadding = 100
+    }));
     private Rect MonitorSize => new(0, 0, 1920, 1080);
 
     #region Window Arrange Tests
@@ -80,6 +85,22 @@ public class SplitArrangementStrategyTests
         Assert.Contains(new Rect(960, 0, 1920, 540), positions);
         Assert.Contains(new Rect(960, 540, 1440, 1080), positions);
         Assert.Contains(new Rect(1440, 540, 1920, 1080), positions);
+    }
+
+    [Fact]
+    public void Arrange_HasMonitorPadding_WhenNonzero()
+    {
+        var windows = Mocks.GetWindowLayouts(1);
+        var monitor = Mocks.GetMonitors(MonitorSize).First();
+        var monitorLayout = new MonitorLayout(monitor, windows);
+
+        var layout = StrategyWithPadding.Arrange(monitorLayout);
+
+        Assert.NotNull(layout);
+
+        var positions = layout.Windows.Select(x => x.Position);
+
+        Assert.Contains(new Rect(100, 100, 1820, 980), positions);
     }
 
     #endregion
