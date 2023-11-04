@@ -22,6 +22,8 @@ jobs:
       run: dotnet restore src/cswm.sln
     - name: Publish
       run: dotnet publish src/cswm.App/cswm.App.csproj --no-restore -c Release -o cswm
+    - name: Rename Executable
+      run: mv cswm/cswm.App.exe cswm/cswm.exe
     - name: Zip Release
       uses: TheDoctor0/zip-release@0.7.1
       with:
