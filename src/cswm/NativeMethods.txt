@@ -5,5 +5,9 @@ HWND
 WINEVENTPROC
 // functions
 EnumWindows
+GetAncestor
 GetShellWindow
+GetWindow
+GetWindowLong
+IsWindowVisible
 SetWinEventHook
