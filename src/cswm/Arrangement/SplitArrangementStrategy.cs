@@ -1,7 +1,6 @@
 using cswm.Arrangement.Partitioning;
 using cswm.Options;
 using cswm.WinApi;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -15,17 +14,14 @@ public class SplitArrangementStrategy : IArrangementStrategy
     public static string DisplayName => "Split";
 
     private readonly WindowManagementOptions _options;
-    private readonly ILogger<SplitArrangementStrategy> _logger;
     private readonly Dictionary<IntPtr, BspSpace> _spaceCache = new();
     private MonitorLayout _lastArrangement = null!;
 
-    public SplitArrangementStrategy(IOptions<WindowManagementOptions> options, ILogger<SplitArrangementStrategy> logger)
+    public SplitArrangementStrategy(IOptions<WindowManagementOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(logger);
 
         _options = options.Value;
-        _logger = logger;
     }
 
     /// <inheritdoc/>
@@ -234,7 +230,6 @@ public class SplitArrangementStrategy : IArrangementStrategy
             {
                 var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == resizedWindow.hWnd).First();
                 var success = bspSpace.TryResize(prev.Position, resizedWindow.Position);
-                _logger.LogDebug($"BspSpace resize was successful: {success}");
             }
         }
         _spaceCache[layout.Monitor.hMonitor] = bspSpace;
