@@ -1,4 +1,3 @@
-using cswm.Options;
 using cswm.WinApi;
 using System;
 using System.Collections.Generic;
@@ -33,7 +32,7 @@ public sealed class BspSpace
         _root = PartitionSpace(_space, partitionCount, prior: _root);
     }
 
-    public IEnumerable<Rect> GetSpaces(int halfMargin)
+    public IEnumerable<Rect> GetSpaces(int halfMargin = 0)
     {
         return AddWindowMargins_Recursive(_space, _root, halfMargin);
 
