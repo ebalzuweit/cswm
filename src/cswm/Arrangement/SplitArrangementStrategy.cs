@@ -1,6 +1,7 @@
 using cswm.Arrangement.Partitioning;
 using cswm.Options;
 using cswm.WinApi;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -14,216 +15,290 @@ public class SplitArrangementStrategy : IArrangementStrategy
     public static string DisplayName => "Split";
 
     private readonly WindowManagementOptions _options;
+    private readonly ILogger<SplitArrangementStrategy> _logger;
     private readonly Dictionary<IntPtr, BspSpace> _spaceCache = new();
     private MonitorLayout _lastArrangement = null!;
 
-    public SplitArrangementStrategy(IOptions<WindowManagementOptions> options)
+    public SplitArrangementStrategy(IOptions<WindowManagementOptions> options, ILogger<SplitArrangementStrategy> logger)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _options = options.Value;
+        _logger = logger;
     }
 
     /// <inheritdoc/>
-    public MonitorLayout Arrange(MonitorLayout layout) => Arrange_Internal(layout);
+    public MonitorLayout Arrange(MonitorLayout layout)
+    {
+        if (layout.Windows.Any() == false)
+        {
+            return layout;
+        }
+
+        _lastArrangement = UpdateLayout_ForGenericWindowEvent(layout);
+        return _lastArrangement;
+    }
 
     /// <inheritdoc/>
     public MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition)
-        => Arrange_Internal(layout, movedWindow, cursorPosition);
+    {
+        if (layout.Windows.Any() == false)
+        {
+            return layout;
+        }
+
+        var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == movedWindow.hWnd).FirstOrDefault();
+        if (prev is not default(WindowLayout))
+        {
+            var wasResize = DetectWindowResize(prev.Position, movedWindow.Position);
+            _lastArrangement = wasResize
+                ? UpdateLayout_ForWindowResized(layout, movedWindow)
+                : UpdateLayout_ForWindowMoved(layout, movedWindow, cursorPosition);
+        }
+        else
+        {
+            _lastArrangement = UpdateLayout_ForGenericWindowEvent(layout);
+        }
+
+        return _lastArrangement;
+
+        static bool DetectWindowResize(Rect from, Rect to)
+        {
+            // Count number of edges that moved
+            var c = 0;
+            if (from.Left != to.Left)
+                c++;
+            if (from.Top != to.Top)
+                c++;
+            if (from.Right != to.Right)
+                c++;
+            if (from.Bottom != to.Bottom)
+                c++;
+
+            if (c == 1 || c == 2)
+                return true;
+            return false;
+        }
+    }
 
     public void Reset()
     {
         _spaceCache.Clear();
     }
 
-    private MonitorLayout Arrange_Internal(MonitorLayout layout, Window? movedWindow = null, Point? cursorPosition = null)
+    private (BspSpace, bool cacheMiss) GetBspSpace(MonitorLayout layout)
     {
-        var windowLayouts = layout.Windows.ToList();
-        if (windowLayouts.Count == 0)
-            return layout;
-
-        // Setup the BSP tree
-        var bspSpace = _spaceCache.GetValueOrDefault(layout.Monitor.hMonitor);
-        if (bspSpace is null)
+        if (_spaceCache.ContainsKey(layout.Monitor.hMonitor))
         {
-            // Create partitions new
-            var monitorArea = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
-            bspSpace = new BspSpace(monitorArea);
-            bspSpace.SetTotalWindowCount(windowLayouts.Count);
+            return (_spaceCache[layout.Monitor.hMonitor], false);
         }
         else
         {
+            // Create new BspSpace for monitor
+            var area = layout.Monitor.WorkArea.AddMargin(_options.MonitorPadding);
+            var space = new BspSpace(area);
+            space.SetTotalWindowCount(layout.Windows.Count());
+            return (space, true);
+        }
+    }
+
+    private MonitorLayout UpdateLayout_ForGenericWindowEvent(MonitorLayout layout)
+    {
+        var windowLayouts = layout.Windows.ToList();
+
+        // Partition the monitor
+        var (bspSpace, cacheMiss) = GetBspSpace(layout);
+        if (cacheMiss == false)
+        {
             // Update existing partitions
-            var spacesCount = bspSpace.GetSpaces(0).Count();
-            if (spacesCount == windowLayouts.Count)
+            var spacesCount = bspSpace.GetSpaces().Count();
+            if (spacesCount != windowLayouts.Count())
             {
-                // Keep existing partitions
-                if (movedWindow is not null)
-                {
-                    var handled = TryHandleMovedWindowResized(movedWindow);
-                    if (handled)
-                    {
-                        cursorPosition = null; // place windows by similarity, cursor is not always in correct space after resizing
-                    }
-                }
-            }
-            else
-            {
-                bspSpace.SetTotalWindowCount(windowLayouts.Count);
+                bspSpace.SetTotalWindowCount(windowLayouts.Count());
             }
         }
-        var spaces = bspSpace.GetSpaces(_options.WindowMargin / 2).ToList();
         _spaceCache[layout.Monitor.hMonitor] = bspSpace;
 
-        // Arrange windows to spaces
-        var arrangedWindows = LayoutWindows(windowLayouts, spaces, movedWindow, cursorPosition);
-        _lastArrangement = layout with { Windows = arrangedWindows };
-
-        return _lastArrangement;
-
-        bool TryHandleMovedWindowResized(Window moved)
+        // Match windows to partitioned space
+        var potentialMatches = layout.Windows.SelectMany
+            (
+                w => bspSpace.GetSpaces(_options.WindowMargin / 2).Select
+                (
+                    s => new WindowPlacement(w, s)
+                )
+            ).ToList();
+        var acceptedMatches = new List<WindowPlacement>(windowLayouts.Count());
+        while (potentialMatches.Any())
         {
-            var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == moved.hWnd).FirstOrDefault();
-            if (prev is not default(WindowLayout))
-            {
-                var wasResize = DetectWindowResize(prev.Position, moved.Position);
-                if (wasResize)
-                {
-                    return bspSpace.TryResize(prev.Position, moved.Position);
-                }
-            }
-            return false;
+            var bestMatch = potentialMatches.MinBy(wp => wp.Score);
+            potentialMatches.RemoveAll(wp =>
+                wp.WindowLayout.Window.hWnd == bestMatch.WindowLayout.Window.hWnd ||
+                wp.Space.Equals(bestMatch.Space));
+            acceptedMatches.Add(bestMatch);
         }
+
+        // Build arrangement
+        var newWindowLayouts = acceptedMatches.Select(wp =>
+        {
+            var position = wp.Space.AdjustForWindowsPadding(wp.WindowLayout.Window);
+            return new WindowLayout(wp.WindowLayout.Window, position);
+        });
+        return new MonitorLayout(layout.Monitor, newWindowLayouts);
     }
 
-    private static bool DetectWindowResize(Rect from, Rect to)
+    private MonitorLayout UpdateLayout_ForWindowMoved(MonitorLayout layout, Window movedWindow, Point cursorPosition)
     {
-        // Count number of edges that moved
-        var c = 0;
-        if (from.Left != to.Left)
-            c++;
-        if (from.Top != to.Top)
-            c++;
-        if (from.Right != to.Right)
-            c++;
-        if (from.Bottom != to.Bottom)
-            c++;
+        var windowLayouts = layout.Windows.ToList();
 
-        if (c == 1 || c == 2)
-            return true;
-        return false;
-    }
-
-    /// <summary>
-    /// Place windows in spaces.
-    /// </summary>
-    /// <param name="windowLayouts">Current window layouts.</param>
-    /// <param name="spaces">New window spaces.</param>
-    /// <returns>Updated window layouts.</returns>
-    private IEnumerable<WindowLayout> LayoutWindows(IList<WindowLayout> windowLayouts, IReadOnlyList<Rect> spaces, Window? movedWindow = null, Point? cursorPosition = null)
-    {
-        var arrangement = new List<WindowLayout>(windowLayouts.Count);
-        var unassignedWindows = new List<Window>(windowLayouts.Select(x => x.Window));
-        var unassignedSpaces = new List<Rect>(spaces);
-
-        if (movedWindow is not null && cursorPosition is not null)
+        // Partition the monitor
+        var (bspSpace, cacheMiss) = GetBspSpace(layout);
+        if (cacheMiss == false)
         {
-            // Arrange on window move
-            var destination = unassignedSpaces.Where(IsCursorInSpace).FirstOrDefault();
-            if (unassignedSpaces.Contains(destination)) // check against default
+            // Update existing partitions
+            var spacesCount = bspSpace.GetSpaces().Count();
+            if (spacesCount != windowLayouts.Count())
             {
-                // Assign moved window to space containing the cursor
-                Assign(movedWindow, destination);
+                bspSpace.SetTotalWindowCount(windowLayouts.Count());
+            }
+        }
+        _spaceCache[layout.Monitor.hMonitor] = bspSpace;
+
+        // Match windows to partitioned space
+        var potentialMatches = layout.Windows.SelectMany
+            (
+                w => bspSpace.GetSpaces(_options.WindowMargin / 2).Select
+                (
+                    s => new WindowPlacement(w, s)
+                )
+            ).ToList();
+        var acceptedMatches = new List<WindowPlacement>(windowLayouts.Count());
+
+        // Place moved window into preferred space
+        {
+            var movedWindowMatch = potentialMatches.Where(wp =>
+                wp.WindowLayout.Window.hWnd == movedWindow.hWnd &&
+                IsCursorInSpace(cursorPosition, wp.Space)).FirstOrDefault();
+            if (movedWindowMatch != default(WindowPlacement))
+            {
+                acceptedMatches.Add(movedWindowMatch);
+                potentialMatches.RemoveAll(wp =>
+                    wp.WindowLayout.Window.hWnd == movedWindowMatch.WindowLayout.Window.hWnd ||
+                    wp.Space.Equals(movedWindowMatch.Space));
             }
         }
 
-        var allArrangements = unassignedWindows.SelectMany(w => unassignedSpaces.Select(s => new WindowLayout(w, s)));
-        var sortedArrangements = allArrangements.OrderBy(a =>
+        while (potentialMatches.Any())
         {
-            // Sort arrangements by geometric similarity
-            var current = windowLayouts.Where(w => w.Window == a.Window).Single();
-            var similarity = GetRectSimilarity(a.Position, current.Position);
-            return similarity;
-        }).ToList();
-
-        while (unassignedSpaces.Any() && unassignedWindows.Any() && sortedArrangements.Any())
-        {
-            var a = sortedArrangements.First();
-            Assign(a.Window, a.Position);
-            sortedArrangements.RemoveAll(x => x.Window == a.Window || x.Position.Equals(a.Position));
+            var bestMatch = potentialMatches.MinBy(wp => wp.Score);
+            potentialMatches.RemoveAll(wp =>
+                wp.WindowLayout.Window.hWnd == bestMatch.WindowLayout.Window.hWnd ||
+                wp.Space.Equals(bestMatch.Space));
+            acceptedMatches.Add(bestMatch);
         }
 
-        return arrangement;
-
-        bool IsCursorInSpace(Rect space)
+        // Build arrangement
+        var newWindowLayouts = acceptedMatches.Select(wp =>
         {
-            if (cursorPosition!.Value.X < space.Left ||
-                cursorPosition!.Value.X > space.Right ||
-                cursorPosition!.Value.Y < space.Top ||
-                cursorPosition!.Value.Y > space.Bottom)
+            var position = wp.Space.AdjustForWindowsPadding(wp.WindowLayout.Window);
+            return new WindowLayout(wp.WindowLayout.Window, position);
+        });
+        return new MonitorLayout(layout.Monitor, newWindowLayouts);
+
+        static bool IsCursorInSpace(Point cursor, Rect space)
+        {
+            if (cursor.X < space.Left ||
+                cursor.X > space.Right ||
+                cursor.Y < space.Top ||
+                cursor.Y > space.Bottom)
                 return false;
             return true;
         }
-
-        void Assign(Window window, Rect space)
-        {
-            var position = space.AdjustForWindowsPadding(window);
-
-            unassignedWindows!.Remove(window);
-            unassignedSpaces!.Remove(space);
-            arrangement!.Add(new(window, position));
-        }
     }
 
-    /// <summary>
-    /// Get the geometric similarity between two <see cref="Rect"/>.
-    /// </summary>
-    /// <remarks>
-    /// Lower is better.
-    /// </remarks>
-    /// <param name="a">The first Rect to compare.</param>
-    /// <param name="b">The second Rect to compare.</param>
-    /// <returns><c>0</c> if the <see cref="Rect"/> are equal; otherwise, the total translation and scaling difference between them.</returns>
-    private static int GetRectSimilarity(Rect a, Rect b)
+    private MonitorLayout UpdateLayout_ForWindowResized(MonitorLayout layout, Window resizedWindow)
     {
-        var translation = Math.Abs(b.Left - a.Left) + Math.Abs(b.Top - a.Top);
-        var scaling = Math.Abs(b.Width - a.Width) + Math.Abs(b.Height - a.Height);
+        var windowLayouts = layout.Windows.ToList();
 
-        bool l = false;
-        bool t = false;
-        bool r = false;
-        bool bo = false;
-        var s = 0;
-        if (b.Left == a.Left)
+        // Partition the monitor
+        var (bspSpace, cacheMiss) = GetBspSpace(layout);
+        if (cacheMiss == false)
         {
-            s++;
-            l = true;
+            // Update existing partitions
+            var spacesCount = bspSpace.GetSpaces().Count();
+            if (spacesCount != windowLayouts.Count())
+            {
+                bspSpace.SetTotalWindowCount(windowLayouts.Count());
+            }
+            else
+            {
+                var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == resizedWindow.hWnd).First();
+                var success = bspSpace.TryResize(prev.Position, resizedWindow.Position);
+                _logger.LogDebug($"BspSpace resize was successful: {success}");
+            }
         }
-        if (b.Top == a.Top)
+        _spaceCache[layout.Monitor.hMonitor] = bspSpace;
+
+        // Match windows to partitioned space
+        var potentialMatches = layout.Windows.SelectMany
+            (
+                w => bspSpace.GetSpaces(_options.WindowMargin / 2).Select
+                (
+                    s => new WindowPlacement(w, s)
+                )
+            ).ToList();
+        var acceptedMatches = new List<WindowPlacement>(windowLayouts.Count());
+
+        // Place resized window into preferred space
         {
-            s++;
-            t = true;
-        }
-        if (b.Right == a.Right)
-        {
-            s++;
-            r = true;
-        }
-        if (b.Bottom == a.Bottom)
-        {
-            s++;
-            bo = true;
+            var resizedWindowMatch = potentialMatches
+                .Where(wp => wp.WindowLayout.Window.hWnd == resizedWindow.hWnd)
+                .MinBy(wp => wp.Score);
+            if (resizedWindowMatch != default(WindowPlacement))
+            {
+                acceptedMatches.Add(resizedWindowMatch);
+                potentialMatches.RemoveAll(wp =>
+                    wp.WindowLayout.Window.hWnd == resizedWindowMatch.WindowLayout.Window.hWnd ||
+                    wp.Space.Equals(resizedWindowMatch.Space));
+            }
         }
 
-        var score = translation + scaling;
-        // If 3 or more edges are equal it's a good match.
-        if (s > 2)
-            return score / 100;
-        // Left & Right / Top & Bottom pairs are excluded -
-        // These pairs are red herrings from our arrangement.
-        if (s == 2 && !(l && r) && !(t && bo))
-            return score / 100;
+        while (potentialMatches.Any())
+        {
+            var bestMatch = potentialMatches.MinBy(wp => wp.Score)!;
+            potentialMatches.RemoveAll(wp =>
+                wp.WindowLayout.Window.hWnd == bestMatch.WindowLayout.Window.hWnd ||
+                wp.Space.Equals(bestMatch.Space));
+            acceptedMatches.Add(bestMatch);
+        }
 
-        return score;
+        // Build arrangement
+        var newWindowLayouts = acceptedMatches.Select(wp =>
+        {
+            var position = wp.Space.AdjustForWindowsPadding(wp.WindowLayout.Window);
+            return new WindowLayout(wp.WindowLayout.Window, position);
+        });
+        return new MonitorLayout(layout.Monitor, newWindowLayouts);
+    }
+
+    sealed internal class WindowPlacement
+    {
+        public WindowLayout WindowLayout { get; init; }
+        public Rect Space { get; init; }
+        public int Score { get; init; }
+
+        public WindowPlacement(WindowLayout windowLayout, Rect space)
+        {
+            WindowLayout = windowLayout;
+            Space = space;
+            Score = GetRectTransformation();
+        }
+
+        private int GetRectTransformation()
+        {
+            var translation = Math.Abs(Space.Left - WindowLayout.Position.Left) + Math.Abs(Space.Top - WindowLayout.Position.Top);
+            var scaling = Math.Abs(Space.Width - WindowLayout.Position.Width) + Math.Abs(Space.Height - WindowLayout.Position.Height);
+            return translation + scaling;
+        }
     }
 }
