@@ -65,11 +65,11 @@ public class WindowTrackingService : IService, IDisposable
 
     public IEnumerable<MonitorLayout> GetCurrentLayouts()
         => User32.EnumDisplayMonitors()
-            .Select(hMonitor =>
-            new MonitorLayout(
+            .Select(hMonitor => new MonitorLayout(
                 Monitor.FromHmon(hMonitor),
                 _windows
                     .Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == hMonitor)
+                    .Where(IsNotMinOrMaximized)
                     .Select(w => new WindowLayout(w, w.Position))
             ));
 
@@ -87,9 +87,8 @@ public class WindowTrackingService : IService, IDisposable
     {
         _windows.Clear();
         var handles = User32.EnumWindows();
-        var newWindows = handles.Select(h => Window.FromHwnd(h))
+        var newWindows = handles.Select(Window.FromHwnd)
             .Where(x => IsIgnoredWindowClass(x) == false)
-            .Where(IsNotMinOrMaximized)
             .Where(_strategy.ShouldTrack);
         foreach (var w in newWindows)
         {
@@ -99,8 +98,8 @@ public class WindowTrackingService : IService, IDisposable
         _bus.Publish(new OnTrackedWindowsResetEvent());
     }
 
-    private readonly EventConstant[] _startTrackingEvents = new[] { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND, EventConstant.EVENT_OBJECT_LOCATIONCHANGE };
-    private readonly EventConstant[] _stopTrackingEvents = new[] { EventConstant.EVENT_OBJECT_HIDE, EventConstant.EVENT_SYSTEM_MINIMIZESTART };
+    private readonly EventConstant[] _startTrackingEvents = { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND, EventConstant.EVENT_OBJECT_LOCATIONCHANGE };
+    private readonly EventConstant[] _stopTrackingEvents = { EventConstant.EVENT_OBJECT_HIDE, EventConstant.EVENT_SYSTEM_MINIMIZESTART };
     private void On_WindowEvent(WindowEvent @event)
     {
         var window = Window.FromHwnd(@event.hWnd);
@@ -116,6 +115,7 @@ public class WindowTrackingService : IService, IDisposable
         var shouldTrack = _strategy.ShouldTrack(window);
         if (shouldTrack == false)
             return;
+
         if (_startTrackingEvents.Contains(@event.EventType))
             TryStartTracking(window);
         else if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
