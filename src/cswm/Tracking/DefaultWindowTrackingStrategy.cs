@@ -20,10 +20,15 @@ public class DefaultWindowTrackingStrategy : IWindowTrackingStrategy
             return false;
         }
 
-        // Note: All exclusion rules must be above this line
-
         var style = PInvoke.GetWindowLong(window.hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
         var exStyle = PInvoke.GetWindowLong(window.hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+
+        if (HasStyle(style, WindowStyle.WS_MAXIMIZEBOX) == false || HasStyle(style, WindowStyle.WS_MINIMIZEBOX) == false)
+        {
+            return false;
+        }
+
+        // Note: All exclusion rules must be above this line
 
         // respect extended styling rules
         if (HasExStyle(exStyle, ExtendedWindowStyle.WS_EX_TOOLWINDOW) || HasExStyle(exStyle, ExtendedWindowStyle.WS_EX_NOACTIVATE))
