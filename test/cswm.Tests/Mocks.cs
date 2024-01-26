@@ -40,18 +40,21 @@ public static class Mocks
         return windows;
     }
 
-    public static Window Window(string tag = "")
+    public static Window Window(Rect position, string tag = "", IntPtr? hWnd = null)
     {
-        var hwnd = new HWND(new IntPtr(Random.Shared.Next()));
+        if (hWnd.HasValue == false) hWnd = new IntPtr(Random.Shared.Next());
+        var hwnd = new HWND(hWnd.Value);
         return new Window
         {
             hWnd = hwnd,
-            ClassName = tag
+            ClassName = tag,
+            Position = position,
+            ClientPosition = position
         };
     }
 
-    public static WindowLayout WindowLayout(Rect position, string tag = "")
-        => new WindowLayout(Mocks.Window(tag), position);
+    public static WindowLayout WindowLayout(Rect position, string tag = "", IntPtr? hWnd = null)
+        => new WindowLayout(Mocks.Window(position, tag, hWnd), position);
 
     public static IOptions<WindowManagementOptions> WindowManagementOptions(WindowManagementOptions? options = null)
     {
