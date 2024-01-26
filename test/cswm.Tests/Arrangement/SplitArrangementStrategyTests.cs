@@ -1,5 +1,4 @@
 using cswm.Arrangement;
-using cswm.Options;
 using cswm.WinApi;
 using System.Linq;
 using Xunit;
@@ -105,7 +104,7 @@ public class SplitArrangementStrategyTests
 
     #endregion
 
-    #region On Window Move Tests
+    #region Window Move Tests
 
     [Fact]
     public void ArrangeOnWindowMove_PrefersMovedWindow_IfWindowsOverlapping()
@@ -117,7 +116,9 @@ public class SplitArrangementStrategyTests
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b });
 
-        var layout = Strategy.ArrangeOnWindowMove(monitorLayout, a.Window, new(1440, 540));
+        var strategy = Strategy;
+        _ = strategy.Arrange(monitorLayout);
+        var layout = strategy.ArrangeOnWindowMove(monitorLayout, a.Window, new(1440, 540));
 
         Assert.NotNull(layout);
         Assert.Equal(aPosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
@@ -137,7 +138,9 @@ public class SplitArrangementStrategyTests
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b, c });
 
-        var layout = Strategy.ArrangeOnWindowMove(monitorLayout, a.Window, new(480, 540));
+        var strategy = Strategy;
+        _ = strategy.Arrange(monitorLayout);
+        var layout = strategy.ArrangeOnWindowMove(monitorLayout, a.Window, new(480, 540));
 
         Assert.NotNull(layout);
         Assert.Equal(aPosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
@@ -149,16 +152,21 @@ public class SplitArrangementStrategyTests
     public void ArrangeOnWindowMove_SwapsExistingWindowPositions_IfCursorInOtherWindow()
     {
         var aPosition = new Rect(0, 0, 960, 1080);
+        var aMovePosition = new Rect(1000, 100, 1960, 1180);
         var bPosition = new Rect(960, 0, 1920, 540);
         var cPosition = new Rect(960, 540, 1920, 1080);
 
         var a = Mocks.WindowLayout(aPosition, "a");
+        var aMove = Mocks.WindowLayout(aMovePosition, "a", a.Window.hWnd);
         var b = Mocks.WindowLayout(bPosition, "b");
         var c = Mocks.WindowLayout(cPosition, "c");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b, c });
+        var movedLayout = new MonitorLayout(monitor, new[] { aMove, b, c });
 
-        var layout = Strategy.ArrangeOnWindowMove(monitorLayout, a.Window, new(1440, 270));
+        var strategy = Strategy;
+        _ = strategy.Arrange(monitorLayout);
+        var layout = strategy.ArrangeOnWindowMove(movedLayout, a.Window, new(1440, 270));
 
         Assert.NotNull(layout);
         Assert.Equal(bPosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
