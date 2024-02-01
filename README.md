@@ -1,18 +1,18 @@
-![](./src/cswm/icon.ico)
+![](./docs/cswm_icon.png)
 
 # cswm
 
 _/ swɪm /_
 
-A simple window manager in C#.
+A simple window manager in C#
 
 ## Installation <sub><sup>_(No installation required)_</sup></sub>
 
-> **Note** Windows-only.
+> **Note** cswm only supports Windows.
 
-Grab the latest release from [here](https://github.com/ebalzuweit/cswm/releases/latest).
+Download the latest release from [here](https://github.com/ebalzuweit/cswm/releases/latest).
 
-Unzip the folder and run `cswm.exe`.
+Unzip the folder and double-click `cswm.exe`.
 
 ### Uninstalling
 
@@ -32,7 +32,7 @@ cswm runs in the system tray, right-click on the icon to access the menu.
 
 ### Configuration
 
-Configuration is done through the `appsettings.json` file, found in the same folder as `cswm.exe`.
+Configuration is done through the `appsettings.json` file, found in the same directory as `cswm.exe`.
 
 | Setting         | Description                                      |
 | --------------- | ------------------------------------------------ |
@@ -41,7 +41,7 @@ Configuration is done through the `appsettings.json` file, found in the same fol
 
 ### Caveats
 
-- Some windows (e.g. Task Manager) require cswm to be run as an administrator to be managed.
+- In order to manage windows running in Administrator mode (e.g. Task Manager), cswm must also be running in Administrator mode.
 
 ## Acknowledgments
 
