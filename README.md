@@ -1,4 +1,4 @@
-![](./src/cswm/icon.ico)
+![](./docs/cswm_icon.png)
 
 # cswm
 
