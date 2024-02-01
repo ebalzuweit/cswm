@@ -27,6 +27,7 @@ While running, cswm automatically manages active windows on the user's desktop.
 It will arrange the active windows like a tiling window manager,
 moving and resizing them to fill the screen without overlapping.
 You can rearrange windows by dragging them from one space to another.
+You can adjust the tiling by resizing the window border (or corner) adjacent to the partition.
 
 cswm runs in the system tray, right-click on the icon to access the menu.
 
