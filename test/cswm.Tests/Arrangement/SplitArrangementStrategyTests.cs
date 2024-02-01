@@ -1,5 +1,6 @@
 using cswm.Arrangement;
 using cswm.WinApi;
+using System.Drawing;
 using System.Linq;
 using Xunit;
 
@@ -12,7 +13,12 @@ public class SplitArrangementStrategyTests
     {
         MonitorPadding = 100
     }));
-    private Rect MonitorSize => new(0, 0, 1920, 1080);
+
+    private readonly Rect MonitorSize = new(0, 0, 1920, 1080);
+    private readonly Rect HalfLeft = new(0, 0, 960, 1080);
+    private readonly Rect HalfRight = new(960, 0, 1920, 1080);
+    private readonly Rect QuarterTopRight = new(960, 0, 1920, 540);
+    private readonly Rect QuarterBottomRight = new(960, 540, 1920, 1080);
 
     #region Window Arrange Tests
 
@@ -26,7 +32,7 @@ public class SplitArrangementStrategyTests
         var layout = Strategy.Arrange(monitorLayout);
 
         Assert.NotNull(layout);
-        Assert.Equal(new Rect(0, 0, 1920, 1080), layout.Windows.First().Position);
+        Assert.Equal(MonitorSize, layout.Windows.First().Position);
     }
 
     [Fact]
@@ -43,8 +49,8 @@ public class SplitArrangementStrategyTests
         var positions = layout.Windows.Select(x => x.Position);
 
         Assert.Equal(2, positions.Count());
-        Assert.Contains(new Rect(0, 0, 960, 1080), positions);
-        Assert.Contains(new Rect(960, 0, 1920, 1080), positions);
+        Assert.Contains(HalfLeft, positions);
+        Assert.Contains(HalfRight, positions);
     }
 
     [Fact]
@@ -61,9 +67,9 @@ public class SplitArrangementStrategyTests
         var positions = layout.Windows.Select(x => x.Position);
 
         Assert.Equal(3, positions.Count());
-        Assert.Contains(new Rect(0, 0, 960, 1080), positions);
-        Assert.Contains(new Rect(960, 0, 1920, 540), positions);
-        Assert.Contains(new Rect(960, 540, 1920, 1080), positions);
+        Assert.Contains(HalfLeft, positions);
+        Assert.Contains(QuarterTopRight, positions);
+        Assert.Contains(QuarterBottomRight, positions);
     }
 
     [Fact]
@@ -80,8 +86,8 @@ public class SplitArrangementStrategyTests
         var positions = layout.Windows.Select(x => x.Position);
 
         Assert.Equal(4, positions.Count());
-        Assert.Contains(new Rect(0, 0, 960, 1080), positions);
-        Assert.Contains(new Rect(960, 0, 1920, 540), positions);
+        Assert.Contains(HalfLeft, positions);
+        Assert.Contains(QuarterTopRight, positions);
         Assert.Contains(new Rect(960, 540, 1440, 1080), positions);
         Assert.Contains(new Rect(1440, 540, 1920, 1080), positions);
     }
@@ -109,10 +115,8 @@ public class SplitArrangementStrategyTests
     [Fact]
     public void ArrangeOnWindowMove_PrefersMovedWindow_IfWindowsOverlapping()
     {
-        var aPosition = new Rect(960, 0, 1920, 1080);
-
-        var a = Mocks.WindowLayout(aPosition, "a");
-        var b = Mocks.WindowLayout(aPosition, "b");
+        var a = Mocks.WindowLayout(HalfRight, "a");
+        var b = Mocks.WindowLayout(HalfRight, "b");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b });
 
@@ -121,45 +125,41 @@ public class SplitArrangementStrategyTests
         var layout = strategy.ArrangeOnWindowMove(monitorLayout, a.Window, new(1440, 540));
 
         Assert.NotNull(layout);
-        Assert.Equal(aPosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
-        Assert.Equal(new(0, 0, 960, 1080), layout.Windows.Where(x => x.Window.ClassName == "b").First().Position);
+        Assert.Equal(HalfRight, layout.GetWindowByClassName("a").Position);
+        Assert.Equal(HalfLeft, layout.GetWindowByClassName("b").Position);
     }
 
     [Fact]
     public void ArrangeOnWindowMove_KeepsExistingWindowPositions_IfCursorInMovedWindow()
     {
-        var aPosition = new Rect(0, 0, 960, 1080);
-        var bPosition = new Rect(960, 0, 1920, 540);
-        var cPosition = new Rect(960, 540, 1920, 1080);
+        Point pos = new(480, 540);
 
-        var a = Mocks.WindowLayout(aPosition, "a");
-        var b = Mocks.WindowLayout(bPosition, "b");
-        var c = Mocks.WindowLayout(cPosition, "c");
+        var a = Mocks.WindowLayout(HalfLeft, "a");
+        var b = Mocks.WindowLayout(QuarterTopRight, "b");
+        var c = Mocks.WindowLayout(QuarterBottomRight, "c");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b, c });
 
         var strategy = Strategy;
         _ = strategy.Arrange(monitorLayout);
-        var layout = strategy.ArrangeOnWindowMove(monitorLayout, a.Window, new(480, 540));
+        var layout = strategy.ArrangeOnWindowMove(monitorLayout, a.Window, pos);
 
         Assert.NotNull(layout);
-        Assert.Equal(aPosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
-        Assert.Equal(bPosition, layout.Windows.Where(x => x.Window.ClassName == "b").First().Position);
-        Assert.Equal(cPosition, layout.Windows.Where(x => x.Window.ClassName == "c").First().Position);
+        Assert.Equal(HalfLeft, layout.GetWindowByClassName("a").Position);
+        Assert.Equal(QuarterTopRight, layout.GetWindowByClassName("b").Position);
+        Assert.Equal(QuarterBottomRight, layout.GetWindowByClassName("c").Position);
     }
 
     [Fact]
     public void ArrangeOnWindowMove_SwapsExistingWindowPositions_IfCursorInOtherWindow()
     {
-        var aPosition = new Rect(0, 0, 960, 1080);
-        var aMovePosition = new Rect(1000, 100, 1960, 1180);
-        var bPosition = new Rect(960, 0, 1920, 540);
-        var cPosition = new Rect(960, 540, 1920, 1080);
+        Point pos = new(1440, 270);
+        var movePos = HalfLeft.MoveTo(pos);
 
-        var a = Mocks.WindowLayout(aPosition, "a");
-        var aMove = Mocks.WindowLayout(aMovePosition, "a", a.Window.hWnd);
-        var b = Mocks.WindowLayout(bPosition, "b");
-        var c = Mocks.WindowLayout(cPosition, "c");
+        var a = Mocks.WindowLayout(HalfLeft, "a");
+        var aMove = Mocks.WindowLayout(movePos, "a", a.Window.hWnd);
+        var b = Mocks.WindowLayout(QuarterTopRight, "b");
+        var c = Mocks.WindowLayout(QuarterBottomRight, "c");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b, c });
         var movedLayout = new MonitorLayout(monitor, new[] { aMove, b, c });
@@ -169,9 +169,9 @@ public class SplitArrangementStrategyTests
         var layout = strategy.ArrangeOnWindowMove(movedLayout, a.Window, new(1440, 270));
 
         Assert.NotNull(layout);
-        Assert.Equal(bPosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
-        Assert.Equal(aPosition, layout.Windows.Where(x => x.Window.ClassName == "b").First().Position);
-        Assert.Equal(cPosition, layout.Windows.Where(x => x.Window.ClassName == "c").First().Position);
+        Assert.Equal(QuarterTopRight, layout.GetWindowByClassName("a").Position);
+        Assert.Equal(HalfLeft, layout.GetWindowByClassName("b").Position);
+        Assert.Equal(QuarterBottomRight, layout.GetWindowByClassName("c").Position);
     }
 
     #endregion
@@ -181,13 +181,11 @@ public class SplitArrangementStrategyTests
     [Fact]
     public void ArrangeOnWindowMove_ResizeOneSide_WithTwoWindows()
     {
-        var aPosition = new Rect(0, 0, 960, 1080);
         var aResizePosition = new Rect(0, 0, 1100, 1080);
-        var bPosition = new Rect(960, 0, 1920, 1080);
 
-        var a = Mocks.WindowLayout(aPosition, "a");
+        var a = Mocks.WindowLayout(HalfLeft, "a");
         var aResize = Mocks.WindowLayout(aResizePosition, "a", a.Window.hWnd);
-        var b = Mocks.WindowLayout(bPosition, "b");
+        var b = Mocks.WindowLayout(HalfRight, "b");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b });
         var resizedLayout = new MonitorLayout(monitor, new[] { aResize, b });
@@ -197,20 +195,18 @@ public class SplitArrangementStrategyTests
         var layout = strategy.ArrangeOnWindowMove(resizedLayout, aResize.Window, new(1100, 270));
 
         Assert.NotNull(layout);
-        Assert.Equal(aResizePosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
-        Assert.Equal(new Rect(1100, 0, 1920, 1080), layout.Windows.Where(x => x.Window.ClassName == "b").First().Position);
+        Assert.Equal(aResizePosition, layout.GetWindowByClassName("a").Position);
+        Assert.Equal(new Rect(1100, 0, 1920, 1080), layout.GetWindowByClassName("b").Position);
     }
 
     [Fact]
     public void ArrangeOnWindowMove_ResizeCorner_WithTwoWindows()
     {
-        var aPosition = new Rect(0, 0, 960, 1080);
         var aResizePosition = new Rect(0, 0, 1100, 900);
-        var bPosition = new Rect(960, 0, 1920, 1080);
 
-        var a = Mocks.WindowLayout(aPosition, "a");
+        var a = Mocks.WindowLayout(HalfLeft, "a");
         var aResize = Mocks.WindowLayout(aResizePosition, "a", a.Window.hWnd);
-        var b = Mocks.WindowLayout(bPosition, "b");
+        var b = Mocks.WindowLayout(HalfRight, "b");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b });
         var resizedLayout = new MonitorLayout(monitor, new[] { aResize, b });
@@ -220,22 +216,19 @@ public class SplitArrangementStrategyTests
         var layout = strategy.ArrangeOnWindowMove(resizedLayout, aResize.Window, new(1100, 270));
 
         Assert.NotNull(layout);
-        Assert.Equal(new Rect(0, 0, 1100, 1080), layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
-        Assert.Equal(new Rect(1100, 0, 1920, 1080), layout.Windows.Where(x => x.Window.ClassName == "b").First().Position);
+        Assert.Equal(new Rect(0, 0, 1100, 1080), layout.GetWindowByClassName("a").Position);
+        Assert.Equal(new Rect(1100, 0, 1920, 1080), layout.GetWindowByClassName("b").Position);
     }
 
     [Fact]
     public void ArrangeOnWindowMove_ResizeOneSide_WithThreeWindows()
     {
-        var aPosition = new Rect(0, 0, 960, 1080);
         var aResizePosition = new Rect(0, 0, 1100, 1080);
-        var bPosition = new Rect(960, 0, 1920, 540);
-        var cPosition = new Rect(960, 540, 1920, 1080);
 
-        var a = Mocks.WindowLayout(aPosition, "a");
+        var a = Mocks.WindowLayout(HalfLeft, "a");
         var aResize = Mocks.WindowLayout(aResizePosition, "a", a.Window.hWnd);
-        var b = Mocks.WindowLayout(bPosition, "b");
-        var c = Mocks.WindowLayout(cPosition, "c");
+        var b = Mocks.WindowLayout(QuarterTopRight, "b");
+        var c = Mocks.WindowLayout(QuarterBottomRight, "c");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b, c });
         var resizedLayout = new MonitorLayout(monitor, new[] { aResize, b, c });
@@ -245,23 +238,20 @@ public class SplitArrangementStrategyTests
         var layout = strategy.ArrangeOnWindowMove(resizedLayout, aResize.Window, new(1100, 270));
 
         Assert.NotNull(layout);
-        Assert.Equal(aResizePosition, layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
-        Assert.Equal(new Rect(1100, 0, 1920, 540), layout.Windows.Where(x => x.Window.ClassName == "b").First().Position);
-        Assert.Equal(new Rect(1100, 540, 1920, 1080), layout.Windows.Where(x => x.Window.ClassName == "c").First().Position);
+        Assert.Equal(aResizePosition, layout.GetWindowByClassName("a").Position);
+        Assert.Equal(new Rect(1100, 0, 1920, 540), layout.GetWindowByClassName("b").Position);
+        Assert.Equal(new Rect(1100, 540, 1920, 1080), layout.GetWindowByClassName("c").Position);
     }
 
     [Fact]
     public void ArrangeOnWindowMove_ResizeCorner_WithThreeWindows()
     {
-        var aPosition = new Rect(0, 0, 960, 1080);
-        var bPosition = new Rect(960, 0, 1920, 540);
         var bResizePosition = new Rect(1100, 0, 1920, 400);
-        var cPosition = new Rect(960, 540, 1920, 1080);
 
-        var a = Mocks.WindowLayout(aPosition, "a");
-        var b = Mocks.WindowLayout(bPosition, "b");
+        var a = Mocks.WindowLayout(HalfLeft, "a");
+        var b = Mocks.WindowLayout(QuarterTopRight, "b");
         var bResize = Mocks.WindowLayout(bResizePosition, "b", b.Window.hWnd);
-        var c = Mocks.WindowLayout(cPosition, "c");
+        var c = Mocks.WindowLayout(QuarterBottomRight, "c");
         var monitor = Mocks.GetMonitors(MonitorSize).First();
         var monitorLayout = new MonitorLayout(monitor, new[] { a, b, c });
         var resizedLayout = new MonitorLayout(monitor, new[] { a, bResize, c });
@@ -271,9 +261,56 @@ public class SplitArrangementStrategyTests
         var layout = strategy.ArrangeOnWindowMove(resizedLayout, bResize.Window, new(1100, 400));
 
         Assert.NotNull(layout);
-        Assert.Equal(new Rect(0, 0, 1100, 1080), layout.Windows.Where(x => x.Window.ClassName == "a").First().Position);
-        Assert.Equal(bResizePosition, layout.Windows.Where(x => x.Window.ClassName == "b").First().Position);
-        Assert.Equal(new Rect(1100, 400, 1920, 1080), layout.Windows.Where(x => x.Window.ClassName == "c").First().Position);
+        Assert.Equal(new Rect(0, 0, 1100, 1080), layout.GetWindowByClassName("a").Position);
+        Assert.Equal(bResizePosition, layout.GetWindowByClassName("b").Position);
+        Assert.Equal(new Rect(1100, 400, 1920, 1080), layout.GetWindowByClassName("c").Position);
+    }
+
+    #endregion
+
+    #region Window Open Tests
+
+    [Fact]
+    public void Arrange_PreservesExistingPositions_OnNewWindow()
+    {
+        var a = Mocks.WindowLayout(HalfRight, "a");
+        var b = Mocks.WindowLayout(HalfLeft, "b");
+        var c = Mocks.WindowLayout(QuarterBottomRight, "c");
+        var monitor = Mocks.GetMonitors(MonitorSize).First();
+        var monitorLayout = new MonitorLayout(monitor, new[] { a, b });
+        var updatedLayout = new MonitorLayout(monitor, new[] { a, b, c });
+
+        var strategy = Strategy;
+        _ = strategy.Arrange(monitorLayout);
+        var layout = strategy.Arrange(updatedLayout);
+
+        Assert.NotNull(layout);
+        Assert.Equal(QuarterTopRight, layout.GetWindowByClassName("a").Position);
+        Assert.Equal(HalfLeft, layout.GetWindowByClassName("b").Position);
+        Assert.Equal(QuarterBottomRight, layout.GetWindowByClassName("c").Position);
+    }
+
+    #endregion
+
+    #region Window Close Tests
+
+    [Fact]
+    public void Arrange_PreservesExistingPositions_OnWindowClose()
+    {
+        var a = Mocks.WindowLayout(HalfLeft, "a");
+        var b = Mocks.WindowLayout(QuarterTopRight, "b");
+        var c = Mocks.WindowLayout(QuarterBottomRight, "c");
+        var monitor = Mocks.GetMonitors(MonitorSize).First();
+        var monitorLayout = new MonitorLayout(monitor, new[] { a, b, c });
+        var updatedLayout = new MonitorLayout(monitor, new[] { a, b });
+
+        var strategy = Strategy;
+        _ = strategy.Arrange(monitorLayout);
+        var layout = strategy.Arrange(updatedLayout);
+
+        Assert.NotNull(layout);
+        Assert.Equal(HalfLeft, layout.GetWindowByClassName("a").Position);
+        Assert.Equal(HalfRight, layout.GetWindowByClassName("b").Position);
     }
 
     #endregion
