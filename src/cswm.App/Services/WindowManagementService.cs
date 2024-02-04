@@ -9,31 +9,31 @@ public class WindowManagementService : IService
 {
     private readonly WindowEventRelayService _winEventRelayService;
     private readonly WindowTrackingService _trackingService;
-    private readonly WindowArrangementService _layoutService;
+    private readonly WindowArrangementService _arrangementService;
     private readonly SystemTrayService _trayService;
 
     public WindowManagementService(
-        WindowEventRelayService winHookService,
+        WindowEventRelayService winEventRelay,
         WindowTrackingService trackingService,
-        WindowArrangementService layoutService,
+        WindowArrangementService arrangementService,
         SystemTrayService trayService
     )
     {
-        ArgumentNullException.ThrowIfNull(winHookService);
+        ArgumentNullException.ThrowIfNull(winEventRelay);
         ArgumentNullException.ThrowIfNull(trackingService);
-        ArgumentNullException.ThrowIfNull(layoutService);
+        ArgumentNullException.ThrowIfNull(arrangementService);
         ArgumentNullException.ThrowIfNull(trayService);
 
-        _winEventRelayService = winHookService;
+        _winEventRelayService = winEventRelay;
         _trackingService = trackingService;
-        _layoutService = layoutService;
+        _arrangementService = arrangementService;
         _trayService = trayService;
     }
 
     public void Start()
     {
         _trackingService.Start();
-        _layoutService.Start();
+        _arrangementService.Start();
         _trayService.Start();
         _winEventRelayService.Start();
     }
@@ -42,7 +42,7 @@ public class WindowManagementService : IService
     {
         _winEventRelayService.Stop();
         _trayService.Stop();
-        _layoutService.Stop();
+        _arrangementService.Stop();
         _trackingService.Stop();
     }
 }
