@@ -1,6 +1,7 @@
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
+using cswm.WinApi;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -44,8 +45,8 @@ public class SystemTrayMenu
             BuildAboutMenuItem(),
             new ToolStripSeparator()
         };
-        var monitorLayouts = _trackingService.GetCurrentLayouts();
-        items.AddRange(BuildMonitorMenuItems(monitorLayouts));
+        var monitors = _trackingService.GetCurrentLayouts().Select(x => x.Monitor);
+        items.AddRange(BuildMonitorMenuItems(monitors));
         items.Add(new ToolStripSeparator());
         items.Add(BuildCloseMenuItem());
 
@@ -54,13 +55,16 @@ public class SystemTrayMenu
 
     private ToolStripMenuItem BuildAboutMenuItem()
     {
+        const string AppName = "cswm";
+        const string AboutUrl = "https://github.com/ebalzuweit/cswm";
+
         var assembly = Assembly.GetEntryAssembly()!;
         var version = assembly.GetName().Version!;
-        var caption = $"cswm v{version.Major}.{version.Minor}.{version.Build}";
+        var caption = $"{AppName} v{version.Major}.{version.Minor}.{version.Build}";
         return new(caption, null, OnClick);
 
         void OnClick(object? sender, EventArgs eventArgs)
-            => Process.Start(new ProcessStartInfo("https://github.com/ebalzuweit/cswm") { UseShellExecute = true });
+            => Process.Start(new ProcessStartInfo(AboutUrl) { UseShellExecute = true });
     }
 
     private ToolStripMenuItem BuildCloseMenuItem()
@@ -71,39 +75,39 @@ public class SystemTrayMenu
             => _bus.Publish(new ExitApplicationEvent());
     }
 
-    private ToolStripMenuItem[] BuildMonitorMenuItems(IEnumerable<MonitorLayout> layouts)
+    private ToolStripMenuItem[] BuildMonitorMenuItems(IEnumerable<Monitor> monitors)
     {
-        return layouts.Select(BuildMonitorMenuItem).ToArray();
+        return monitors.Select(BuildMonitorMenuItem).ToArray();
 
-        ToolStripMenuItem BuildMonitorMenuItem(MonitorLayout layout)
+        ToolStripMenuItem BuildMonitorMenuItem(Monitor monitor)
         {
-            var items = BuildMonitorMenuList(layout);
-            return new ToolStripMenuItem(text: layout.Monitor.DeviceName, image: null, dropDownItems: items);
+            var items = BuildMonitorMenuList(monitor);
+            return new ToolStripMenuItem(text: monitor.DeviceName, image: null, dropDownItems: items);
         }
 
-        ToolStripMenuItem[] BuildMonitorMenuList(MonitorLayout layout)
+        ToolStripMenuItem[] BuildMonitorMenuList(Monitor monitor)
         {
             var items = new List<ToolStripMenuItem>()
             {
-                BuildArrangementMenuItem<SplitArrangementStrategy>(layout),
-                BuildArrangementMenuItem<SilentArrangementStrategy>(layout)
+                BuildArrangementMenuItem<SplitArrangementStrategy>(monitor),
+                BuildArrangementMenuItem<SilentArrangementStrategy>(monitor)
             };
             return items.ToArray();
         }
     }
 
-    private ToolStripMenuItem BuildArrangementMenuItem<T>(MonitorLayout layout)
+    private ToolStripMenuItem BuildArrangementMenuItem<T>(Monitor monitor)
         where T : IArrangementStrategy
     {
         var n = typeof(T).Name;
         var name = n[..n.IndexOf("ArrangementStrategy")];
-        var isChecked = typeof(T) == _layoutService.GetArrangement(layout.Monitor.hMonitor).GetType();
+        var isChecked = typeof(T) == _layoutService.GetArrangement(monitor.hMonitor).GetType();
         return new(name, null, OnClick)
         {
             Checked = isChecked
         };
 
         void OnClick(object? sender, EventArgs eventArgs)
-            => _bus.Publish(new SetArrangementStrategyEvent((IArrangementStrategy)_provider.GetService(typeof(T))!, layout.Monitor));
+            => _bus.Publish(new SetArrangementStrategyEvent((IArrangementStrategy)_provider.GetService(typeof(T))!, monitor));
     }
 }
