@@ -59,7 +59,12 @@ public sealed class WindowArrangementService : IService
         Subscribe<WindowMovedEvent>(OnWindowMoved);
         Subscribe<OnTrackedWindowsResetEvent>(OnWindowTrackingReset);
 
-        SetStrategy(_defaultArrangementStrategy);
+        // Setup initial monitor strategies
+        foreach (var monitorLayout in _trackingService.GetCurrentLayouts())
+        {
+            _monitorStrategies[monitorLayout.Monitor.hMonitor] = _defaultArrangementStrategy;
+            UpdateArrangement(monitorLayout.Monitor.hMonitor);
+        }
 
         void Subscribe<T>(Action<T> action)
             where T : Event
