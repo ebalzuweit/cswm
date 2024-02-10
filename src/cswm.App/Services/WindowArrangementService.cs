@@ -54,10 +54,11 @@ public sealed class WindowArrangementService : IService
     public void Start()
     {
         Subscribe<SetArrangementStrategyEvent>(OnSetArrangementStrategy);
-        Subscribe<StartTrackingWindowEvent>(OnWindowTrackingStart);
-        Subscribe<StopTrackingWindowEvent>(OnWindowTrackingStop);
+        Subscribe<StartTrackingWindowEvent>(e => StartArrangingWindow(e.Window));
+        Subscribe<StopTrackingWindowEvent>(e => StopArrangingWindow(e.Window));
         Subscribe<WindowMovedEvent>(OnWindowMoved);
         Subscribe<OnTrackedWindowsResetEvent>(OnWindowTrackingReset);
+        Subscribe<SetWindowFlaggedEvent>(OnWindowFlagged);
 
         // Setup initial monitor strategies
         foreach (var monitorLayout in _trackingService.GetCurrentLayouts())
@@ -227,29 +228,29 @@ public sealed class WindowArrangementService : IService
         }
     }
 
-    private void OnWindowTrackingStart(StartTrackingWindowEvent @event)
+    private void StartArrangingWindow(Window window)
     {
-        var hMon = User32.MonitorFromWindow(@event.Window.hWnd, MonitorFlags.DefaultToNearest);
+        var hMon = User32.MonitorFromWindow(window.hWnd, MonitorFlags.DefaultToNearest);
         var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
         if (currArrangement == default)
         {
             _logger.LogWarning("Start Tracking: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
             return;
         }
-        var updatedArrangement = strategy.AddWindow(currArrangement, @event.Window);
+        var updatedArrangement = strategy.AddWindow(currArrangement, window);
         ApplyArrangement(updatedArrangement);
     }
 
-    private void OnWindowTrackingStop(StopTrackingWindowEvent @event)
+    private void StopArrangingWindow(Window window)
     {
-        var hMon = User32.MonitorFromWindow(@event.Window.hWnd, MonitorFlags.DefaultToNearest);
+        var hMon = User32.MonitorFromWindow(window.hWnd, MonitorFlags.DefaultToNearest);
         var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
         if (currArrangement == default)
         {
             _logger.LogWarning("Stop Tracking: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
             return;
         }
-        var updatedArrangement = strategy.RemoveWindow(currArrangement, @event.Window);
+        var updatedArrangement = strategy.RemoveWindow(currArrangement, window);
         ApplyArrangement(updatedArrangement);
     }
 
@@ -270,6 +271,36 @@ public sealed class WindowArrangementService : IService
         }
         var updatedArrangement = strategy.MoveWindow(currArrangement, @event.Window, cursorPosition);
         ApplyArrangement(updatedArrangement);
+    }
+
+    private void OnWindowFlagged(SetWindowFlaggedEvent @event)
+    {
+        if (_options.DoNotManage)
+        {
+            return;
+        }
+
+        var flags = @event.Flagged
+            ? HwndInsertAfterFlags.HWND_TOPMOST
+            : HwndInsertAfterFlags.HWND_NOTOPMOST;
+
+        User32.SetWindowPos(
+            @event.Window.hWnd,
+            flags,
+            x: @event.Window.Position.Left,
+            y: @event.Window.Position.Top,
+            cx: @event.Window.Position.Width,
+            cy: @event.Window.Position.Height,
+            SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_SHOWWINDOW);
+
+        if (@event.Flagged)
+        {
+            StopArrangingWindow(@event.Window);
+        }
+        else
+        {
+            StartArrangingWindow(@event.Window);
+        }
     }
 
     #endregion Event Handlers

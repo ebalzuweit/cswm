@@ -1,6 +1,7 @@
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
+using cswm.Tracking.Events;
 using cswm.WinApi;
 using System;
 using System.Collections.Generic;
@@ -45,7 +46,7 @@ public class SystemTrayMenu
             BuildAboutMenuItem(),
             new ToolStripSeparator()
         };
-        var monitorLayouts = _trackingService.GetCurrentLayouts();
+        var monitorLayouts = _trackingService.GetCurrentLayouts(includeFlaggedWindows: true);
         items.AddRange(BuildMonitorMenuItems(monitorLayouts));
         items.Add(new ToolStripSeparator());
         items.Add(BuildCloseMenuItem());
@@ -121,6 +122,13 @@ public class SystemTrayMenu
         var name = window.Caption ?? window.ClassName ?? "[WINDOW]";
         if (name.Length > 20)
             name = name[..17] + "...";
-        return new(name);
+        var isFlagged = _trackingService.IsFlaggedWindow(window);
+        return new(name, null, OnClick)
+        {
+            Checked = isFlagged
+        };
+
+        void OnClick(object? sender, EventArgs eventArgs)
+            => _bus.Publish(new SetWindowFlaggedEvent(window, !isFlagged));
     }
 }
