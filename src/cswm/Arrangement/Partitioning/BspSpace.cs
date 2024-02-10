@@ -12,12 +12,11 @@ public sealed class BspSpace
 {
     private readonly Rect _space;
     private BspTree _root = null!;
+    private BspTree _maxDepthTree = null!;
 
     public BspSpace(Rect space)
     {
         _space = space;
-
-        SetTotalWindowCount(1);
     }
 
     public void SetTotalWindowCount(int spaceCount)
@@ -29,7 +28,22 @@ public sealed class BspSpace
 
         // Rebuild partition tree
         var partitionCount = Math.Max(0, spaceCount - 1);
-        _root = PartitionSpace(_space, partitionCount, prior: _root);
+        _root = PartitionSpace(_space, partitionCount, prior: _maxDepthTree);
+        if (_maxDepthTree == null)
+        {
+            // Initialize max depth tree
+            _maxDepthTree = _root;
+        }
+        else if (_root.Count() >= _maxDepthTree.Count())
+        {
+            // Overwrite max depth tree
+            _maxDepthTree = _root;
+        }
+        else
+        {
+            // Update max depth tree
+            _maxDepthTree.CopyPartitions(_root);
+        }
     }
 
     public IEnumerable<Rect> GetSpaces(int halfMargin = 0)
