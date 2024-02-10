@@ -4,6 +4,9 @@ using System;
 
 namespace cswm.Arrangement.Events;
 
+/// <summary>
+/// Sets the arrangement strategy for a specific, or all, Monitor(s).
+/// </summary>
 public class SetArrangementStrategyEvent : Event
 {
     private readonly IArrangementStrategy _strategy;
@@ -19,5 +22,9 @@ public class SetArrangementStrategyEvent : Event
 
     public IArrangementStrategy Strategy => _strategy;
     public bool AllMonitors => _monitor is null;
+
+    /// <remarks>
+    /// Not null if <see cref="AllMonitors"/> is <c>false</c>.
+    /// </remarks>
     public Monitor? Monitor => _monitor;
 }
