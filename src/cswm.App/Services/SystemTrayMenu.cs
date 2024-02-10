@@ -101,7 +101,7 @@ public class SystemTrayMenu
     {
         var n = typeof(T).Name;
         var name = n[..n.IndexOf("ArrangementStrategy")];
-        var isChecked = typeof(T) == _layoutService.GetArrangement(monitor.hMonitor).GetType();
+        var isChecked = typeof(T) == _layoutService.GetStrategy(monitor.hMonitor).GetType();
         return new(name, null, OnClick)
         {
             Checked = isChecked

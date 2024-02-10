@@ -5,11 +5,15 @@ namespace cswm.Arrangement;
 
 public interface IArrangementStrategy
 {
-    static string DisplayName { get; } = null!;
+    static string DisplayName { get; } = "[NOT SET]";
 
-    MonitorLayout Arrange(MonitorLayout layout);
+    MonitorLayout? Arrange(MonitorLayout prevLayout);
 
-    MonitorLayout ArrangeOnWindowMove(MonitorLayout layout, Window movedWindow, Point cursorPosition);
+    MonitorLayout? AddWindow(MonitorLayout prevLayout, Window newWindow);
+
+    MonitorLayout? MoveWindow(MonitorLayout prevLayout, Window movedWindow, Point cursorPosition);
+
+    MonitorLayout? RemoveWindow(MonitorLayout prevLayout, Window removedWindow);
 
     void Reset();
 }

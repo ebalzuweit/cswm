@@ -14,7 +14,7 @@ using System.Linq;
 namespace cswm.App.Services;
 
 /// <summary>
-/// Performs window layout, based on an <see cref="IArrangementStrategy"/>.
+/// Performs window arrangement, using an <see cref="IArrangementStrategy"/> for each monitor.
 /// </summary>
 public sealed class WindowArrangementService : IService
 {
@@ -24,8 +24,10 @@ public sealed class WindowArrangementService : IService
     private readonly WindowTrackingService _trackingService;
     private readonly IArrangementStrategy _defaultArrangementStrategy;
 
+    // TODO: store initial window positions in Start, restore positions on Stop
     private List<IDisposable> _subscriptions = new();
     private Dictionary<IntPtr, IArrangementStrategy> _monitorStrategies = new();
+    private Dictionary<IntPtr, MonitorLayout> _prevArrangements = new();
 
     public WindowArrangementService(
         ILogger<WindowArrangementService> logger,
@@ -48,58 +50,23 @@ public sealed class WindowArrangementService : IService
         _defaultArrangementStrategy = defaultArrangementStrategy;
     }
 
-    public IArrangementStrategy GetArrangement(IntPtr hMon)
-    {
-        if (_monitorStrategies.ContainsKey(hMon) == false)
-            return _defaultArrangementStrategy;
-        return _monitorStrategies[hMon];
-    }
-
-    public void SetArrangement(IntPtr hMon, IArrangementStrategy strategy) => _monitorStrategies[hMon] = strategy;
-    public void SetAllArrangements(IArrangementStrategy strategy)
-    {
-        foreach (var hMon in _monitorStrategies.Keys)
-        {
-            SetArrangement(hMon, strategy);
-        }
-    }
-
+    /// <inheritdoc/>
     public void Start()
     {
-        Subscribe<SetArrangementStrategyEvent>(
-            @event =>
-            {
-                _logger.LogDebug("Applying arrangment {ArrangementType} to {Target}",
-                    @event.Strategy.GetType().Name,
-                    @event.AllMonitors ? "ALL" : @event.Monitor!.DeviceName);
-                if (@event.AllMonitors)
-                {
-                    SetAllArrangements(@event.Strategy);
-                    Rearrange();
-                }
-                else
-                {
-                    SetArrangement(@event.Monitor!.hMonitor, @event.Strategy);
-                    Rearrange(@event.Monitor!.hMonitor);
-                }
-            });
-        Subscribe<StartTrackingWindowEvent>(@event => OnWindowTrackingStart(@event.Window));
-        Subscribe<StopTrackingWindowEvent>(@event => OnWindowTrackingStop(@event.Window));
-        Subscribe<WindowMovedEvent>(@event => OnWindowMoved(@event.Window));
-        Subscribe<OnTrackedWindowsResetEvent>(@event => OnWindowTrackingReset());
+        Subscribe<SetArrangementStrategyEvent>(OnSetArrangementStrategy);
+        Subscribe<StartTrackingWindowEvent>(OnWindowTrackingStart);
+        Subscribe<StopTrackingWindowEvent>(OnWindowTrackingStop);
+        Subscribe<WindowMovedEvent>(OnWindowMoved);
+        Subscribe<OnTrackedWindowsResetEvent>(OnWindowTrackingReset);
 
-        var hMons = User32.EnumDisplayMonitors();
-        foreach (var hMon in hMons)
-        {
-            _monitorStrategies[hMon] = _defaultArrangementStrategy;
-        }
-        Rearrange();
+        SetStrategy(_defaultArrangementStrategy);
 
         void Subscribe<T>(Action<T> action)
             where T : Event
             => _subscriptions.Add(_bus.Subscribe<T>(action));
     }
 
+    /// <inheritdoc/>
     public void Stop()
     {
         foreach (var subscription in _subscriptions)
@@ -107,80 +74,198 @@ public sealed class WindowArrangementService : IService
         _subscriptions.Clear();
     }
 
-    private void Rearrange(IntPtr? hMon = null)
+    /// <summary>
+    /// Get the arrangement strategy for a monitor.
+    /// </summary>
+    /// <param name="hMon">Handle for the monitor.</param>
+    /// <returns></returns>
+    public IArrangementStrategy GetStrategy(IntPtr hMon)
     {
-        UpdateWindowPositions(hMon: hMon);
+        if (_monitorStrategies.ContainsKey(hMon) == false)
+        {
+            _logger.LogWarning("Failed to lookup arrangement strategy for monitor [{hMonitor}]", hMon);
+            _monitorStrategies[hMon] = _defaultArrangementStrategy;
+            return _defaultArrangementStrategy;
+        }
+        return _monitorStrategies[hMon];
     }
 
-    private void OnWindowTrackingReset()
+    /// <summary>
+    /// Apply a given arrangement for a monitor.
+    /// </summary>
+    /// <param name="arrangement">Arrangement for a monitor.</param>
+    private void ApplyArrangement(MonitorLayout? arrangement)
     {
-        foreach (var strategy in _monitorStrategies.Values)
+        if (arrangement == default)
+        {
+            return;
+        }
+
+        _prevArrangements[arrangement.Monitor.hMonitor] = arrangement;
+
+        if (_options.DoNotManage)
+        {
+            return;
+        }
+
+        // Move windows into position
+        foreach (var windowLayout in arrangement.Windows)
+        {
+            // TODO: skip if already in position
+            User32.SetWindowPos(
+                windowLayout.Window.hWnd,
+                HwndInsertAfterFlags.HWND_NOTOPMOST,
+                x: windowLayout.Position.Left,
+                y: windowLayout.Position.Top,
+                cx: windowLayout.Position.Width,
+                cy: windowLayout.Position.Height,
+                SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_SHOWWINDOW);
+        }
+    }
+
+    /// <summary>
+    /// Helper function to fetch strategy and previous (or current) arrangement, for a monitor.
+    /// </summary>
+    /// <param name="hMon">Handle for the monitor.</param>
+    /// <returns></returns>
+    private (IArrangementStrategy strategy, MonitorLayout? arrangement) GetStrategyAndPrevOrCurrArrangement(IntPtr hMon)
+    {
+        var strategy = GetStrategy(hMon);
+        var arrangement = GetPreviousOrCurrentArrangement(hMon);
+
+        return (strategy, arrangement);
+    }
+
+    /// <summary>
+    /// Get the previous or current arrangement for a monitor.
+    /// </summary>
+    /// <param name="hMon">Handle for the monitor.</param>
+    /// <returns></returns>
+    private MonitorLayout? GetPreviousOrCurrentArrangement(IntPtr hMon)
+    {
+        if (_prevArrangements.ContainsKey(hMon))
+        {
+            return _prevArrangements[hMon];
+        }
+        return _trackingService
+            .GetCurrentLayouts() // TODO: only fetch layout for monitor in consideration
+            .Where(x => x.Monitor.hMonitor == hMon)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Set the arrangement strategy for all monitors.
+    /// </summary>
+    /// <remarks>
+    /// This will trigger arrangement for all monitors.
+    /// </remarks>
+    /// <param name="strategy">Strategy to use for arranging the windows.</param>
+    private void SetStrategy(IArrangementStrategy strategy)
+    {
+        foreach (var hMon in _monitorStrategies.Keys)
+        {
+            SetStrategyForMonitor(hMon, strategy);
+        }
+    }
+
+    /// <summary>
+    /// Set the arrangement strategy for a <see cref="Monitor"/>.
+    /// </summary>
+    /// <remarks>
+    /// This will trigger arrangement for the <see cref="Monitor"/>.
+    /// </remarks>
+    /// <param name="hMon">Handle for the monitor.</param>
+    /// <param name="strategy">Strategy to use for arranging the windows.</param>
+    private void SetStrategyForMonitor(IntPtr hMon, IArrangementStrategy strategy)
+    {
+        _monitorStrategies[hMon] = strategy;
+        UpdateArrangement(hMon);
+    }
+
+    /// <summary>
+    /// Update the arrangement for a <see cref="Monitor"/>.
+    /// </summary>
+    /// <param name="hMon">Handle for the monitor.</param>
+    private void UpdateArrangement(IntPtr hMon)
+    {
+        var (strategy, current) = GetStrategyAndPrevOrCurrArrangement(hMon);
+        if (current == default)
+        {
+            _logger.LogError("Failed to get previous or current arrangement for monitor [{hMonitor}]", hMon);
+            return;
+        }
+        var updateArrangement = strategy.Arrange(current);
+        ApplyArrangement(updateArrangement);
+    }
+
+    #region Event Handlers
+
+    private void OnSetArrangementStrategy(SetArrangementStrategyEvent @event)
+    {
+        if (@event.AllMonitors)
+        {
+            SetStrategy(@event.Strategy);
+        }
+        else
+        {
+            SetStrategyForMonitor(@event.Monitor!.hMonitor, @event.Strategy);
+        }
+    }
+
+    private void OnWindowTrackingReset(OnTrackedWindowsResetEvent @event)
+    {
+        _prevArrangements.Clear();
+        foreach (var (hMon, strategy) in _monitorStrategies)
         {
             strategy.Reset();
+            UpdateArrangement(hMon);
         }
-        Rearrange();
     }
 
-    private void OnWindowTrackingStart(Window window)
+    private void OnWindowTrackingStart(StartTrackingWindowEvent @event)
     {
-        UpdateWindowPositions();
-    }
-
-    private void OnWindowTrackingStop(Window window)
-    {
-        UpdateWindowPositions();
-    }
-
-    private void OnWindowMoved(Window window)
-    {
-        UpdateWindowPositions(movedWindow: window);
-    }
-
-    private void UpdateWindowPositions(Window? movedWindow = default, IntPtr? hMon = null)
-    {
-        var monitorLayouts = _trackingService.GetCurrentLayouts()
-            .Where(x => hMon is null || x.Monitor.hMonitor == hMon);
-
-        foreach (var layout in monitorLayouts)
+        var hMon = User32.MonitorFromWindow(@event.Window.hWnd, MonitorFlags.DefaultToNearest);
+        var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
+        if (currArrangement == default)
         {
-            var strategy = _monitorStrategies[layout.Monitor.hMonitor];
-            var arrangement = GetArrangement(layout, strategy);
-            if (arrangement is null)
-                continue;
-            foreach (var windowLayout in arrangement.Windows)
-                SetWindowPos(windowLayout.Window, windowLayout.Position);
+            _logger.LogWarning("Start Tracking: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
+            return;
         }
-
-        MonitorLayout? GetArrangement(MonitorLayout layout, IArrangementStrategy strategy)
-        {
-            if (movedWindow is null)
-            {
-                return strategy.Arrange(layout);
-            }
-            else
-            {
-                var cursorPosition = new Point();
-                if (User32.GetCursorPos(ref cursorPosition))
-                {
-                    return strategy.ArrangeOnWindowMove(layout, movedWindow, cursorPosition);
-                }
-            }
-            return null;
-        }
+        var updatedArrangement = strategy.AddWindow(currArrangement, @event.Window);
+        ApplyArrangement(updatedArrangement);
     }
 
-    private bool SetWindowPos(Window window, Rect position)
+    private void OnWindowTrackingStop(StopTrackingWindowEvent @event)
     {
-        if (_options.DoNotManage)
-            return true;
-
-        return User32.SetWindowPos(
-            window.hWnd,
-            HwndInsertAfterFlags.HWND_NOTOPMOST,
-            x: position.Left,
-            y: position.Top,
-            cx: position.Width,
-            cy: position.Height,
-            SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_SHOWWINDOW);
+        var hMon = User32.MonitorFromWindow(@event.Window.hWnd, MonitorFlags.DefaultToNearest);
+        var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
+        if (currArrangement == default)
+        {
+            _logger.LogWarning("Stop Tracking: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
+            return;
+        }
+        var updatedArrangement = strategy.RemoveWindow(currArrangement, @event.Window);
+        ApplyArrangement(updatedArrangement);
     }
+
+    private void OnWindowMoved(WindowMovedEvent @event)
+    {
+        var hMon = User32.MonitorFromWindow(@event.Window.hWnd, MonitorFlags.DefaultToNearest);
+        var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
+        if (currArrangement == default)
+        {
+            _logger.LogWarning("Window Move: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
+            return;
+        }
+        var cursorPosition = new Point();
+        if (User32.GetCursorPos(ref cursorPosition) == false)
+        {
+            _logger.LogWarning("Window Move: Failed to get cursor position!");
+            return;
+        }
+        var updatedArrangement = strategy.MoveWindow(currArrangement, @event.Window, cursorPosition);
+        ApplyArrangement(updatedArrangement);
+    }
+
+    #endregion Event Handlers
 }

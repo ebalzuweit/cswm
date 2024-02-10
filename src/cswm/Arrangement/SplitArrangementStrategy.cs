@@ -24,8 +24,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
         _options = options.Value;
     }
 
-    /// <inheritdoc/>
-    public MonitorLayout Arrange(MonitorLayout layout)
+    public MonitorLayout? Arrange(MonitorLayout layout)
     {
         if (layout.Windows.Any() == false)
         {
@@ -34,6 +33,30 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
         _lastArrangement = UpdateLayout_ForGenericWindowEvent(layout);
         return _lastArrangement;
+    }
+
+    public MonitorLayout? AddWindow(MonitorLayout prevLayout, Window newWindow)
+    {
+        var windows = new List<WindowLayout>(prevLayout.Windows)
+        {
+            new(newWindow, newWindow.Position)
+        };
+        var monitorLayout = new MonitorLayout(prevLayout.Monitor, windows);
+
+        return Arrange(monitorLayout);
+    }
+
+    public MonitorLayout? MoveWindow(MonitorLayout prevLayout, Window movedWindow, Point cursorPosition)
+    {
+        return ArrangeOnWindowMove(prevLayout, movedWindow, cursorPosition);
+    }
+
+    public MonitorLayout? RemoveWindow(MonitorLayout prevLayout, Window removedWindow)
+    {
+        var windows = prevLayout.Windows.Where(x => x.Window.hWnd != removedWindow.hWnd);
+        var monitorLayout = new MonitorLayout(prevLayout.Monitor, windows);
+
+        return Arrange(monitorLayout);
     }
 
     /// <inheritdoc/>
