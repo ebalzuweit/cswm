@@ -15,7 +15,6 @@ public class SplitArrangementStrategy : IArrangementStrategy
 
     private readonly WindowManagementOptions _options;
     private readonly Dictionary<IntPtr, BspSpace> _spaceCache = new();
-    private MonitorLayout _lastArrangement = null!;
 
     public SplitArrangementStrategy(IOptions<WindowManagementOptions> options)
     {
@@ -24,16 +23,38 @@ public class SplitArrangementStrategy : IArrangementStrategy
         _options = options.Value;
     }
 
-    /// <inheritdoc/>
-    public MonitorLayout Arrange(MonitorLayout layout)
+    public MonitorLayout? Arrange(MonitorLayout layout)
     {
         if (layout.Windows.Any() == false)
         {
             return layout;
         }
 
-        _lastArrangement = UpdateLayout_ForGenericWindowEvent(layout);
-        return _lastArrangement;
+        return UpdateLayout_ForGenericWindowEvent(layout);
+    }
+
+    public MonitorLayout? AddWindow(MonitorLayout prevLayout, Window newWindow)
+    {
+        var windows = new List<WindowLayout>(prevLayout.Windows)
+        {
+            new(newWindow, newWindow.Position)
+        };
+        var monitorLayout = new MonitorLayout(prevLayout.Monitor, windows);
+
+        return Arrange(monitorLayout);
+    }
+
+    public MonitorLayout? MoveWindow(MonitorLayout prevLayout, Window movedWindow, Point cursorPosition)
+    {
+        return ArrangeOnWindowMove(prevLayout, movedWindow, cursorPosition);
+    }
+
+    public MonitorLayout? RemoveWindow(MonitorLayout prevLayout, Window removedWindow)
+    {
+        var windows = prevLayout.Windows.Where(x => x.Window.hWnd != removedWindow.hWnd);
+        var monitorLayout = new MonitorLayout(prevLayout.Monitor, windows);
+
+        return Arrange(monitorLayout);
     }
 
     /// <inheritdoc/>
@@ -44,20 +65,18 @@ public class SplitArrangementStrategy : IArrangementStrategy
             return layout;
         }
 
-        var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == movedWindow.hWnd).FirstOrDefault();
+        var prev = layout.Windows.Where(w => w.Window.hWnd == movedWindow.hWnd).FirstOrDefault();
         if (prev is not default(WindowLayout))
         {
             var wasResize = DetectWindowResize(prev.Position, movedWindow.Position);
-            _lastArrangement = wasResize
+            return wasResize
                 ? UpdateLayout_ForWindowResized(layout, movedWindow)
                 : UpdateLayout_ForWindowMoved(layout, movedWindow, cursorPosition);
         }
         else
         {
-            _lastArrangement = UpdateLayout_ForGenericWindowEvent(layout);
+            return UpdateLayout_ForGenericWindowEvent(layout);
         }
-
-        return _lastArrangement;
 
         static bool DetectWindowResize(Rect from, Rect to)
         {
@@ -228,7 +247,7 @@ public class SplitArrangementStrategy : IArrangementStrategy
             }
             else
             {
-                var prev = _lastArrangement.Windows.Where(w => w.Window.hWnd == resizedWindow.hWnd).First();
+                var prev = layout.Windows.Where(w => w.Window.hWnd == resizedWindow.hWnd).First(); // TODO: prevLayout?
                 var success = bspSpace.TryResize(prev.Position, resizedWindow.Position);
             }
         }

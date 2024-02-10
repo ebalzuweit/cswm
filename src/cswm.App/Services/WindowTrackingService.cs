@@ -46,7 +46,9 @@ public class WindowTrackingService : IService, IDisposable
     public void Start()
     {
         ResetTrackedWindows();
-        SubscribeToEvents();
+
+        _eventSubscriptions.Add(_bus.Subscribe<WindowEvent>(On_WindowEvent));
+        _eventSubscriptions.Add(_bus.Subscribe<ResetTrackedWindowsEvent>(_ => ResetTrackedWindows()));
     }
 
     public void Stop()
@@ -77,12 +79,6 @@ public class WindowTrackingService : IService, IDisposable
 
     public bool IsIgnoredWindowClass(Window window) => _options.IgnoredWindowClasses.Contains(window.ClassName);
 
-    private void SubscribeToEvents()
-    {
-        _eventSubscriptions.Add(_bus.Subscribe<WindowEvent>(On_WindowEvent));
-        _eventSubscriptions.Add(_bus.Subscribe<ResetTrackedWindowsEvent>(_ => ResetTrackedWindows()));
-    }
-
     private void ResetTrackedWindows()
     {
         _windows.Clear();
@@ -94,7 +90,7 @@ public class WindowTrackingService : IService, IDisposable
         {
             _windows.Add(w);
         }
-        _logger.LogDebug("Reset tracked windows, {WindowsCount} windows tracked.", _windows.Count);
+
         _bus.Publish(new OnTrackedWindowsResetEvent());
     }
 
