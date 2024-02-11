@@ -263,23 +263,9 @@ public class SplitArrangementStrategy : IArrangementStrategy
             ).ToList();
         var acceptedMatches = new List<WindowPlacement>(windowLayouts.Count());
 
-        // Place resized window into preferred space
-        {
-            var resizedWindowMatch = potentialMatches
-                .Where(wp => wp.WindowLayout.Window.hWnd == resizedWindow.hWnd)
-                .MinBy(wp => wp.Score);
-            if (resizedWindowMatch != default(WindowPlacement))
-            {
-                acceptedMatches.Add(resizedWindowMatch);
-                potentialMatches.RemoveAll(wp =>
-                    wp.WindowLayout.Window.hWnd == resizedWindowMatch.WindowLayout.Window.hWnd ||
-                    wp.Space.Equals(resizedWindowMatch.Space));
-            }
-        }
-
         while (potentialMatches.Any())
         {
-            var bestMatch = potentialMatches.MinBy(wp => wp.Score)!;
+            var bestMatch = potentialMatches.MinBy(wp => wp.Translation)!; // match by translation only, when resizing
             potentialMatches.RemoveAll(wp =>
                 wp.WindowLayout.Window.hWnd == bestMatch.WindowLayout.Window.hWnd ||
                 wp.Space.Equals(bestMatch.Space));
@@ -299,20 +285,17 @@ public class SplitArrangementStrategy : IArrangementStrategy
     {
         public WindowLayout WindowLayout { get; init; }
         public Rect Space { get; init; }
-        public int Score { get; init; }
+        public int Scaling { get; init; }
+        public int Translation { get; init; }
+
+        public int Score => Scaling + Translation;
 
         public WindowPlacement(WindowLayout windowLayout, Rect space)
         {
             WindowLayout = windowLayout;
             Space = space;
-            Score = GetRectTransformation();
-        }
-
-        private int GetRectTransformation()
-        {
-            var translation = Math.Abs(Space.Left - WindowLayout.Position.Left) + Math.Abs(Space.Top - WindowLayout.Position.Top);
-            var scaling = Math.Abs(Space.Width - WindowLayout.Position.Width) + Math.Abs(Space.Height - WindowLayout.Position.Height);
-            return translation + scaling;
+            Translation = Math.Abs(Space.Left - WindowLayout.Position.Left) + Math.Abs(Space.Top - WindowLayout.Position.Top);
+            Scaling = Math.Abs(Space.Width - WindowLayout.Position.Width) + Math.Abs(Space.Height - WindowLayout.Position.Height); // TODO: average over axes instead of adding, to keep translation & scaling similar scales?
         }
     }
 }
