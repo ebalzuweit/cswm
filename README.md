@@ -31,6 +31,12 @@ You can adjust the tiling by resizing the window border (or corner) adjacent to 
 
 cswm runs in the system tray, right-click on the icon to access the menu.
 
+Via the menu, you can:
+- Choose the arrangement strategy for a monitor
+	- Silent - No arrangement
+	- Split - Binary-space partitioning, with a twist
+- Flag windows - Flagging a window makes it float on top of other windows, and enables custom resizing.
+
 ### Configuration
 
 Configuration is done through the `appsettings.json` file, found in the same directory as `cswm.exe`.

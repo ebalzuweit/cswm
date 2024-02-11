@@ -1,6 +1,7 @@
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
+using cswm.Tracking.Events;
 using cswm.WinApi;
 using System;
 using System.Collections.Generic;
@@ -45,8 +46,8 @@ public class SystemTrayMenu
             BuildAboutMenuItem(),
             new ToolStripSeparator()
         };
-        var monitors = _trackingService.GetCurrentLayouts().Select(x => x.Monitor);
-        items.AddRange(BuildMonitorMenuItems(monitors));
+        var monitorLayouts = _trackingService.GetCurrentLayouts(includeFlaggedWindows: true);
+        items.AddRange(BuildMonitorMenuItems(monitorLayouts));
         items.Add(new ToolStripSeparator());
         items.Add(BuildCloseMenuItem());
 
@@ -75,25 +76,30 @@ public class SystemTrayMenu
             => _bus.Publish(new ExitApplicationEvent());
     }
 
-    private ToolStripMenuItem[] BuildMonitorMenuItems(IEnumerable<Monitor> monitors)
+    private ToolStripMenuItem[] BuildMonitorMenuItems(IEnumerable<MonitorLayout> monitorLayouts)
     {
-        return monitors.Select(BuildMonitorMenuItem).ToArray();
+        return monitorLayouts.Count() == 1
+            ? BuildMenuListForMonitor(monitorLayouts.Single())
+            : monitorLayouts.Select(BuildMenuListItemForMonitor).ToArray();
 
-        ToolStripMenuItem BuildMonitorMenuItem(Monitor monitor)
+        ToolStripMenuItem BuildMenuListItemForMonitor(MonitorLayout monitorLayout)
+            => new ToolStripMenuItem(text: monitorLayout.Monitor.DeviceName ?? "[MONITOR]", image: null, dropDownItems: BuildMenuListForMonitor(monitorLayout));
+
+        ToolStripMenuItem[] BuildMenuListForMonitor(MonitorLayout monitorLayout)
         {
-            var items = BuildMonitorMenuList(monitor);
-            return new ToolStripMenuItem(text: monitor.DeviceName, image: null, dropDownItems: items);
+            var arrangeList = new ToolStripMenuItem(text: "Arrangement", image: null, dropDownItems: BuildArrangementListForMonitor(monitorLayout.Monitor));
+            var windowList = new ToolStripMenuItem(text: "Windows", image: null, dropDownItems: BuildWindowListForMonitor(monitorLayout));
+            return [arrangeList, windowList];
         }
 
-        ToolStripMenuItem[] BuildMonitorMenuList(Monitor monitor)
-        {
-            var items = new List<ToolStripMenuItem>()
-            {
+        ToolStripMenuItem[] BuildArrangementListForMonitor(Monitor monitor)
+            => [
                 BuildArrangementMenuItem<SplitArrangementStrategy>(monitor),
                 BuildArrangementMenuItem<SilentArrangementStrategy>(monitor)
-            };
-            return items.ToArray();
-        }
+            ];
+
+        ToolStripMenuItem[] BuildWindowListForMonitor(MonitorLayout monitorLayout)
+            => monitorLayout.Windows.Select(x => BuildWindowMenuItem(x.Window)).ToArray();
     }
 
     private ToolStripMenuItem BuildArrangementMenuItem<T>(Monitor monitor)
@@ -109,5 +115,20 @@ public class SystemTrayMenu
 
         void OnClick(object? sender, EventArgs eventArgs)
             => _bus.Publish(new SetArrangementStrategyEvent((IArrangementStrategy)_provider.GetService(typeof(T))!, monitor));
+    }
+
+    private ToolStripMenuItem BuildWindowMenuItem(Window window)
+    {
+        var name = window.Caption ?? window.ClassName ?? "[WINDOW]";
+        if (name.Length > 20)
+            name = name[..17] + "...";
+        var isFlagged = _trackingService.IsFlaggedWindow(window);
+        return new(name, null, OnClick)
+        {
+            Checked = isFlagged
+        };
+
+        void OnClick(object? sender, EventArgs eventArgs)
+            => _bus.Publish(new SetWindowFlaggedEvent(window, !isFlagged));
     }
 }

@@ -24,6 +24,7 @@ public class WindowTrackingService : IService, IDisposable
     private readonly IWindowTrackingStrategy _strategy;
     private readonly MessageBus _bus;
     private readonly HashSet<Window> _windows = new();
+    private readonly HashSet<Window> _flaggedWindows = new();
     private readonly ISet<IDisposable> _eventSubscriptions = new HashSet<IDisposable>();
 
     public WindowTrackingService(
@@ -49,6 +50,7 @@ public class WindowTrackingService : IService, IDisposable
 
         _eventSubscriptions.Add(_bus.Subscribe<WindowEvent>(On_WindowEvent));
         _eventSubscriptions.Add(_bus.Subscribe<ResetTrackedWindowsEvent>(_ => ResetTrackedWindows()));
+        _eventSubscriptions.Add(_bus.Subscribe<SetWindowFlaggedEvent>(x => SetWindowFlagged(x.Window, x.Flagged)));
     }
 
     public void Stop()
@@ -65,17 +67,27 @@ public class WindowTrackingService : IService, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public IEnumerable<MonitorLayout> GetCurrentLayouts()
+    public IEnumerable<MonitorLayout> GetCurrentLayouts(bool includeFlaggedWindows = false)
         => User32.EnumDisplayMonitors()
             .Select(hMonitor => new MonitorLayout(
                 Monitor.FromHmon(hMonitor),
                 _windows
                     .Where(w => User32.MonitorFromWindow(w.hWnd, MonitorFlags.DefaultToNearest) == hMonitor)
-                    .Where(IsNotMinOrMaximized)
+                    .Where(w => (IsFlaggedWindow(w) == false || includeFlaggedWindows) && IsNotMinOrMaximized(w))
                     .Select(w => new WindowLayout(w, w.Position))
             ));
 
     public bool IsNotMinOrMaximized(Window window) => !User32.IsIconic(window.hWnd) && !User32.IsZoomed(window.hWnd);
+
+    /// <summary>
+    /// Is the given window flagged?
+    /// </summary>
+    /// <remarks>
+    /// A flagged window is tracked, but treated as untracked.
+    /// </remarks>
+    /// <param name="window"></param>
+    /// <returns></returns>
+    public bool IsFlaggedWindow(Window window) => _flaggedWindows.Contains(window);
 
     public bool IsIgnoredWindowClass(Window window) => _options.IgnoredWindowClasses.Contains(window.ClassName);
 
@@ -84,14 +96,30 @@ public class WindowTrackingService : IService, IDisposable
         _windows.Clear();
         var handles = User32.EnumWindows();
         var newWindows = handles.Select(Window.FromHwnd)
-            .Where(x => IsIgnoredWindowClass(x) == false)
+            .Where(w => IsIgnoredWindowClass(w) == false)
             .Where(_strategy.ShouldTrack);
         foreach (var w in newWindows)
         {
             _windows.Add(w);
         }
+        _flaggedWindows.RemoveWhere(x => _windows.Contains(x) == false);
 
         _bus.Publish(new OnTrackedWindowsResetEvent());
+    }
+
+    private bool SetWindowFlagged(Window window, bool flagged)
+    {
+        if (flagged)
+        {
+            if (_windows.Contains(window) == false)
+                return false;
+            _flaggedWindows.Add(window);
+            return true;
+        }
+        else
+        {
+            return _flaggedWindows.Remove(window);
+        }
     }
 
     private readonly EventConstant[] _startTrackingEvents = { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND, EventConstant.EVENT_OBJECT_LOCATIONCHANGE };
@@ -102,7 +130,7 @@ public class WindowTrackingService : IService, IDisposable
         if (IsIgnoredWindowClass(window))
             return;
 
-        var tracking = _windows.Any(x => x.hWnd == @event.hWnd);
+        var tracking = _windows.Any(w => w.hWnd == @event.hWnd);
         if (tracking && _stopTrackingEvents.Contains(@event.EventType))
         {
             TryStopTracking(window);
@@ -138,6 +166,7 @@ public class WindowTrackingService : IService, IDisposable
         var stoppedTracking = _windows.Remove(window);
         if (stoppedTracking)
         {
+            _ = _flaggedWindows.Remove(window);
             _logger.LogDebug("Stopped tracking window {window}", window);
             _bus.Publish(new StopTrackingWindowEvent(window));
         }
