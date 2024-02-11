@@ -11,7 +11,7 @@ jobs:
     outputs:
       build_required: ${{ steps.filter.outputs.build_required }}
     steps:
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3.0.0
       id: filter
       with:
         filters: |
@@ -26,11 +26,11 @@ jobs:
     if: ${{ needs.is_build_required.outputs.build_required == 'true' }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.1
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore src/cswm.sln
     - name: Build
