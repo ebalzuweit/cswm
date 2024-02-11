@@ -30,6 +30,11 @@ You can rearrange windows by dragging them from one space to another.
 You can adjust the tiling by resizing the window border (or corner) adjacent to the partition.
 
 cswm runs in the system tray, right-click on the icon to access the menu.
+Via the menu, you can:
+- Choose the arrangement strategy for a monitor
+	- Silent - No arrangement
+	- Split - Binary-space partitioning, with a twist
+- Flag windows - Flagging a window makes it float on top of other windows, and enables custom resizing.
 
 ### Configuration
 
