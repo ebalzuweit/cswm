@@ -8,7 +8,7 @@
     
     <!-- Project configuration -->
     <AssemblyName>cswm.App</AssemblyName>
-    <Version>0.4.5</Version>
+    <Version>0.4.6</Version>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
 
