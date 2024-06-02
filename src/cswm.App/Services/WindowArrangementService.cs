@@ -1,3 +1,4 @@
+using cswm.App.Events;
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
@@ -58,6 +59,7 @@ public sealed class WindowArrangementService : IService
         Subscribe<StopTrackingWindowEvent>(e => StopArrangingWindow(e.Window));
         Subscribe<WindowMovedEvent>(OnWindowMoved);
         Subscribe<OnTrackedWindowsResetEvent>(OnWindowTrackingReset);
+        Subscribe<ResetArrangementStrategyEvent>(OnArrangementStrategyReset);
         Subscribe<SetWindowFlaggedEvent>(OnWindowFlagged);
 
         // Setup initial monitor strategies
@@ -223,6 +225,15 @@ public sealed class WindowArrangementService : IService
         _prevArrangements.Clear();
         foreach (var (hMon, _) in _monitorStrategies)
         {
+            UpdateArrangement(hMon);
+        }
+    }
+
+    private void OnArrangementStrategyReset(ResetArrangementStrategyEvent @event)
+    {
+        foreach (var (hMon, strategy) in _monitorStrategies)
+        {
+            strategy.Reset();
             UpdateArrangement(hMon);
         }
     }
