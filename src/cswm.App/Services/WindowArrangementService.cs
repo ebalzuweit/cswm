@@ -221,9 +221,8 @@ public sealed class WindowArrangementService : IService
     private void OnWindowTrackingReset(OnTrackedWindowsResetEvent @event)
     {
         _prevArrangements.Clear();
-        foreach (var (hMon, strategy) in _monitorStrategies)
+        foreach (var (hMon, _) in _monitorStrategies)
         {
-            strategy.Reset();
             UpdateArrangement(hMon);
         }
     }
