@@ -1,3 +1,5 @@
+using cswm.App.Events;
+using cswm.App.Services;
 using cswm.Arrangement;
 using cswm.Arrangement.Events;
 using cswm.Events;
@@ -10,7 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace cswm.App.Services;
+namespace cswm.App.Ux;
 
 /// <summary>
 /// Context menu for <see cref="SystemTrayService"/>.
@@ -92,14 +94,42 @@ public class SystemTrayMenu
             return [arrangeList, windowList];
         }
 
-        ToolStripMenuItem[] BuildArrangementListForMonitor(Monitor monitor)
+        ToolStripItem[] BuildArrangementListForMonitor(Monitor monitor)
             => [
+                BuildResetArrangementStrategyMenuItem(monitor),
+                new ToolStripSeparator(),
                 BuildArrangementMenuItem<SplitArrangementStrategy>(monitor),
                 BuildArrangementMenuItem<SilentArrangementStrategy>(monitor)
             ];
 
-        ToolStripMenuItem[] BuildWindowListForMonitor(MonitorLayout monitorLayout)
-            => monitorLayout.Windows.Select(x => BuildWindowMenuItem(x.Window)).ToArray();
+        ToolStripItem[] BuildWindowListForMonitor(MonitorLayout monitorLayout)
+        {
+            var windowItems = monitorLayout.Windows.Select(x => BuildWindowMenuItem(x.Window));
+            var windowList = new List<ToolStripItem>()
+            {
+                BuildResetTrackedWindowsMenuItem(),
+                new ToolStripSeparator()
+            };
+            windowList.AddRange(windowItems);
+
+            return windowList.ToArray();
+        }
+    }
+
+    private ToolStripMenuItem BuildResetTrackedWindowsMenuItem()
+    {
+        return new("Reset Tracked Windows", null, OnClick);
+
+        void OnClick(object? sender, EventArgs eventArgs)
+            => _bus.Publish(new ResetTrackedWindowsEvent());
+    }
+
+    private ToolStripMenuItem BuildResetArrangementStrategyMenuItem(Monitor monitor)
+    {
+        return new("Reset Arrangement", null, OnClick);
+
+        void OnClick(object? sender, EventArgs eventArgs)
+            => _bus.Publish(new ResetArrangementStrategyEvent());
     }
 
     private ToolStripMenuItem BuildArrangementMenuItem<T>(Monitor monitor)
