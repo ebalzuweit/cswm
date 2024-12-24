@@ -3,12 +3,12 @@ using cswm.Core.Layout;
 
 namespace cswm.Core.Test.Layout;
 
-public class BoundsTest
+public class RectTest
 {
 	[Fact]
 	public void Ctor_ThrowsInvalidOperationException_IfLeftGreaterThanRight()
 	{
-		var act = () => { _ = new Bounds(1, 0, 0, 0); };
+		var act = () => { _ = new Rect(1, 0, 0, 0); };
 
 		Assert.Throws<InvalidOperationException>(act);
 	}
@@ -16,7 +16,7 @@ public class BoundsTest
 	[Fact]
 	public void Ctor_ThrowsInvalidOperationException_IfTopGreaterThanBottom()
 	{
-		var act = () => { _ = new Bounds(0, 1, 0, 0); };
+		var act = () => { _ = new Rect(0, 1, 0, 0); };
 
 		Assert.Throws<InvalidOperationException>(act);
 	}
@@ -24,9 +24,9 @@ public class BoundsTest
 	[Theory]
 	[InlineData(0, 1000, 1000)]
 	[InlineData(-500, 500, 1000)]
-	public void Width_ReturnsWidthOfBounds(int left, int right, int expectedWidth)
+	public void Width_ReturnsWidth(int left, int right, int expectedWidth)
 	{
-		var bounds = new Bounds(left, 0, right, 0);
+		var bounds = new Rect(left, 0, right, 0);
 
 		var width = bounds.Width;
 
@@ -36,9 +36,9 @@ public class BoundsTest
 	[Theory]
 	[InlineData(0, 1000, 1000)]
 	[InlineData(-500, 500, 1000)]
-	public void Height_ReturnsHeightOfBounds(int top, int bottom, int expectedHeight)
+	public void Height_ReturnsHeight(int top, int bottom, int expectedHeight)
 	{
-		var bounds = new Bounds(0, top, 0, bottom);
+		var bounds = new Rect(0, top, 0, bottom);
 
 		var height = bounds.Height;
 

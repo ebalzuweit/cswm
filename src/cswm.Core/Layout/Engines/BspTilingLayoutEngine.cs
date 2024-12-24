@@ -7,7 +7,7 @@ namespace cswm.Core.Layout.Engines;
 public sealed class BspTilingLayoutEngine : ILayoutEngine
 {
 	/// <inheritdoc/>
-	public LayoutResult CalculateLayout(Bounds displayArea, IReadOnlyList<WindowInfo> windows)
+	public LayoutResult CalculateLayout(Rect displayArea, IReadOnlyList<WindowInfo> windows)
 	{
 		if (windows.Any() == false)
 		{
@@ -34,29 +34,29 @@ public sealed class BspTilingLayoutEngine : ILayoutEngine
 		}
 	}
 
-	public bool ValidateLayout(Bounds displayArea, LayoutResult layout)
+	public bool ValidateLayout(Rect displayArea, LayoutResult layout)
 	{
 		// TODO: For now, always recalculate layouts
 		return false;
 	}
 
-	private (Bounds Left, Bounds Right) SplitBounds(Bounds b)
+	private (Rect Left, Rect Right) SplitBounds(Rect b)
 	{
 		int split;
 		if (b.Width >= b.Height)
 		{
 			split = b.Left + (b.Width / 2);
 			return (
-				new Bounds(b.Left, b.Top, split, b.Bottom),
-				new Bounds(split + 1, b.Top, b.Right, b.Bottom)
+				new Rect(b.Left, b.Top, split, b.Bottom),
+				new Rect(split + 1, b.Top, b.Right, b.Bottom)
 			);
 		}
 		else
 		{
 			split = b.Top + (b.Height / 2);
 			return (
-				new Bounds(b.Left, b.Top, b.Right, split),
-				new Bounds(b.Left, split + 1, b.Right, b.Bottom)
+				new Rect(b.Left, b.Top, b.Right, split),
+				new Rect(b.Left, split + 1, b.Right, b.Bottom)
 			);
 		}
 	}

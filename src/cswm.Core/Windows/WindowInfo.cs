@@ -5,7 +5,7 @@ public sealed record WindowInfo(
 	IntPtr Handle,
 	string Title,
 	string ProcessName,
-	Bounds Bounds,
+	Rect Bounds,
 	bool IsMinimized,
 	bool IsMaximized
 );
