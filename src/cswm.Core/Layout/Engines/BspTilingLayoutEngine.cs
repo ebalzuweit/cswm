@@ -21,7 +21,7 @@ public sealed class BspTilingLayoutEngine : ILayoutEngine
 		}
 		else if (windows.Count == 2)
 		{
-			var areas = SplitBounds(displayArea);
+			var areas = SplitRect(displayArea);
 			// TODO: area assignment
 			return new([
 				new WindowLayout(windows.First().Handle, areas.Left),
@@ -40,7 +40,7 @@ public sealed class BspTilingLayoutEngine : ILayoutEngine
 		return false;
 	}
 
-	private (Rect Left, Rect Right) SplitBounds(Rect b)
+	private (Rect Left, Rect Right) SplitRect(Rect b)
 	{
 		int split;
 		if (b.Width >= b.Height)
