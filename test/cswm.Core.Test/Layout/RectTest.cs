@@ -26,9 +26,9 @@ public class RectTest
 	[InlineData(-500, 500, 1000)]
 	public void Width_ReturnsWidth(int left, int right, int expectedWidth)
 	{
-		var bounds = new Rect(left, 0, right, 0);
+		var rect = new Rect(left, 0, right, 0);
 
-		var width = bounds.Width;
+		var width = rect.Width;
 
 		Assert.Equal(expectedWidth, width);
 	}
@@ -38,9 +38,9 @@ public class RectTest
 	[InlineData(-500, 500, 1000)]
 	public void Height_ReturnsHeight(int top, int bottom, int expectedHeight)
 	{
-		var bounds = new Rect(0, top, 0, bottom);
+		var rect = new Rect(0, top, 0, bottom);
 
-		var height = bounds.Height;
+		var height = rect.Height;
 
 		Assert.Equal(expectedHeight, height);
 	}
