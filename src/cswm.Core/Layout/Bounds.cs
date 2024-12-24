@@ -9,14 +9,14 @@ public struct Bounds
 	public readonly int Top { get; }
 	public readonly int Bottom { get; }
 
-	public int Width => Right - Left;
-	public int Height => Bottom - Top;
+	public readonly int Width => Right - Left;
+	public readonly int Height => Bottom - Top;
 
 	public Bounds(int left, int top, int right, int bottom)
 	{
 		if (left > right || top > bottom)
 		{
-			throw new InvalidOperationException("Invalid bounds.");
+			throw new InvalidOperationException($"Invalid dimensions for bounds: ({left}, {top}, {right}, {bottom})");
 		}
 
 		Left = left;
