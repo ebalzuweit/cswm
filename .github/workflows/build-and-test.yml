@@ -32,8 +32,8 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore src/cswm.sln
+      run: dotnet restore cswm.sln
     - name: Build
-      run: dotnet build src/cswm.sln -c Release --no-restore
+      run: dotnet build cswm.sln -c Release --no-restore
     - name: Test
-      run: dotnet test src/cswm.sln -c Release --no-build --verbosity normal
+      run: dotnet test cswm.sln -c Release --no-build --verbosity normal

@@ -19,9 +19,9 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore src/cswm.sln
+      run: dotnet restore cswm.sln
     - name: Publish
-      run: dotnet publish src/cswm.App/cswm.App.csproj --no-restore -c Release -o cswm
+      run: dotnet publish cswm.App/cswm.App.csproj --no-restore -c Release -o cswm
     - name: Rename Executable
       run: mv cswm/cswm.App.exe cswm/cswm.exe
     - name: Zip Release
