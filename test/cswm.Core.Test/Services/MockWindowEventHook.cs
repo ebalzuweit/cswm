@@ -9,10 +9,10 @@ public class MockWindowEventHook : IWindowEventHook
 
 	private bool running = false;
 
-	public event EventHandler<WindowInfo> WindowCreated;
-	public event EventHandler<WindowInfo> WindowDestroyed;
-	public event EventHandler<WindowInfo> WindowMoved;
-	public event EventHandler<WindowInfo> WindowStateChanged;
+	public event EventHandler<WindowInfo>? WindowCreated;
+	public event EventHandler<WindowInfo>? WindowDestroyed;
+	public event EventHandler<WindowInfo>? WindowMoved;
+	public event EventHandler<WindowInfo>? WindowStateChanged;
 
 	public void StartSubscriptions()
 	{
@@ -28,28 +28,28 @@ public class MockWindowEventHook : IWindowEventHook
 	{
 		ThrowIfNotRunning();
 
-		WindowCreated.Invoke(this, window);
+		WindowCreated?.Invoke(this, window);
 	}
 
 	public void InvokeWindowDestroyed(WindowInfo window)
 	{
 		ThrowIfNotRunning();
 
-		WindowDestroyed.Invoke(this, window);
+		WindowDestroyed?.Invoke(this, window);
 	}
 
 	public void InvokeWindowMoved(WindowInfo window)
 	{
 		ThrowIfNotRunning();
 
-		WindowMoved.Invoke(this, window);
+		WindowMoved?.Invoke(this, window);
 	}
 
 	public void InvokeWindowStateChanged(WindowInfo window)
 	{
 		ThrowIfNotRunning();
 
-		WindowStateChanged.Invoke(this, window);
+		WindowStateChanged?.Invoke(this, window);
 	}
 
 	private void ThrowIfNotRunning()
