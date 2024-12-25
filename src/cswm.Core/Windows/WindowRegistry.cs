@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace cswm.Core.Windows;
@@ -28,6 +29,11 @@ public class WindowRegistry
 
 		logger.LogDebug("Unregistering window: [{handle}] {title}", window.Handle, window.Title);
 		return registeredWindows.Remove(window.Handle);
+	}
+
+	public IEnumerable<WindowInfo> GetAllWindows()
+	{
+		return registeredWindows.Values.AsEnumerable();
 	}
 
 	public WindowInfo? GetWindowInfo(IntPtr handle)

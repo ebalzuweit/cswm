@@ -1,0 +1,75 @@
+using System.Collections;
+using System.Collections.Generic;
+using cswm.Core.Layout;
+using cswm.Core.Management;
+using cswm.Core.Windows;
+
+namespace cswm.Core;
+
+public class WindowManager
+{
+	private readonly IWindowEventHook windowEventHook;
+	private readonly IWindowController windowController;
+	private readonly ILayoutEngine layoutEngine;
+	private readonly WindowRegistry windowRegistry;
+
+	public WindowManager(
+		IWindowEventHook windowEventHook,
+		IWindowController windowController,
+		ILayoutEngine layoutEngine,
+		WindowRegistry windowRegistry
+	)
+	{
+		this.windowEventHook = windowEventHook;
+		this.windowController = windowController;
+		this.layoutEngine = layoutEngine;
+		this.windowRegistry = windowRegistry;
+	}
+
+	public void Start()
+	{
+		windowEventHook.WindowCreated += OnWindowCreated;
+		windowEventHook.WindowDestroyed += OnWindowDestroyed;
+		windowEventHook.WindowMoved += OnWindowMoved;
+		windowEventHook.WindowStateChanged += OnWindowStateChanged;
+
+		windowEventHook.StartSubscriptions();
+	}
+
+	public void Stop()
+	{
+		windowEventHook.WindowCreated -= OnWindowCreated;
+		windowEventHook.WindowDestroyed -= OnWindowDestroyed;
+		windowEventHook.WindowMoved -= OnWindowMoved;
+		windowEventHook.WindowStateChanged -= OnWindowStateChanged;
+
+		windowEventHook.StopSubscriptions();
+	}
+
+	public IEnumerable<WindowInfo> GetWindows()
+	{
+		return windowRegistry.GetAllWindows();
+	}
+
+	private void OnWindowCreated(object? sender, WindowInfo window)
+	{
+		windowRegistry.RegisterWindow(window);
+		// TODO: Update layout
+	}
+
+	private void OnWindowDestroyed(object? sender, WindowInfo window)
+	{
+		windowRegistry.UnregisterWindow(window);
+		// TODO: Update layout
+	}
+
+	private void OnWindowMoved(object? sender, WindowInfo window)
+	{
+		// TODO: Update layout
+	}
+
+	private void OnWindowStateChanged(object? sender, WindowInfo window)
+	{
+		// TODO: Update layout
+	}
+}
