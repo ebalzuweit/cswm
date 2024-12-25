@@ -1,6 +1,7 @@
-using cswm.Core.Windows;
+using cswm.Core.Models;
+using cswm.Core.Services;
 
-namespace cswm.Core.Test.Windows;
+namespace cswm.Core.Test.Services;
 
 public class WindowRegistryTest
 {

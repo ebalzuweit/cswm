@@ -1,9 +1,8 @@
-using System;
 using cswm.Core.Layout;
-using cswm.Core.Management;
-using cswm.Core.Windows;
+using cswm.Core.Models;
+using cswm.Core.Services;
 
-namespace cswm.Core.Test.Management;
+namespace cswm.Core.Test.Services;
 
 public class MockWindowController : IWindowController
 {

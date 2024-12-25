@@ -1,4 +1,3 @@
-using System;
 using cswm.Core.Layout;
 
 namespace cswm.Core.Test.Layout;

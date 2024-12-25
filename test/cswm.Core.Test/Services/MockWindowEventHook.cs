@@ -1,7 +1,7 @@
-using System;
-using cswm.Core.Management;
+using cswm.Core.Models;
+using cswm.Core.Services;
 
-namespace cswm.Core.Test.Management;
+namespace cswm.Core.Test.Services;
 
 public class MockWindowEventHook : IWindowEventHook
 {

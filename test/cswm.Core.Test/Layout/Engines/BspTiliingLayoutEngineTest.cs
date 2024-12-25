@@ -1,6 +1,6 @@
-using System;
 using cswm.Core.Layout;
 using cswm.Core.Layout.Engines;
+using cswm.Core.Models;
 
 namespace cswm.Core.Test.Layout.Engines;
 

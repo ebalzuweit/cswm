@@ -1,5 +1,5 @@
-using cswm.Core.Management;
-using cswm.Core.Test.Management;
+using cswm.Core.Services;
+using cswm.Core.Test.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.DependencyInjection.Logging;
 
