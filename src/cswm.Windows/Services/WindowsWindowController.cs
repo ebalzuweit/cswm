@@ -1,9 +1,9 @@
 using System;
 using cswm.Core.Layout;
-using cswm.Core.Management;
-using cswm.Core.Windows;
+using cswm.Core.Services;
+using cswm.Core.Models;
 
-namespace cswm.Windows.Management;
+namespace cswm.Windows.Services;
 
 public class WindowsWindowController : IWindowController
 {

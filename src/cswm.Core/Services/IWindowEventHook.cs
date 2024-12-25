@@ -1,6 +1,7 @@
 using System;
+using cswm.Core.Models;
 
-namespace cswm.Core.Management;
+namespace cswm.Core.Services;
 
 public interface IWindowEventHook : IDisposable
 {

@@ -1,7 +1,8 @@
 using System;
-using cswm.Core.Management;
+using cswm.Core.Models;
+using cswm.Core.Services;
 
-namespace cswm.Windows.Management;
+namespace cswm.Windows.Services;
 
 public class WindowsWindowEventHook : IWindowEventHook
 {

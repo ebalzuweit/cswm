@@ -1,6 +1,6 @@
 using cswm.Core.Layout;
 using cswm.Core.Layout.Engines;
-using cswm.Core.Windows;
+using cswm.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace cswm.Core;

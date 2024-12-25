@@ -1,8 +1,8 @@
 using System;
 using cswm.Core.Layout;
-using cswm.Core.Windows;
+using cswm.Core.Models;
 
-namespace cswm.Core.Management;
+namespace cswm.Core.Services;
 
 public interface IWindowController
 {

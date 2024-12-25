@@ -1,7 +1,6 @@
-using System;
 using cswm.Core;
-using cswm.Core.Management;
-using cswm.Windows.Management;
+using cswm.Core.Services;
+using cswm.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace cswm.Windows;

@@ -1,7 +1,7 @@
 using System;
 using cswm.Core.Layout;
 
-namespace cswm.Core.Windows;
+namespace cswm.Core.Models;
 
 public sealed record MonitorInfo
 (
