@@ -73,7 +73,7 @@ public class WindowManagerTest
 	public void OnWindowCreated_DoNothing_IfWindowMinimized()
 	{
 		var monitor = windowController.GetMonitors().First();
-		var initialBounds = new Rect(0, 0, 1, 1);
+		var initialBounds = DefaultBounds;
 		var window = GetWindowInfo(bounds: initialBounds, minimized: true);
 
 		windowManager.Start();
@@ -96,7 +96,7 @@ public class WindowManagerTest
 	public void OnWindowCreated_DoNothing_IfWindowMaximized()
 	{
 		var monitor = windowController.GetMonitors().First();
-		var initialBounds = new Rect(0, 0, 1, 1);
+		var initialBounds = DefaultBounds;
 		var window = GetWindowInfo(bounds: initialBounds, maximized: true);
 
 		windowManager.Start();
@@ -177,7 +177,7 @@ public class WindowManagerTest
 	public void OnWindowMoved_DoNothing_IfWindowNotManaged()
 	{
 		var monitor = windowController.GetMonitors().First();
-		var initialBounds = new Rect(0, 0, 1, 1);
+		var initialBounds = DefaultBounds;
 		var updatedBounds = new Rect(1, 1, 2, 2);
 		var window = GetWindowInfo(maximized: true);
 
