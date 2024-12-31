@@ -23,6 +23,10 @@ public class WindowManagerTest
 		var window = new WindowInfo(0, string.Empty, string.Empty, new(0, 0, 1, 1), false, false);
 
 		windowManager.Start();
+
+		var windowsBefore = windowManager.GetWindows().ToArray();
+		Assert.Empty(windowsBefore);
+
 		windowEventHook.InvokeWindowCreated(window);
 
 		var windowsAfter = windowManager.GetWindows().ToArray();
