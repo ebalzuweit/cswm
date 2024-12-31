@@ -10,8 +10,9 @@ public interface ILayoutEngine
 	/// </summary>
 	/// <param name="displayArea">Display region for the windows.</param>
 	/// <param name="windows">Windows to layout.</param>
+	/// <param name="priorityWindowHandle">If set, the window with the given handle will be prioritized during layout.</param>
 	/// <returns><see cref="LayoutResult"/> for the windows.</returns>
-	LayoutResult CalculateLayout(Rect displayArea, IEnumerable<WindowInfo> windows);
+	LayoutResult CalculateLayout(Rect displayArea, IEnumerable<WindowInfo> windows, nint? priorityWindowHandle = null);
 
 	/// <summary>
 	/// Determine if a layout is valid, or needs re-calculating.

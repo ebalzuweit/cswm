@@ -164,13 +164,51 @@ public class WindowManagerTest
 	[Fact]
 	public void OnWindowMoved_SwapWindows_IfMovedOverWindow()
 	{
-		Assert.Fail("TODO");
+		var monitor = windowController.GetMonitors().First();
+		var split = monitor.Bounds.Left + (monitor.Bounds.Width / 2);
+		var window0 = GetWindowInfo(handle: 0);
+		var window1 = GetWindowInfo(handle: 1);
+		windowRegistry.RegisterWindow(window0);
+		windowRegistry.RegisterWindow(window1);
+		windowManager.Start();
+
+		var windowsBefore = windowManager.GetManagedWindows();
+		Assert.NotEmpty(windowsBefore);
+		Assert.Contains(windowsBefore, x =>
+			x.Handle == window0.Handle &&
+			x.Bounds == monitor.Bounds with { Right = split });
+		Assert.Contains(windowsBefore, x =>
+			x.Handle == window1.Handle &&
+			x.Bounds == monitor.Bounds with { Left = split + 1 });
+
+		// Update window info after initial layout
+		window0 = windowRegistry.GetWindowInfo(window0.Handle);
+		window1 = windowRegistry.GetWindowInfo(window1.Handle);
+		Assert.NotNull(window0);
+		Assert.NotNull(window1);
+
+		// Move window0 to window1
+		var left = window1.Bounds.Left + 1;
+		var top = window1.Bounds.Top + 1;
+		windowEventHook.InvokeWindowMoved(window0 with
+		{
+			Bounds = new Rect(left, top, left + window0.Bounds.Width, top + window0.Bounds.Height)
+		});
+
+		var windowsAfter = windowManager.GetManagedWindows();
+		Assert.NotEmpty(windowsAfter);
+		Assert.Contains(windowsAfter, x =>
+			x.Handle == window0.Handle &&
+			x.Bounds == monitor.Bounds with { Left = split + 1 });
+		Assert.Contains(windowsAfter, x =>
+			x.Handle == window1.Handle &&
+			x.Bounds == monitor.Bounds with { Right = split });
 	}
 
-	[Fact]
+	[Fact(Skip = "TODO: Requires multiple monitor support.")]
 	public void OnWindowMoved_SwapMonitors_IfMovedToMonitor()
 	{
-		Assert.Fail("TODO");
+		Assert.Fail("TODO: Multiple monitor support");
 	}
 
 	[Fact]

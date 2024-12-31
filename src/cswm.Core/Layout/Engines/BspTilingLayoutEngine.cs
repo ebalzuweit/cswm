@@ -8,7 +8,7 @@ namespace cswm.Core.Layout.Engines;
 public sealed class BspTilingLayoutEngine : ILayoutEngine
 {
 	/// <inheritdoc/>
-	public LayoutResult CalculateLayout(Rect displayArea, IEnumerable<WindowInfo> windows)
+	public LayoutResult CalculateLayout(Rect displayArea, IEnumerable<WindowInfo> windows, nint? priorityWindowHandle = null)
 	{
 		if (windows.Any() == false)
 		{
@@ -25,20 +25,37 @@ public sealed class BspTilingLayoutEngine : ILayoutEngine
 		else if (windows.Count() == 2)
 		{
 			// Single partition
-			var areas = SplitRect(displayArea);
-			// TODO: area assignment
+			// TODO: Cleanup needed here
+			var (left, right) = SplitRect(displayArea);
+			var areas = new List<Rect>(2) { left, right };
+			var firstWindow = GetFirstWindowToLayout(windows, priorityWindowHandle);
+			var firstWindowSpace = PickSpaceForWindow(firstWindow, areas);
+			areas.Remove(firstWindowSpace);
+			var lastWindowSpace = areas.First();
+			var remainingWindows = windows.ToList();
+			remainingWindows.Remove(firstWindow);
+			var lastWindow = remainingWindows.First();
+
 			return new([
-				new WindowLayout(windows.First().Handle, areas.Left),
-				new WindowLayout(windows.Last().Handle, areas.Right)
+				new WindowLayout(firstWindow.Handle, firstWindowSpace),
+				new WindowLayout(lastWindow.Handle, lastWindowSpace)
 			]);
 		}
 		else
 		{
 			// Partition & recurse
-			var areas = SplitRect(displayArea);
-			// TODO: area assignment
-			var firstLayout = new WindowLayout(windows.First().Handle, areas.Left);
-			var recursiveLayout = CalculateLayout(areas.Right, windows.Skip(1).ToArray());
+			// TODO: Cleanup needed here
+			var (left, right) = SplitRect(displayArea);
+			var areas = new List<Rect>(2) { left, right };
+			var firstWindow = GetFirstWindowToLayout(windows, priorityWindowHandle);
+			var firstWindowSpace = PickSpaceForWindow(firstWindow, areas);
+			areas.Remove(firstWindowSpace);
+			var lastWindowSpace = areas.First();
+			var remainingWindows = windows.ToList();
+			remainingWindows.Remove(firstWindow);
+
+			var firstLayout = new WindowLayout(firstWindow.Handle, firstWindowSpace);
+			var recursiveLayout = CalculateLayout(lastWindowSpace, remainingWindows);
 			return LayoutResult.Merge(firstLayout, recursiveLayout);
 		}
 	}
@@ -68,5 +85,25 @@ public sealed class BspTilingLayoutEngine : ILayoutEngine
 				new Rect(b.Left, split + 1, b.Right, b.Bottom)
 			);
 		}
+	}
+
+	private WindowInfo GetFirstWindowToLayout(IEnumerable<WindowInfo> windows, nint? priorityWindowHandle)
+	{
+		if (priorityWindowHandle is not null)
+		{
+			return windows.First(x => x.Handle == priorityWindowHandle);
+		}
+		return windows.First();
+	}
+
+	private Rect PickSpaceForWindow(WindowInfo window, IEnumerable<Rect> spaces)
+	{
+		return spaces.OrderBy(x =>
+		{
+			var translation = Math.Abs(window.Bounds.Left - x.Left) + Math.Abs(window.Bounds.Top - x.Top);
+			var resize = Math.Abs(window.Bounds.Width - x.Width) + Math.Abs(window.Bounds.Height - x.Height);
+
+			return translation + resize;
+		}).First();
 	}
 }

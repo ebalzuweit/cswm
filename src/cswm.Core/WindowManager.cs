@@ -81,7 +81,7 @@ public class WindowManager
 	{
 		windowRegistry.UpdateWindow(window);
 		// TODO: Handle monitor/window swapping
-		RelayoutAllMonitors();
+		RelayoutAllMonitors(window.Handle);
 	}
 
 	private void OnWindowStateChanged(object? sender, WindowInfo window)
@@ -91,12 +91,12 @@ public class WindowManager
 		RelayoutAllMonitors();
 	}
 
-	private void RelayoutAllMonitors()
+	private void RelayoutAllMonitors(nint? priorityWindowHandle = null)
 	{
 		// TODO: Multi-monitor support
 		var monitor = windowController.GetMonitors().First();
 		var windows = GetManagedWindows();
-		var monitorLayout = layoutEngine.CalculateLayout(monitor.Bounds, windows);
+		var monitorLayout = layoutEngine.CalculateLayout(monitor.Bounds, windows, priorityWindowHandle);
 		foreach (var windowLayout in monitorLayout.WindowLayouts)
 		{
 			windowController.MoveWindow(windowLayout.Handle, windowLayout.Area);
