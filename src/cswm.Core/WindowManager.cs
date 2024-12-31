@@ -33,6 +33,8 @@ public class WindowManager
 		windowEventHook.WindowMoved += OnWindowMoved;
 		windowEventHook.WindowStateChanged += OnWindowStateChanged;
 
+		RelayoutAllMonitors();
+
 		windowEventHook.StartSubscriptions();
 	}
 
@@ -46,36 +48,58 @@ public class WindowManager
 		windowEventHook.StopSubscriptions();
 	}
 
-	public IEnumerable<WindowInfo> GetWindows()
+	public IEnumerable<WindowInfo> GetAllWindows()
 	{
 		return windowRegistry.GetAllWindows();
 	}
 
+	public IEnumerable<WindowInfo> GetManagedWindows()
+	{
+		return windowRegistry
+			.GetAllWindows()
+			.Where(ShouldManageWindow);
+	}
+
+	private bool ShouldManageWindow(WindowInfo window)
+		=> window.IsMinimized == false && window.IsMaximized == false;
+
 	private void OnWindowCreated(object? sender, WindowInfo window)
 	{
 		windowRegistry.RegisterWindow(window);
-		// TODO: Multi-monitor support
-		var monitor = windowController.GetMonitors().First();
-		var monitorLayout = layoutEngine.CalculateLayout(monitor.Bounds, GetWindows());
-		foreach (var windowLayout in monitorLayout.WindowLayouts)
-		{
-			windowController.MoveWindow(windowLayout.Handle, windowLayout.Area);
-		}
+		// HACK: Only need to relayout the relevant monitor
+		RelayoutAllMonitors();
 	}
 
 	private void OnWindowDestroyed(object? sender, WindowInfo window)
 	{
 		windowRegistry.UnregisterWindow(window);
-		// TODO: Update layout
+		// HACK: Only need to relayout the relevant monitor
+		RelayoutAllMonitors();
 	}
 
 	private void OnWindowMoved(object? sender, WindowInfo window)
 	{
-		// TODO: Update layout
+		windowRegistry.UpdateWindow(window);
+		// TODO: Handle monitor/window swapping
+		RelayoutAllMonitors();
 	}
 
 	private void OnWindowStateChanged(object? sender, WindowInfo window)
 	{
-		// TODO: Update layout
+		windowRegistry.UpdateWindow(window);
+		// HACK: Only need to relayout the relevant monitor
+		RelayoutAllMonitors();
+	}
+
+	private void RelayoutAllMonitors()
+	{
+		// TODO: Multi-monitor support
+		var monitor = windowController.GetMonitors().First();
+		var windows = GetManagedWindows();
+		var monitorLayout = layoutEngine.CalculateLayout(monitor.Bounds, windows);
+		foreach (var windowLayout in monitorLayout.WindowLayouts)
+		{
+			windowController.MoveWindow(windowLayout.Handle, windowLayout.Area);
+		}
 	}
 }
