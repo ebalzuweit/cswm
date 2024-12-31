@@ -36,4 +36,10 @@ jobs:
     - name: Build
       run: dotnet build cswm.sln -c Release --no-restore
     - name: Test
-      run: dotnet test cswm.sln -c Release --no-build --verbosity normal
+      run: dotnet test cswm.sln -c Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+    - name: Display Test Coverage
+      uses: 5monkeys/cobertura-action@v14
+      with:
+        path: test/**/TestResults/**/*.xml
+        skip_covered: false
+        minimum_coverage: 0
