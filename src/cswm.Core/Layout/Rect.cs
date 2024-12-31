@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace cswm.Core.Layout;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Rect
+public readonly struct Rect
 {
 	public readonly int Left { get; }
 	public readonly int Right { get; }
@@ -26,4 +26,30 @@ public struct Rect
 		Right = right;
 		Bottom = bottom;
 	}
+
+	public override bool Equals(object? o)
+	{
+		if (o is null)
+		{
+			return false;
+		}
+		if (o is Rect r)
+		{
+			return Left == r.Left &&
+				Top == r.Top &&
+				Right == r.Right &&
+				Bottom == r.Bottom;
+		}
+
+		return false;
+	}
+
+	public override int GetHashCode()
+	{
+		return base.GetHashCode();
+	}
+
+	public static bool operator ==(Rect a, Rect b) => a.Equals(b);
+
+	public static bool operator !=(Rect a, Rect b) => a.Equals(b) == false;
 }
