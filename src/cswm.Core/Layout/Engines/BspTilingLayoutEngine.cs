@@ -8,20 +8,23 @@ namespace cswm.Core.Layout.Engines;
 public sealed class BspTilingLayoutEngine : ILayoutEngine
 {
 	/// <inheritdoc/>
-	public LayoutResult CalculateLayout(Rect displayArea, IReadOnlyList<WindowInfo> windows)
+	public LayoutResult CalculateLayout(Rect displayArea, IEnumerable<WindowInfo> windows)
 	{
 		if (windows.Any() == false)
 		{
+			// No windows
 			return new([]);
 		}
-		else if (windows.Count == 1)
+		else if (windows.Count() == 1)
 		{
+			// Single window
 			return new([
 				new WindowLayout(windows.First().Handle, displayArea)
 			]);
 		}
-		else if (windows.Count == 2)
+		else if (windows.Count() == 2)
 		{
+			// Single partition
 			var areas = SplitRect(displayArea);
 			// TODO: area assignment
 			return new([
@@ -31,7 +34,12 @@ public sealed class BspTilingLayoutEngine : ILayoutEngine
 		}
 		else
 		{
-			throw new NotImplementedException("TODO: Implement >2 window layout logic.");
+			// Partition & recurse
+			var areas = SplitRect(displayArea);
+			// TODO: area assignment
+			var firstLayout = new WindowLayout(windows.First().Handle, areas.Left);
+			var recursiveLayout = CalculateLayout(areas.Right, windows.Skip(1).ToArray());
+			return LayoutResult.Merge(firstLayout, recursiveLayout);
 		}
 	}
 

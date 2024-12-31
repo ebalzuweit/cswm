@@ -11,7 +11,7 @@ public interface ILayoutEngine
 	/// <param name="displayArea">Display region for the windows.</param>
 	/// <param name="windows">Windows to layout.</param>
 	/// <returns><see cref="LayoutResult"/> for the windows.</returns>
-	LayoutResult CalculateLayout(Rect displayArea, IReadOnlyList<WindowInfo> windows);
+	LayoutResult CalculateLayout(Rect displayArea, IEnumerable<WindowInfo> windows);
 
 	/// <summary>
 	/// Determine if a layout is valid, or needs re-calculating.

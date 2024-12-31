@@ -80,4 +80,30 @@ public class BspTiliingLayoutEngineTest
 		Assert.Contains(new Rect(rect.Left, rect.Top, rect.Right, split), areas);
 		Assert.Contains(new Rect(rect.Left, split + 1, rect.Right, rect.Bottom), areas);
 	}
+
+	[Fact]
+	public void CalculateLayout_Returns211Layout_WithThreeWindows()
+	{
+		var engine = new BspTilingLayoutEngine();
+		var rect = Rect_1920x1080;
+		var windows = new WindowInfo[]
+		{
+			GetWindowInfo(),
+			GetWindowInfo(),
+			GetWindowInfo()
+		};
+
+		var result = engine.CalculateLayout(rect, windows);
+
+		Assert.NotNull(result);
+		Assert.Equal(3, result.WindowLayouts.Count);
+
+		var areas = result.WindowLayouts.Select(x => x.Area).ToArray();
+		var firstSplit = rect.Left + (rect.Width / 2);
+		var secondSplit = rect.Top + (rect.Height / 2);
+
+		Assert.Contains(new Rect(rect.Left, rect.Top, firstSplit, rect.Bottom), areas);
+		Assert.Contains(new Rect(firstSplit + 1, rect.Top, rect.Right, secondSplit), areas);
+		Assert.Contains(new Rect(firstSplit + 1, secondSplit + 1, rect.Right, rect.Bottom), areas);
+	}
 }
