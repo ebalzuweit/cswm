@@ -21,7 +21,7 @@ jobs:
             - test/**
   build_and_test:
     name: Build & Test
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: is_build_required
     if: ${{ needs.is_build_required.outputs.build_required == 'true' }}
 
