@@ -33,7 +33,7 @@ public class MockWindowController : IWindowController
 		return [.. windowRegistry.GetAllWindows()];
 	}
 
-	public void MoveWindow(WindowInfo window, Rect area) { }
+	public void MoveWindow(IntPtr handle, Rect area) { }
 
 	private MonitorInfo GetMonitorInfo(nint handle = 0, Rect? rect = null)
 		=> new MonitorInfo(handle, rect ?? new(0, 0, 1920, 1080));

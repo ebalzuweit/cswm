@@ -27,7 +27,7 @@ public class WindowsWindowController : IWindowController
 		throw new NotImplementedException();
 	}
 
-	public void MoveWindow(WindowInfo window, Rect area)
+	public void MoveWindow(IntPtr handle, Rect area)
 	{
 		throw new NotImplementedException();
 	}

@@ -10,5 +10,5 @@ public interface IWindowController
 	MonitorInfo[] GetMonitors();
 	WindowInfo FetchWindowInfo(IntPtr handle);
 	WindowInfo[] GetWindows();
-	void MoveWindow(WindowInfo window, Rect area);
+	void MoveWindow(IntPtr handle, Rect area);
 }
