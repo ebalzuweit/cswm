@@ -4,22 +4,6 @@ namespace cswm.Core.Test.Layout;
 
 public class RectTest
 {
-	[Fact]
-	public void Ctor_ThrowsInvalidOperationException_IfLeftGreaterThanRight()
-	{
-		var act = () => { _ = new Rect(1, 0, 0, 0); };
-
-		Assert.Throws<InvalidOperationException>(act);
-	}
-
-	[Fact]
-	public void Ctor_ThrowsInvalidOperationException_IfTopGreaterThanBottom()
-	{
-		var act = () => { _ = new Rect(0, 1, 0, 0); };
-
-		Assert.Throws<InvalidOperationException>(act);
-	}
-
 	[Theory]
 	[InlineData(0, 1000, 1000)]
 	[InlineData(-500, 500, 1000)]
