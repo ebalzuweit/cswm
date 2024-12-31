@@ -15,17 +15,17 @@ public class MockWindowController : IWindowController
 
 	public MonitorInfo FetchMonitorInfo(nint handle)
 	{
-		return GetMonitorInfo(handle);
+		return CreateMonitorInfo(handle);
 	}
 
 	public MonitorInfo[] GetMonitors()
 	{
-		return [GetMonitorInfo(0)];
+		return [CreateMonitorInfo(0)];
 	}
 
 	public WindowInfo FetchWindowInfo(nint handle)
 	{
-		return GetWindowInfo(handle);
+		return windowRegistry.GetWindowInfo(handle) ?? CreateWindowInfo(handle);
 	}
 
 	public WindowInfo[] GetWindows()
@@ -33,11 +33,22 @@ public class MockWindowController : IWindowController
 		return [.. windowRegistry.GetAllWindows()];
 	}
 
-	public void MoveWindow(IntPtr handle, Rect area) { }
+	public void MoveWindow(IntPtr handle, Rect area)
+	{
+		var window = windowRegistry.GetWindowInfo(handle);
+		if (window is null)
+		{
+			throw new InvalidOperationException($"Cannot move Window that is not registered. (Handle: {handle})");
+		}
+		windowRegistry.UpdateWindow(window with
+		{
+			Bounds = area
+		});
+	}
 
-	private MonitorInfo GetMonitorInfo(nint handle = 0, Rect? rect = null)
+	private MonitorInfo CreateMonitorInfo(nint handle = 0, Rect? rect = null)
 		=> new MonitorInfo(handle, rect ?? new(0, 0, 1920, 1080));
 
-	private WindowInfo GetWindowInfo(nint handle = 0, Rect? rect = null)
+	private WindowInfo CreateWindowInfo(nint handle = 0, Rect? rect = null)
 		=> new WindowInfo(handle, string.Empty, string.Empty, rect ?? new(0, 0, 1, 1), false, false);
 }

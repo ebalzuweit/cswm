@@ -6,7 +6,7 @@ namespace cswm.Core.Test.Services;
 public class WindowRegistryTest
 {
 	private readonly WindowRegistry windowRegistry;
-	private Func<WindowInfo> GetWindowInfo = () => new WindowInfo(0, string.Empty, string.Empty, new(0, 0, 1, 1), false, false);
+	private Func<nint, WindowInfo> GetWindowInfo = (nint handle) => new WindowInfo(handle, string.Empty, string.Empty, new(0, 0, 1, 1), false, false);
 
 	public WindowRegistryTest(WindowRegistry windowRegistry)
 	{
@@ -24,7 +24,7 @@ public class WindowRegistryTest
 	[Fact]
 	public void RegisterWindow_AddsWindowToRegistry_IfWindowInfoNotNull()
 	{
-		var window = GetWindowInfo();
+		var window = GetWindowInfo(100);
 
 		Assert.Null(windowRegistry.GetWindowInfo(window.Handle));
 
@@ -46,7 +46,7 @@ public class WindowRegistryTest
 	[Fact]
 	public void UnregisterWindow_ReturnsFalse_IfWindowNotRegistered()
 	{
-		var window = GetWindowInfo();
+		var window = GetWindowInfo(200);
 
 		var result = windowRegistry.UnregisterWindow(window);
 
@@ -56,7 +56,7 @@ public class WindowRegistryTest
 	[Fact]
 	public void UnregisterWindow_ReturnsTrue_IfWindowRegistered()
 	{
-		var window = GetWindowInfo();
+		var window = GetWindowInfo(300);
 
 		windowRegistry.RegisterWindow(window);
 		var result = windowRegistry.UnregisterWindow(window);
@@ -78,7 +78,7 @@ public class WindowRegistryTest
 	[Fact]
 	public void UpdateWindow_UpdatesWindowInfo_IfWindowRegistered()
 	{
-		var window = GetWindowInfo();
+		var window = GetWindowInfo(400);
 
 		windowRegistry.RegisterWindow(window);
 
@@ -100,7 +100,7 @@ public class WindowRegistryTest
 	[Fact]
 	public void UpdateWindow_RegistersWindow_IfWindowNotRegistered()
 	{
-		var window = GetWindowInfo();
+		var window = GetWindowInfo(500);
 
 		windowRegistry.UpdateWindow(window);
 
