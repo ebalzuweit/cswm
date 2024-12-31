@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using cswm.Core.Layout;
 using cswm.Core.Models;
 using cswm.Core.Services;
@@ -53,7 +54,13 @@ public class WindowManager
 	private void OnWindowCreated(object? sender, WindowInfo window)
 	{
 		windowRegistry.RegisterWindow(window);
-		// TODO: Update layout
+		// TODO: Multi-monitor support
+		var monitor = windowController.GetMonitors().First();
+		var monitorLayout = layoutEngine.CalculateLayout(monitor.Bounds, GetWindows());
+		foreach (var windowLayout in monitorLayout.WindowLayouts)
+		{
+			windowController.MoveWindow(windowLayout.Handle, windowLayout.Area);
+		}
 	}
 
 	private void OnWindowDestroyed(object? sender, WindowInfo window)
