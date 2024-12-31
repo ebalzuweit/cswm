@@ -27,6 +27,11 @@ public readonly struct Rect
 		Bottom = bottom;
 	}
 
+	public override string ToString()
+	{
+		return $"({Left}, {Top}, {Right}, {Bottom})";
+	}
+
 	public override bool Equals(object? o)
 	{
 		if (o is null)
