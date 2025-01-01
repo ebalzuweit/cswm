@@ -5,11 +5,14 @@
 // Manual changes to this file may not be handled correctly.
 //
 
+using Foundation;
+
 namespace cswm.macOS.TrayApp;
 
-[Register ("ViewController")]
-partial class ViewController {
-	void ReleaseDesignerOutlets ()
-	{
-	}
+[Register("ViewController")]
+partial class ViewController
+{
+    void ReleaseDesignerOutlets()
+    {
+    }
 }

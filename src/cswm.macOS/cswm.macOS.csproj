@@ -1,13 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net9.0-macos</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>true</ImplicitUsings>
+    <PropertyGroup>
+        <TargetFramework>net9.0-macos</TargetFramework>
+        <Nullable>enable</Nullable>
 
-    <!--
-      Enable trim analyzers for class libraries.
-      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
-    -->
-    <IsTrimmable>true</IsTrimmable>
-  </PropertyGroup>
+        <!--
+          Enable trim analyzers for class libraries.
+          To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
+        -->
+        <IsTrimmable>true</IsTrimmable>
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\cswm.Core\cswm.Core.csproj" />
+    </ItemGroup>
 </Project>

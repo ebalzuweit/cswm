@@ -7,7 +7,9 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\cswm.Core\cswm.Core.csproj" />
+    <ProjectReference Include="..\cswm.Core\cswm.Core.csproj">
+      <ReferenceSourceTarget></ReferenceSourceTarget>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>
