@@ -98,6 +98,8 @@ public sealed class BspTilingLayoutEngine : ILayoutEngine
 
 	private Rect PickSpaceForWindow(WindowInfo window, IEnumerable<Rect> spaces)
 	{
+		// TODO: This is greedy
+		// Ideally we'd examine all possible layouts and total movement required to match layout.
 		return spaces.OrderBy(x =>
 		{
 			var translation = Math.Abs(window.Bounds.Left - x.Left) + Math.Abs(window.Bounds.Top - x.Top);
