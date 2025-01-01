@@ -26,7 +26,7 @@ jobs:
     needs: is_build_required
     if: ${{ needs.is_build_required.outputs.build_required == 'true' }}
     permissions:
-      contents: write # Required to publish Test Results
+      checks: write # Required to publish Test Results
       pull-requests: write # Required to write Code Coverage PR comment
 
     steps:
