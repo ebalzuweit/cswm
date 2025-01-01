@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>cswm.macOS.TrayApp</string>
+	<string>cswm</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.ebalzuweit.cswm</string>
 	<key>CFBundleShortVersionString</key>
@@ -26,5 +26,7 @@
 	<string>Main</string>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/AppIcon.appiconset</string>
+	<key>LSBackgroundOnly</key>
+	<true/>
 </dict>
 </plist>
