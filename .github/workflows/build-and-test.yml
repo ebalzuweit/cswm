@@ -70,17 +70,17 @@ jobs:
         customSettings: ""
         toolpath: "reportgeneratortool"
     
-    - name: Upload Combined Coverage XML
+    - name: Upload Code Coverage Report
       uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: code-coverage-report
         path: ${{ github.workspace }}/coverage.cobertura.xml
         retention-days: 7
 
     - name: Publish Code Coverage Report
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
-        filename: coverage.cobertura.xml # test/**/coverage.cobertura.xml
+        filename: ${{ github.workspace }}/coverage.cobertura.xml # test/**/coverage.cobertura.xml
         badge: true
         fail_below_min: true
         format: markdown
