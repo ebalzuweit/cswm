@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8FC126E3-64B5-4032-9266-3A5E10B738DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cswm.Core", "src\cswm.Core\cswm.Core.csproj", "{55D9AC08-E43E-4A61-AD54-C3BC429DD859}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8BF24B00-A74D-4DEC-9151-3E814C3C9139}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cswm.Core.Test", "test\cswm.Core.Test\cswm.Core.Test.csproj", "{C22A444D-9D25-42D1-B310-94CA9320603C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cswm.Windows", "src\cswm.Windows\cswm.Windows.csproj", "{66A7C405-2AA2-4D57-9078-3234F12F37D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cswm.Windows.TaskbarApp", "src\cswm.Windows.TaskbarApp\cswm.Windows.TaskbarApp.csproj", "{EE42E5A4-A64B-426F-A2C1-E93C43861603}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cswm.macOS", "src\cswm.macOS\cswm.macOS.csproj", "{7A8F3108-F154-4F15-B99E-D92CBF714B9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cswm.macOS.TrayApp", "src\cswm.macOS.TrayApp\cswm.macOS.TrayApp.csproj", "{31343012-FEAE-4B8B-A42D-7722C2E7A3A6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{55D9AC08-E43E-4A61-AD54-C3BC429DD859}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55D9AC08-E43E-4A61-AD54-C3BC429DD859}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55D9AC08-E43E-4A61-AD54-C3BC429DD859}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55D9AC08-E43E-4A61-AD54-C3BC429DD859}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C22A444D-9D25-42D1-B310-94CA9320603C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C22A444D-9D25-42D1-B310-94CA9320603C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C22A444D-9D25-42D1-B310-94CA9320603C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C22A444D-9D25-42D1-B310-94CA9320603C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66A7C405-2AA2-4D57-9078-3234F12F37D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66A7C405-2AA2-4D57-9078-3234F12F37D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66A7C405-2AA2-4D57-9078-3234F12F37D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66A7C405-2AA2-4D57-9078-3234F12F37D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE42E5A4-A64B-426F-A2C1-E93C43861603}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE42E5A4-A64B-426F-A2C1-E93C43861603}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE42E5A4-A64B-426F-A2C1-E93C43861603}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE42E5A4-A64B-426F-A2C1-E93C43861603}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A8F3108-F154-4F15-B99E-D92CBF714B9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A8F3108-F154-4F15-B99E-D92CBF714B9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A8F3108-F154-4F15-B99E-D92CBF714B9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A8F3108-F154-4F15-B99E-D92CBF714B9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31343012-FEAE-4B8B-A42D-7722C2E7A3A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31343012-FEAE-4B8B-A42D-7722C2E7A3A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31343012-FEAE-4B8B-A42D-7722C2E7A3A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31343012-FEAE-4B8B-A42D-7722C2E7A3A6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{55D9AC08-E43E-4A61-AD54-C3BC429DD859} = {8FC126E3-64B5-4032-9266-3A5E10B738DA}
+		{C22A444D-9D25-42D1-B310-94CA9320603C} = {8BF24B00-A74D-4DEC-9151-3E814C3C9139}
+		{66A7C405-2AA2-4D57-9078-3234F12F37D4} = {8FC126E3-64B5-4032-9266-3A5E10B738DA}
+		{EE42E5A4-A64B-426F-A2C1-E93C43861603} = {8FC126E3-64B5-4032-9266-3A5E10B738DA}
+		{7A8F3108-F154-4F15-B99E-D92CBF714B9F} = {8FC126E3-64B5-4032-9266-3A5E10B738DA}
+		{31343012-FEAE-4B8B-A42D-7722C2E7A3A6} = {8FC126E3-64B5-4032-9266-3A5E10B738DA}
+	EndGlobalSection
+EndGlobal
