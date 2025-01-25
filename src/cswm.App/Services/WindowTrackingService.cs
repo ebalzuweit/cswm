@@ -17,6 +17,9 @@ namespace cswm.App.Services;
 /// <summary>
 /// Tracks active windows, like Alt + Tab.
 /// </summary>
+/// <remarks>
+/// This does not track minimized, nor maximized, windows.
+/// </remarks>
 public class WindowTrackingService : IService, IDisposable
 {
     private readonly ILogger _logger;
@@ -122,7 +125,7 @@ public class WindowTrackingService : IService, IDisposable
         }
     }
 
-    private readonly EventConstant[] _startTrackingEvents = { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND, EventConstant.EVENT_OBJECT_LOCATIONCHANGE };
+    private readonly EventConstant[] _startTrackingEvents = { EventConstant.EVENT_OBJECT_SHOW, EventConstant.EVENT_SYSTEM_MINIMIZEEND };
     private readonly EventConstant[] _stopTrackingEvents = { EventConstant.EVENT_OBJECT_HIDE, EventConstant.EVENT_SYSTEM_MINIMIZESTART };
     private void On_WindowEvent(WindowEvent @event)
     {
@@ -130,10 +133,13 @@ public class WindowTrackingService : IService, IDisposable
         if (IsIgnoredWindowClass(window))
             return;
 
-        var tracking = _windows.Any(w => w.hWnd == @event.hWnd);
+        var tracking = _windows.Contains(window);
         if (tracking && _stopTrackingEvents.Contains(@event.EventType))
         {
-            TryStopTracking(window);
+            _logger.LogDebug("Stopped tracking window {window}", window);
+
+            _windows.Remove(window);
+            _bus.Publish(new StopTrackingWindowEvent(window));
         }
 
         var shouldTrack = _strategy.ShouldTrack(window);
@@ -141,35 +147,16 @@ public class WindowTrackingService : IService, IDisposable
             return;
 
         if (_startTrackingEvents.Contains(@event.EventType))
-            TryStartTracking(window);
+        {
+            _logger.LogDebug("Started tracking new window {window}", window);
+
+            _windows.Add(window);
+            _bus.Publish(new StartTrackingWindowEvent(window));
+        }
         else if (@event.EventType == EventConstant.EVENT_SYSTEM_MOVESIZEEND)
         {
             _logger.LogDebug("Window moved {window}", window);
             _bus.Publish(new WindowMovedEvent(window));
         }
-    }
-
-    private bool TryStartTracking(Window window)
-    {
-        var startedTracking = _windows.Add(window);
-        if (startedTracking)
-        {
-
-            _logger.LogDebug("Started tracking window {window}", window);
-            _bus.Publish(new StartTrackingWindowEvent(window));
-        }
-        return startedTracking;
-    }
-
-    private bool TryStopTracking(Window window)
-    {
-        var stoppedTracking = _windows.Remove(window);
-        if (stoppedTracking)
-        {
-            _ = _flaggedWindows.Remove(window);
-            _logger.LogDebug("Stopped tracking window {window}", window);
-            _bus.Publish(new StopTrackingWindowEvent(window));
-        }
-        return stoppedTracking;
     }
 }
