@@ -104,7 +104,7 @@ public sealed class WindowArrangementService : IService
     /// <param name="arrangement">Arrangement for a monitor.</param>
     private void ApplyArrangement(MonitorLayout? arrangement)
     {
-        if (arrangement == default)
+        if (arrangement is null)
         {
             return;
         }
@@ -115,6 +115,8 @@ public sealed class WindowArrangementService : IService
         {
             return;
         }
+
+        _logger.LogInformation($"Updated arrangement for {arrangement.Monitor}");
 
         // Move windows into position
         foreach (var windowLayout in arrangement.Windows)
@@ -162,6 +164,25 @@ public sealed class WindowArrangementService : IService
     }
 
     /// <summary>
+    /// Lookup the previous monitor for a window.
+    /// </summary>
+    /// <param name="window">Window for the lookup.</param>
+    /// <returns>Monitor handle if previously arranged; otherwise, null.</returns>
+    private nint? LookupPreviousMonitor(Window window)
+    {
+        _logger.LogDebug("Looking up monitor for window [{hWnd}]", window.hWnd);
+        foreach (var arrangement in _prevArrangements)
+        {
+            _logger.LogDebug("Checking monitor [{hMonitor}]", arrangement.Key);
+            if (arrangement.Value.Windows.Where(x => x.Window.hWnd == window.hWnd).Any())
+            {
+                return arrangement.Key;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Set the arrangement strategy for all monitors.
     /// </summary>
     /// <remarks>
@@ -197,7 +218,7 @@ public sealed class WindowArrangementService : IService
     private void UpdateArrangement(IntPtr hMon)
     {
         var (strategy, current) = GetStrategyAndPrevOrCurrArrangement(hMon);
-        if (current == default)
+        if (current is null)
         {
             _logger.LogError("Failed to get previous or current arrangement for monitor [{hMonitor}]", hMon);
             return;
@@ -242,7 +263,7 @@ public sealed class WindowArrangementService : IService
     {
         var hMon = User32.MonitorFromWindow(window.hWnd, MonitorFlags.DefaultToNearest);
         var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
-        if (currArrangement == default)
+        if (currArrangement is null)
         {
             _logger.LogWarning("Start Tracking: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
             return;
@@ -255,7 +276,7 @@ public sealed class WindowArrangementService : IService
     {
         var hMon = User32.MonitorFromWindow(window.hWnd, MonitorFlags.DefaultToNearest);
         var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
-        if (currArrangement == default)
+        if (currArrangement is null)
         {
             _logger.LogWarning("Stop Tracking: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
             return;
@@ -268,7 +289,7 @@ public sealed class WindowArrangementService : IService
     {
         var hMon = User32.MonitorFromWindow(@event.Window.hWnd, MonitorFlags.DefaultToNearest);
         var (strategy, currArrangement) = GetStrategyAndPrevOrCurrArrangement(hMon);
-        if (currArrangement == default)
+        if (currArrangement is null)
         {
             _logger.LogWarning("Window Move: Failed to get previous and current arrangement for monitor [{hMonitor}]", hMon);
             return;
@@ -279,8 +300,39 @@ public sealed class WindowArrangementService : IService
             _logger.LogWarning("Window Move: Failed to get cursor position!");
             return;
         }
-        var updatedArrangement = strategy.MoveWindow(currArrangement, @event.Window, cursorPosition);
-        ApplyArrangement(updatedArrangement);
+
+        if (currArrangement.Windows.Where(x => x.Window.hWnd == @event.Window.hWnd).Any())
+        {
+            // Move within same monitor
+            var updatedArrangement = strategy.MoveWindow(currArrangement, @event.Window, cursorPosition);
+            ApplyArrangement(updatedArrangement);
+        }
+        else
+        {
+            // Move from another monitor
+            var updatedArrangment = strategy.AddWindow(currArrangement, @event.Window);
+
+            var prevMonitorHandle = LookupPreviousMonitor(@event.Window);
+            _logger.LogDebug("Detected Monitor change, previous monitor [{hMonitor}]", prevMonitorHandle);
+            if (prevMonitorHandle.HasValue)
+            {
+                var (prevMonitorStrategy, prevMonitorArrangement) = GetStrategyAndPrevOrCurrArrangement(prevMonitorHandle.Value);
+                if (prevMonitorArrangement != null)
+                {
+                    var updatedPrevMonitorArrangement = prevMonitorStrategy.RemoveWindow(prevMonitorArrangement, @event.Window);
+                    ApplyArrangement(updatedPrevMonitorArrangement);
+                }
+                else
+                {
+                    _logger.LogWarning("Window Move: Failed to get arrangement for previous monitor [{hMonitor}]", prevMonitorHandle.Value);
+                }
+            }
+
+            // This will affect the previous arrangement cache,
+            // so we delay applying until the previous monitor has been arranged.
+            ApplyArrangement(updatedArrangment);
+        }
+
     }
 
     private void OnWindowFlagged(SetWindowFlaggedEvent @event)
