@@ -29,9 +29,9 @@ Important services include:
 │ WindowEventRelayService ├──►─┤ MessageBus │    │ WindowTrackingService │
 │                         │    │            ├─◄──┤                       │
 └─────────────────────────┘    └─────┬──────┘    └───────────────────────┘
-                                     ▲                                    
+                                     |                                    
                                      │                                    
-                                     │                                    
+                                     ▼                                    
                         ┌────────────┴─────────────┐                      
                         │                          │                      
                         │ WindowArrangementService │                      
