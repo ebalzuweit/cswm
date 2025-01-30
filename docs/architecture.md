@@ -7,10 +7,37 @@ This document provides a high-level overview of the architecture of cswm.
 cswm is composed of multiple services, that communicate via an internal `MessageBus`.
 
 Important services include:
+
 - `WindowEventRelayService`
 - `WindowTrackingService`
 - `WindowArrangementService`
 - `SystemTrayService`
+
+### Diagram
+
+```
+                           ┌───────────────────┐                          
+                           │                   │                          
+                           │ SystemTrayService │                          
+                           │                   │                          
+                           └─────────┬─────────┘                          
+                                     │                                    
+                                     │                                    
+                                     ▼                                    
+┌─────────────────────────┐    ┌─────┴──────┐    ┌───────────────────────┐
+│                         │    │            ├──►─┤                       │
+│ WindowEventRelayService ├──►─┤ MessageBus │    │ WindowTrackingService │
+│                         │    │            ├─◄──┤                       │
+└─────────────────────────┘    └─────┬──────┘    └───────────────────────┘
+                                     ▲                                    
+                                     │                                    
+                                     │                                    
+                        ┌────────────┴─────────────┐                      
+                        │                          │                      
+                        │ WindowArrangementService │                      
+                        │                          │                      
+                        └──────────────────────────┘                      
+```
 
 ## Events
 
@@ -32,6 +59,7 @@ The only window tracking strategy at this time is the `DefaultWindowTrackingStra
 Window arrangement is handled by the `WindowArrangementService`, which uses an `IArrangementStrategy` to determine how the windows are positioned in a space.
 
 There are two arrangement strategies currently:
+
 - `SilentArrangementStrategy` - no arrangement
 - `SplitArrangementStrategy` - [binary space partitioning](https://en.wikipedia.org/wiki/Binary_space_partitioning), with a twist
 
